@@ -32,11 +32,12 @@ cd ../../HiHiC
 3. Generate input data of each deep leaning models
 >This python code needs chromosome length file like **hg19.txt** in the same directory. You also should specify required arguments as below.
 >```
->-i : Hi-C data directory containing .txt files (directory of Hi-C contact pare files) - example) /hihic/data   
->-d : Hi-C downsampled data directory containing .txt files (directory of Hi-C contact pare files) - example) /hihic/data_downsampled_16   
+>-i : Hi-C data directory containing .txt files (directory of Hi-C contact pare files) - example) /HiHiC/data   
+>-d : Hi-C downsampled data directory containing .txt files (directory of downsampled Hi-C contact pare files) - example) /HiHiC/data_downsampled_16   
 >-m : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - example) DFHiC   
 >-g : Reference genome length file, your data is based on - example) hg19.txt'  
 >-r : Downsampling ratio of your downsampled data - example) 16
+>-o : Directory for saving output
 >```
 ```
 python data_generate.py -i ./data -d ./data_downsampled_16 -m DFHiC -g ./hg19.txt -r 16

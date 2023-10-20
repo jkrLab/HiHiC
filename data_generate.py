@@ -11,15 +11,17 @@ random.seed(100)
 parser = argparse.ArgumentParser(description='Read Hi-C contact map and Divide submatrix for train and predict', add_help=True)
 req_args = parser.add_argument_group('Required Arguments')
 req_args.add_argument('-i', dest='input_data_dir', required=True,
-                      help='REQUIRED: Hi-C data directory containing .txt files (Hi-C contact pares) - example) /home/data')
+                      help='REQUIRED: Hi-C data directory containing .txt files (directory of Hi-C contact pares) - example) /HiHiC/data')
 req_args.add_argument('-d', dest='input_downsample_dir', required=True,
-                      help='REQUIRED: Hi-C downsampled data directory containing .txt files (Hi-C contact pares) - example) /home/data_downsampled_16')
+                      help='REQUIRED: Hi-C downsampled data directory containing .txt files (directory of downsampled Hi-C contact pares) - example) /HiHiC/data_downsampled_16')
 req_args.add_argument('-m', dest='model', required=True, choices=['HiCARN', 'DeepHiC', 'HiCNN2', 'HiCSR', 'DFHiC', 'hicplus', 'SRHiC'],
-                      help='REQUIRED: Model name that you want to use - example) DFHiC')
+                      help='REQUIRED: Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - example) DFHiC')
 req_args.add_argument('-g', dest='ref_chrom', required=True,
                       help='REQUIRED: Reference genome length file, your data is based on - example) hg19.txt')
 req_args.add_argument('-r', dest='data_ratio', required=True,
                       help='REQUIRED: Downsampling ratio of your downsampled data - example) 16')
+req_args.add_argument('-o', dest='output_dir', required=True,
+                      help='REQUIRED: Directory for saving output - example) /HiHiC')
 
 args = parser.parse_args()
 input_data_dir = args.input_data_dir 
@@ -27,6 +29,7 @@ input_downsample_dir = args.input_downsample_dir
 model = args.model
 ref_chrom = args.ref_chrom
 data_ratio = args.data_ratio
+output_dir = args.output_dir
 print(f"\n\n\n...Start generating input data for {model} training...\nusing Hi-C data of {input_data_dir} and 1/{data_ratio} downsampled data of {input_downsample_dir}")
 
 
@@ -260,23 +263,19 @@ def hicplus_data_split(chrom_list):
 # 함수 실행
 hr_contacts_dict,lr_contacts_dict,nb_hr_contacts,nb_lr_contacts = hic_matrix_extraction()
 
+save_dir = f'{output_dir}/data_{model}/'
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)   
+
 # 모델이 원하는 포멧으로 저장
 if model == "DFHiC":
-    save_dir = './data_DFHiC/'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    print(f"\n.../data_{model} is in {path}!")    
     hr_mats_train,lr_mats_train,distance_train = DFHiC_data_split([f'chr{idx}' for idx in list(range(1,18))]) # train: 1~17
     hr_mats_test,lr_mats_test,distance_test = DFHiC_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test: 18~22
 
     np.savez(save_dir+f'train_data_raw_ratio{data_ratio}.npz', train_lr=lr_mats_train,train_hr=hr_mats_train,distance=distance_train)
     np.savez(save_dir+f'test_data_raw_ratio{data_ratio}.npz', test_lr=lr_mats_test,test_hr=hr_mats_test,distance=distance_test)
 
-elif model == "deepHiC":
-    save_dir = './data_DeepHiC/'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    print(f"\n.../data_{model} is in {path}!")        
+elif model == "deepHiC":      
     hr_mats_train,lr_mats_train,coordinates_train = DeepHiC_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train:1~15
     hr_mats_valid,lr_mats_valid,coordinates_valid = DeepHiC_data_split([f'chr{idx}' for idx in list(range(15,18))]) # valid:15~17
     hr_mats_test,lr_mats_test,coordinates_test = DeepHiC_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
@@ -291,11 +290,7 @@ elif model == "deepHiC":
     np.savez(save_dir+f'Train_and_Validation/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,size=size)
     np.savez(save_dir+f'Test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,size=size)
     
-elif model == "HiCARN":
-    save_dir = './data_HiCARN/'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    print(f"\n.../data_{model} is in {path}!")            
+elif model == "HiCARN":          
     hr_mats_train,lr_mats_train,coordinates_train = HiCARN_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train:1~14
     hr_mats_valid,lr_mats_valid,coordinates_valid = HiCARN_data_split([f'chr{idx}' for idx in list(range(15,18))]) # valid:15~17
     hr_mats_test,lr_mats_test,coordinates_test = HiCARN_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
@@ -310,11 +305,7 @@ elif model == "HiCARN":
     np.savez(save_dir+f'Train_and_Validation/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,size=size)
     np.savez(save_dir+f'Test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,size=size)
 
-elif model == "HiCNN":
-    save_dir = './data_HiCNN/'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    print(f"\n.../data_{model} is in {path}!")        
+elif model == "HiCNN":     
     hr_mats_train,lr_mats_train,hr_coordinates_train,lr_coordinates_train = HiCNN_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train:1~14
     hr_mats_valid,lr_mats_valid,hr_coordinates_valid,lr_coordinates_valid = HiCNN_data_split([f'chr{idx}' for idx in list(range(15,18))]) # valid:15~17
     # hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = HiCNN_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
@@ -328,11 +319,7 @@ elif model == "HiCNN":
     np.save(save_dir+f'index_valid_target', hr_coordinates_valid)
     np.save(save_dir+f'index_valid_data', lr_coordinates_valid)
     
-elif model == "SRHiC":
-    save_dir = './data_SRHiC/'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    print(f"\n.../data_{model} is in {path}!")    
+elif model == "SRHiC":  
     hr_mats_train,lr_mats_train = SRHiC_data_split([f'chr{idx}' for idx in list(range(1,18))]) # train: 1~17
     hr_mats_test,lr_mats_test = SRHiC_data_split([f'chr{idx}' for idx in list(range(18,23))]) # valid:15~17
 
@@ -344,10 +331,6 @@ elif model == "SRHiC":
     
 else:
     assert model == "hicplus"
-    save_dir = './data_hicplus/'
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-        
     hr_mats_train,lr_mats_train,hr_coordinates_train,lr_coordinates_train = hicplus_data_split([f'chr{idx}' for idx in list(range(1,18))]) # train:1~17
     hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = hicplus_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
 
@@ -360,4 +343,4 @@ else:
     np.save(save_dir+f'index_test_target', hr_coordinates_test)
     np.save(save_dir+f'index_test_data', lr_coordinates_test)  
     
-print(f"\n\n... Saved in ./data_{model}...")
+print(f"\n\n... Generated data is saved in {save_dir}...")
