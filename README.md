@@ -30,9 +30,16 @@ cd ../../HiHiC
 ```
 
 3. Generate input data of each deep leaning models
->This python code needs chromosome length file like **hg19.txt** in the same directory.
+>This python code needs chromosome length file like **hg19.txt** in the same directory. You also should specify required arguments as below.
+>```
+>-i : Hi-C data directory containing .txt files (directory of Hi-C contact pare files) - example) /hihic/data   
+>-d : Hi-C downsampled data directory containing .txt files (directory of Hi-C contact pare files) - example) /hihic/data_downsampled_16   
+>-m : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - example) DFHiC   
+>-g : Reference genome length file, your data is based on - example) hg19.txt'  
+>-r : Downsampling ratio of your downsampled data - example) 16
+>```
 ```
-python data_generate.py
+python data_generate.py -i ./data -d ./data_downsampled_16 -m DFHiC -g ./hg19.txt -r 16
 ```
 
 Ⅲ. Environment for each deep learning model
@@ -52,4 +59,4 @@ docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/h
 
 Ⅴ. Use to HiC contact map enhancement
 --------------------------------------
-> Without training and test, you can use pretrained models in our platform.
+> Without training, you can use pretrained models in our platform.
