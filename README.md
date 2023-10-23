@@ -14,9 +14,9 @@ git clone https://github.com/jkrLab/HiHiC.git
 ```
 docker run --rm --gpus all -it --name hihic_preprocess -v ${PWD}:${PWD} jkrlab/hihic_preprocess
 ```
-3. Make symbolic linc to Juicer tools in the workspace of docker
+3. Make symbolic linc Juicer tools in the workspace of docker to HiHiC directory
 ```
-ln -s /workspace/juicer_tools.jar /HiHiC-main/juicer_tools.jar
+ln -s /workspace/juicer_tools.jar /HiHiC-main
 ```
 
   
@@ -41,7 +41,7 @@ cd /HiHiC-main
 >-m : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - example) DFHiC   
 >-g : Reference genome length file, your data is based on - example) hg19.txt'  
 >-r : Downsampling ratio of your downsampled data - example) 16
->-o : Parent directory path for saving output
+>-o : Parent directory path for saving output (child directory named as model name will be generated under this)
 >```
 ```
 python data_generate.py -i ./data -d ./data_downsampled_16 -m DFHiC -g ./hg19.txt -r 16 -o ./
@@ -62,6 +62,6 @@ docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/h
 ---------------------
 
 
-Ⅴ. Use to HiC contact map enhancement
+Ⅴ. HiC contact map enhancement
 --------------------------------------
 > Without training, you can use pretrained models in our platform.
