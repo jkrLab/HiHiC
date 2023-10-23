@@ -41,7 +41,7 @@ cd /HiHiC-main
 >-m : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - example) DFHiC   
 >-g : Reference genome length file, your data is based on - example) hg19.txt'  
 >-r : Downsampling ratio of your downsampled data - example) 16
->-o : Parent directory path for saving output (child directory named as model name will be generated under this)
+>-o : Parent directory path for saving output (child directory named as the model name will be generated under this)
 >```
 ```
 python data_generate.py -i ./data -d ./data_downsampled_16 -m DFHiC -g ./hg19.txt -r 16 -o ./
