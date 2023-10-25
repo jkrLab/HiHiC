@@ -14,7 +14,7 @@ git clone https://github.com/jkrLab/HiHiC.git
 ```
 docker run --rm --gpus all -it --name hihic_preprocess -v ${PWD}:${PWD} jkrlab/hihic_preprocess
 ```
-3. Make symbolic linc Juicer tools in the workspace of docker to HiHiC directory
+3. Make symbolic link Juicer tools in the workspace of docker to HiHiC directory
 ```
 ln -s /workspace/juicer_tools.jar /HiHiC-main
 ```
@@ -34,14 +34,14 @@ cd /HiHiC-main
 ```
 
 3. Generate input data of each deep leaning models
->This python code needs chromosome length file like **hg19.txt** in the same directory. You also should specify required arguments as below.
+>This python code needs chromosome length file like **hg19.txt**. You also should specify **required arguments** as below.
 >```
->-i : Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) - example) /HiHiC-main/data   
->-d : Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) - example) /HiHiC-main/data_downsampled_16   
->-m : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - example) DFHiC   
->-g : Reference genome length file, your data is based on - example) hg19.txt'  
->-r : Downsampling ratio of your downsampled data - example) 16
->-o : Parent directory path for saving output (Child directory named as the model name will be generated under this.)
+>-i : Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) - (example) /HiHiC-main/data   
+>-d : Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) - (example) /HiHiC-main/data_downsampled_16   
+>-m : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - (example) DFHiC   
+>-g : Reference genome length file, your data is based on - (example) ./hg19.txt  
+>-r : Downsampling ratio of your downsampled data - (example) 16
+>-o : Parent directory path for saving output (Child directory named as the model name will be generated under this.) - (example) ./
 >```
 ```
 python data_generate.py -i ./data -d ./data_downsampled_16 -m DFHiC -g ./hg19.txt -r 16 -o ./

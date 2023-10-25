@@ -6,7 +6,7 @@ download_url="https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/sup
 file_name="GSM1551550_HIC001"
 chromosom_length="hg19"
 downsample_ratio="16"
-juicertools="../../workspace/juicer_tools.jar" # TODO: 절대 경로 잡아 넣기
+juicertools="./juicer_tools.jar" # path to juicer_tool.jar of docker image
 
 
 ### read data download ###

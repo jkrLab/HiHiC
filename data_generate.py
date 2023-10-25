@@ -11,17 +11,17 @@ random.seed(100)
 parser = argparse.ArgumentParser(description='Read Hi-C contact map and Divide submatrix for train and predict', add_help=True)
 req_args = parser.add_argument_group('Required Arguments')
 req_args.add_argument('-i', dest='input_data_dir', required=True,
-                      help='REQUIRED: Hi-C data directory containing .txt files (directory of Hi-C contact pares) - example) /HiHiC/data')
+                      help='REQUIRED: Hi-C data directory containing .txt files (Directory of Hi-C contact pares) ==== (example) /HiHiC-main/data ====')
 req_args.add_argument('-d', dest='input_downsample_dir', required=True,
-                      help='REQUIRED: Hi-C downsampled data directory containing .txt files (directory of downsampled Hi-C contact pares) - example) /HiHiC/data_downsampled_16')
+                      help='REQUIRED: Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pares) ==== (example) /HiHiC-main/data_downsampled_16 ====')
 req_args.add_argument('-m', dest='model', required=True, choices=['HiCARN', 'DeepHiC', 'HiCNN2', 'HiCSR', 'DFHiC', 'hicplus', 'SRHiC'],
-                      help='REQUIRED: Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - example) DFHiC')
+                      help='REQUIRED: Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) ==== (example) DFHiC ====')
 req_args.add_argument('-g', dest='ref_chrom', required=True,
-                      help='REQUIRED: Reference genome length file, your data is based on - example) hg19.txt')
+                      help='REQUIRED: Reference genome length file, your data is based on ==== (example) /HiHiC-main/hg19.txt ====')
 req_args.add_argument('-r', dest='data_ratio', required=True,
-                      help='REQUIRED: Downsampling ratio of your downsampled data - example) 16')
+                      help='REQUIRED: Downsampling ratio of your downsampled data ==== (example) 16 ====')
 req_args.add_argument('-o', dest='output_dir', required=True,
-                      help='REQUIRED: Directory for saving output - example) /HiHiC')
+                      help='REQUIRED: Parent directory path for saving output (Child directory named as the model name will be generated under this.) ==== (example) /HiHiC ====')
 
 args = parser.parse_args()
 input_data_dir = args.input_data_dir 

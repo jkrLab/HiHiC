@@ -1,0 +1,142 @@
+
+HiCNN2 is a computational tool for improving resolution of Hi-C contact matries. It contains three architectures: HiCNN2-1, HiCNN2-2, and HiCNN2-3.
+
+-------
+Install
+-------
+
+In order to use HiCNN2 to improve the resolution of your own Hi-C matrices, the following is required.
+
+requirements:
+Python 3.6
+numpy >1.14
+pytorch >0.4.0
+
+To install Python, numpy, and pytorch, We recommend Anaconda (https://www.anaconda.com/). CUDA (https://developer.nvidia.com/cuda-zone) is needed if you'd like to use GPU for acceleratoin.
+
+------
+Usage
+------
+
+The following six steps are an example of how we use HiCNN2 to improve the resolution of "HIC071" (one Hi-C sample) from GEO, GSE63525 at the resolution of 10 kb. 
+
+(1) download "HIC071" at ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551620/suppl/GSM1551620_HIC071_merged_nodups.txt.gz.
+
+(2) "gunzip GSM1551620_HIC071_merged_nodups.txt.gz" to get the txt file (GSM1551620_HIC071_merged_nodups.txt) of read pairs.
+
+(3) use the python script "get_chr_reads.py" to generate a Hi-C read-pair file for one chromosome: 
+"python get_chr_reads.py GSM1551620_HIC071_merged_nodups.txt 15 chr15.reads"
+
+"15", the second argument, is the chromosome ID of interest. 
+The Hi-C read-pair file for chromosome 15 "chr15.reads" can be found in the "data" folder.
+
+(4) generate the input of HiCNN2_predict using a python script: 
+
+"python get_HiCNN2_input.py chr15.reads 102531392 10000 chr15.subMats chr15.index"
+
+"chr15.reads" is the output file of step (3); 
+"102531392" is the length of chromosome 15; 
+"10000" is the resolution of interest; 
+"chr15.subMats" is the output submatrix file with shape (n*1*40*40);
+"chr15.index" is the output index file with shape (n*2) for us to rebuild the whole Hi-C matrix after running HiCNN2_predict.
+
+The two example files "chr15.subMats.npy" and "chr15.index.npy" can be found in the "data" folder.
+
+(5) run HiCNN2_predict
+
+Two examples:
+
+"python HiCNN2_predict.py -f1 data/chr15.subMats.npy -f2 data/chr15.subMats_HiCNN23_16 -mid 3 -m checkpoint/model_HiCNN23_16.pt -r 16"
+
+"python HiCNN2_predict.py -f1 data/chr15.subMats.npy -f2 data/chr15.subMats_HiCNN21_16 -mid 1 -m checkpoint/model_HiCNN21_16.pt -r 16"
+
+	"-f1" is followed by the input file generated in step (4). 
+	"-f2" is followed by the output file. 
+	"-mid 3" means that we are using HiCNN2-3. 
+	"-m" indicates the best model we want to use. We provide 6 checkpoint files in the "checkpoint" folder. The checkpoint files are named with the format "model_HiCNN2*_#.pt", where "*" may be 1/2/3 representing the three architectures and "#" may be 8/16/25 representing the three down sampling ratios (1/8, 1/16, and 1/25).
+
+
+(6) combine predicted sub-matrices to get a big predicted high-resolution Hi-C matrix for one chromosome.
+
+"python combine_subMats.py data/chr15.subMats_HiCNN23_16.npy data/chr15.index.npy 102531392 10000 data/chr15.predictedMat"
+
+"data/chr15.subMats_HiCNN23_16.npy" is from step (5).
+"data/chr15.index.npy" is from step(4).
+"102531392" is the chromosome length.
+"10000" is the resolution.
+"data/chr15.predictedMat" is the predicted high-resolution matrix for one chromosome (chr15).
+
+
+-------------
+For training:
+-------------
+
+python HiCNN2_training.py -h
+
+usage: HiCNN2_training.py [-h] -f1 FILE -f2 FILE -f3 FILE -f4 FILE -m N -d DIR
+                          -r N [--HiC-max N] [--batch-size N] [--epochs N]
+                          [--lr LR] [--momentum M] [--weight-decay M]
+                          [--clip M] [--no-cuda] [--seed S]
+
+HiCNN2 training process
+
+required arguments:
+  -f1 FILE, --file-training-data FILE
+                        file name of the training data, npy format and
+                        shape=n1*1*40*40
+  -f2 FILE, --file-training-target FILE
+                        file name of the training target, npy format and
+                        shape=n1*1*40*40
+  -f3 FILE, --file-validate-data FILE
+                        file name of the validation data, npy format and
+                        shape=n2*1*40*40
+  -f4 FILE, --file-validate-target FILE
+                        file name of the validation target, npy format and
+                        shape=n2*1*40*40
+  -m N, --model N       1:HiCNN2-1, 2:HiCNN2-2, and 3:HiCNN2-3 (default: 3)
+  -d DIR, --dir-models DIR
+                        directory for saving models
+  -r N, --down-ratio N  down sampling ratio, 16 means 1/16 (default: 16)
+
+optional arguments:
+  --HiC-max N           the maximum value of Hi-C contacts (default: 100)
+  --batch-size N        input batch size for training (default: 256)
+  --epochs N            number of epochs to train (default: 500)
+  --lr LR               initial learning rate (default: 0.1)
+  --momentum M          SGD momentum (default: 0.5)
+  --weight-decay M      weight-decay (default: 1e-4)
+  --clip M              clip (default: 0.01)
+  --no-cuda             disables CUDA training
+  --seed S              random seed (default: 1)
+
+----------------
+For prediction:
+----------------
+
+python HiCNN2_predict.py -h
+
+usage: HiCNN2_predict.py [-h] -f1 FILE -f2 FILE -mid N -m FILE -r N
+                         [--no-cuda] [--HiC-max N] [--batch-size N]
+
+HiCNN2 predicting process
+
+required arguments:
+  -f1 FILE, --file-test-data FILE
+                        file name of the test data, npy format and
+                        shape=n1*1*40*40
+  -f2 FILE, --file-test-predicted FILE
+                        file name to save the predicted target, npy format and
+                        shape=n1*1*28*28
+  -mid N, --model N     1:HiCNN2-1, 2:HiCNN2-2, and 3:HiCNN2-3 (default: 3)
+  -m FILE, --file-best-model FILE
+                        file name of the best model
+  -r N, --down-ratio N  down sampling ratio, 16 means 1/16 (default: 16)
+
+optional arguments:
+  --no-cuda             disables CUDA predicting
+  --HiC-max N           the maximum value of Hi-C contacts (default: 100)
+  --batch-size N        input batch size for test (default: 128)
+
+
+
+
