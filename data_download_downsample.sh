@@ -1,15 +1,27 @@
 #!/bin/bash
 seed=42
+
+# example
+# bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz GSM1551550_HIC001 hg19 16 ./juicer_tools.jar
+
 path=$(pwd)
+download_url=$1
+file_name=$2
+ref_genome=$3
+downsample_ratio=$4
+juicertools=$5
 
-download_url="https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz"
-file_name="GSM1551550_HIC001"
-chromosom_length="hg19"
-downsample_ratio="16"
-juicertools="./juicer_tools.jar" # path to juicer_tool.jar of docker image
-
+echo ""
+echo "  ...current working directory is $(pwd)"
+echo "      data_download_url = ${download_url}"
+echo "      file_name = ${file_name}"
+echo "      ref_genome = ${ref_genome}"
+echo "      downsample_ratio = ${downsample_ratio}"
+echo "      juicertools = ${juicertools}" # path to juicer_tool.jar of docker image
+echo ""
 
 ### read data download ###
+echo "  ...For download,"
 save_name="${file_name}.txt.gz"
 wget ${download_url} -O ${save_name} 
 
@@ -23,7 +35,8 @@ downsample_name=${path}/${file_name}_ds_${downsample_ratio}.txt.gz
 
 # 파일의 총 라인 수 가져오기
 total_lines=$(zcat "$file_path" | wc -l)
-echo "The number of total reads is ${total_lines}."
+echo ""
+echo "  ...The number of total reads is ${total_lines}."
 
 # downsample_ratio로 샘플링할 라인 수 계산
 sample_size=`expr ${total_lines} / ${downsample_ratio}`
@@ -33,21 +46,24 @@ temp_file=$(mktemp)
 
 # 원본 파일에서 중복 없이 무작위로 샘플링한 라인을 추출하여 임시 파일에 저장
 zcat "$file_path" | shuf -n "$sample_size" >> "$temp_file"
-echo "And ${sample_size} reads are randomly sampled."
+echo "  ...And ${sample_size} reads are randomly sampled."
 
 # 3번째와 7번째 컬럼(크로모좀) 기준으로 오름차순 정렬
 sort -k3,3d -k7,7 "$temp_file" | gzip > "${downsample_name}"
 rm "$temp_file"  # 임시 파일 삭제
-echo "Randomly sampled reads are saved: ${downsample_name}"
+echo "  ...Randomly sampled reads are saved: ${downsample_name}"
 
 
 ### .hic format ###
 # juicer pre 로 .hic 변환
-java -Xmx2g -jar ${juicertools} pre ${save_name} ./${file_name}.hic ${chromosom_length} # 원본 데이터
-echo "${file_name}.hic is generated."
+echo ""
+echo "  ...To hic,"
+java -Xmx2g -jar ${juicertools} pre ${save_name} ./${file_name}.hic ${ref_genome} # 원본 데이터
+echo "  ...${file_name}.hic is generated."
+echo ""
+java -Xmx2g -jar ${juicertools} pre ${downsample_name} ./${file_name}_ds_${downsample_ratio}.hic ${ref_genome} # 다운 샘플링 데이터
+echo "  ...${file_name}_ds_${downsample_ratio}.hic is generated."
 
-java -Xmx2g -jar ${juicertools} pre ${downsample_name} ./${file_name}_ds_${downsample_ratio}.hic ${chromosom_length} # 다운 샘플링 데이터
-echo "${file_name}_ds_${downsample_ratio}.hic is generated."
 
 ### .txt format for each chromosome (intra) ###
 # 크로모좀의 시작과 끝 숫자 설정
@@ -61,7 +77,8 @@ for ((chrom=1; chrom<end; chrom++))
 do
     java -jar ${juicertools} dump observed NONE ./${file_name}.hic ${chrom} ${chrom} BP 10000 ${path}/data/chr${chrom}_10kb.txt
 done
-echo "Intra chromosome contact matrix are generated: ./data/"
+echo ""
+echo "  ...Intra chromosome contact matrix are generated: ./data/"
 
 # 결과를 저장할 폴더 생성​​
 mkdir ${path}/data_downsampled_${downsample_ratio}
@@ -70,4 +87,5 @@ for ((chrom=1; chrom<end; chrom++))
 do
     java -jar ${juicertools} dump observed NONE ./${file_name}_ds_${downsample_ratio}.hic ${chrom} ${chrom} BP 10000 ${path}/data_downsampled_${downsample_ratio}/chr${chrom}_10kb.txt
 done
-echo "Downsampled contact matrix are generated: ./data_downsampled_${downsample_ratio}/"
+echo "  ...Downsampled contact matrix are generated: ./data_downsampled_${downsample_ratio}/"
+echo ""
