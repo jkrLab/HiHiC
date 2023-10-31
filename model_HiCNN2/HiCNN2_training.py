@@ -16,6 +16,17 @@ from model import model1
 from model import model2
 from model import model3
 
+# python HiCNN2_training.py 
+# -f1 /data/mohyelim7/intergrate_hihic_data/HiCNN/subMats_train_ratio16.npy
+# -f2 /data/mohyelim7/intergrate_hihic_data/HiCNN/subMats_train_target_ratio16.npy
+# -f3 /data/mohyelim7/intergrate_hihic_data/HiCNN/subMats_valid_ratio16.npy
+# -f4 /data/mohyelim7/intergrate_hihic_data/HiCNN/subMats_valid_target_ratio16.npy
+# -m3 -d ./checkpoint
+# -r 16
+# --no-cuda
+
+
+
 # get current learning rate
 def get_lr(optimizer):
 	for param_group in optimizer.param_groups:
@@ -53,9 +64,6 @@ def validate(model, device, validation_loader):
 			loss = criterion(output, target)
 			loss_sum = loss_sum + loss.item()
 	return loss_sum/i
-
-# python HiCNN2_training.py -f1 /data/mohyelim7/intergrate_hihic_data/HiCNN/subMats_train_ratio16.npy -f2 /data/mohyelim7/intergrate_hihic_data/HiCNN/subMats_train_target_ratio16.npy -f3 /data/mohyelim7/intergrate_hihic_data/HiCNN/subMats_valid_ratio16.npy -f4 /data/mohyelim7/intergrate_hihic_data/HiCNN/subMats_valid_target_ratio16.npy -m3 -d ./checkpoint -r 16 --no-cuda
-
 
 def main():
 	parser = argparse.ArgumentParser(description='HiCNN2 training process')

@@ -12,22 +12,31 @@ import hickle as hkl
 from skimage.measure import compare_mse
 from skimage.measure import compare_ssim
 
+
+##################################################################
+GPU_ID = 'cpu' #sys.argv[1]
+CHECKPOINT_PATH = './checkpoint' # sys.argv[2]
+# GRAPH_PATH = './graph' #sys.argv[3]
+BLOCK_SIZE = 40 # int(sys.argv[4])
+BATCH_SISE = 128 # int(sys.argv[5])  #128
+TRAIN_DATA = '/data/HiHiC/data_DFHiC/train_data_raw_ratio16.npz'
+##################################################################
+
+
 #GPU setting and Global parameters
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = 'cpu' #sys.argv[1]
-#checkpoint = "checkpoint"
-checkpoint = './checkpoint' # sys.argv[2]
-graph_dir = './graph' #sys.argv[3]
-block_size = 40 # sys.argv[4]
+os.environ["CUDA_VISIBLE_DEVICES"] = GPU_ID
+checkpoint = CHECKPOINT_PATH
+# graph_dir = GRAPH_PATH
+block_size = BLOCK_SIZE
 tl.global_flag['mode']='DFHiC'
 tl.files.exists_or_mkdir(checkpoint)
-tl.files.exists_or_mkdir(graph_dir)
-batch_size = 128 # int(sys.argv[5])  #128
+# tl.files.exists_or_mkdir(graph_dir)
+batch_size = BATCH_SISE
 lr_init = 1e-4
 
 beta1 = 0.9
-#n_epoch_init = 100
-n_epoch_init = 1
+n_epoch_init = 100
 n_epoch = 500
 lr_decay = 0.1
 decay_every = int(n_epoch / 2)
@@ -43,8 +52,7 @@ def calculate_ssim(mat1,mat2):
     data_range=np.max(mat1)-np.min(mat1)
     return compare_ssim(mat1,mat2,data_range=data_range)
 
-# train_data=np.load("preprocess/data/GM12878/train_data_raw_ratio16.npz")
-train_data=np.load('/data/mohyelim7/intergrate_hihic_data/DFHiC/train_data_raw_ratio16.npz')
+train_data=np.load(TRAIN_DATA)
 lr_mats_full=train_data['train_lr']
 hr_mats_full=train_data['train_hr']
 
@@ -96,13 +104,13 @@ with tf.variable_scope('learning_rate'):
 g_optim = tf.train.AdamOptimizer(lr_v, beta1=beta1).minimize(l1_loss, var_list=g_vars)
 
 #summary variables
-merged_summary = tf.summary.scalar("l1_loss", l1_loss)
+# merged_summary = tf.summary.scalar("l1_loss", l1_loss)
 
 sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=False))
 tl.layers.initialize_global_variables(sess)
 
 #record variables for TensorBoard visualization
-summary_writer=tf.summary.FileWriter('%s'%graph_dir,graph=tf.get_default_graph())
+# summary_writer=tf.summary.FileWriter('%s'%graph_dir,graph=tf.get_default_graph())
 
 wait=0
 patience=20
@@ -137,24 +145,24 @@ for epoch in range(0, n_epoch + 1):
         hr_mats_pre[batch_size*i:batch_size*(i+1)] = sess.run(net_test.outputs, {t_matrix: lr_mats_valid[batch_size*i:batch_size*(i+1)]})
     hr_mats_pre[batch_size*(i+1):] = sess.run(net_test.outputs, {t_matrix: lr_mats_valid[batch_size*(i+1):]})
     mse_val=np.median(list(map(compare_mse,hr_mats_pre[:,:,:,0],hr_mats_valid[:,:,:,0])))
-    if mse_val < best_mse_val:
-        wait=0
-        best_mse_val = mse_val
-        #save the model with minimal MSE in validation samples
-        tl.files.save_npz(net.all_params, name=checkpoint + '/{}_best.npz'.format(tl.global_flag['mode']), sess=sess)
-        best_epoch=epoch
-        # np.savetxt(checkpoint + 'best_epoch.txt',np.array(best_epoch))
-    else:
-        wait+=1
-        if wait >= patience:
-            print("Early stopping! The validation median mse is %.6f\n"%best_mse_val)
-            #sys.exit() 
+    # if mse_val < best_mse_val:
+    #     wait=0
+    #     best_mse_val = mse_val
+    #     #save the model with minimal MSE in validation samples
+    #     tl.files.save_npz(net.all_params, name=checkpoint + '/{}_best.npz'.format(tl.global_flag['mode']), sess=sess)
+    #     best_epoch=epoch
+    #     np.savetxt(checkpoint + 'best_epoch.txt',np.array(best_epoch))
+    # else:
+    #     wait+=1
+    #     if wait >= patience:
+    #         print("Early stopping! The validation median mse is %.6f\n"%best_mse_val)
+    #         sys.exit() 
 
     log = "[*] Epoch: [%2d/%2d] time: %4.4fs, valid_mse:%.8f\n" % (epoch, n_epoch, time.time() - epoch_time,mse_val)
     print(log)
     #record variables for TensorBoard visualization
-    summary=sess.run(merged_summary,{t_matrix: b_mats_input, t_target_matrix: b_mats_target})
-    summary_writer.add_summary(summary, epoch)
+    # summary=sess.run(merged_summary,{t_matrix: b_mats_input, t_target_matrix: b_mats_target})
+    # summary_writer.add_summary(summary, epoch)
     
 print("epoch")
 print(best_epoch)

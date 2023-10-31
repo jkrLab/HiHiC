@@ -27,13 +27,16 @@ ln -s /workspace/juicer_tools.jar /path/to/HiHiC/directory
 cd /path/to/HiHiC/directory
 ```
 2. Prepare HiC-sequencing read data and randomly sample reads for low resolution data
->We download and process GM12879 cell line, which is aligned based on hg19.
->You can modify options, **data download url, file name, reference genome, downsampling ratio**, and **path of juicer tools** in bash script, as you need.
->If you put this argments in command line, these should be put in order.
 ```
 bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz GSM1551550_HIC001 hg19 16 ./juicer_tools.jar
 ```
+>We download and process GM12879 cell line, which is aligned based on hg19.
+>You can modify options, **data download url, file name, reference genome, downsampling ratio**, and **path of juicer tools** in bash script, as you need.
+>If you put this argments in command line, these should be put in order.
 3. Generate input data of each deep leaning models
+```
+python data_generate.py -i ./data -d ./data_downsampled_16 -m DFHiC -g ./hg19.txt -r 16 -o ./
+```
 >This python code needs chromosome length .txt file of reference genome like **hg19.txt** in HiHiC directory. You also should specify **required argments** as below.
 >```
 >-i : Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) - (example) /HiHiC/data   
@@ -43,9 +46,7 @@ bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM155
 >-r : Downsampling ratio of your downsampled data - (example) 16
 >-o : Parent directory path for saving output (Child directory named as the model name will be generated under this.) - (example) ./
 >```
-```
-python data_generate.py -i ./data -d ./data_downsampled_16 -m DFHiC -g ./hg19.txt -r 16 -o ./
-```
+
 
 Ⅲ. Environment for each deep learning model
 --------------------------------------------
@@ -60,9 +61,15 @@ docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/h
 
 Ⅳ. Training and Test
 --------------------- 
->The model codes were downloaded from github of the each author. For lightening storage, pretrained weights were removed. You also should specified required argments of the model you want.
-```
-```
+> You should specified required argments of the model you want. The model codes were downloaded from github of the each author. For lightening storage, pretrained weights and data were removed.
+>```
+>-g : Number of gpu for training
+>-i : Hi-C data directory containig numpy matrix files (Directory of Hi-C matrix for training input)
+>-m : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC)
+>-e : Number of train epoch
+>-o : Directory to save training weight (Directory for saving pretrained model)
+>-p : Directory to save training performance
+>```
 
 Ⅴ. HiC contact map enhancement
 --------------------------------------

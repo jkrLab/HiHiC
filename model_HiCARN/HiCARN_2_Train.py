@@ -9,9 +9,31 @@ from Models.HiCARN_2 import Generator, Discriminator
 from Models.HiCARN_2_Loss import GeneratorLoss
 from Utils.SSIM import ssim
 from math import log10
-from Arg_Parser import root_dir
+
+
+##################################################################
+
+import datetime
+
+ROOT_DIR = './'
+OUT_DIR = os.path.join(ROOT_DIR, 'HiCARN2_checkpoints')
+TRAN_FILE = '/data/HiHiC/data_HiCARN/Train_and_Validation/train_ratio16.npz'
+VALID_FILE = '/data/mohyelim7/intergrate_hihic_data/HiCARN/Train_and_Validation/valid_ratio16.npz'
+NUM_EPOCHS = 100
+BATCH_SIZE = 64
+
+start = time.time()
+
+train_epoch = [] 
+train_loss = []
+train_time = []
+
+##################################################################
+
 
 cs = np.column_stack
+
+root_dir = ROOT_DIR
 
 
 def adjust_learning_rate(epoch):
@@ -20,24 +42,17 @@ def adjust_learning_rate(epoch):
 
 
 # data_dir: directory storing processed data
-data_dir = os.path.join(root_dir, 'data')
+data_dir = DATA_DIR
 
 # out_dir: directory storing checkpoint files
-out_dir = os.path.join(root_dir, 'checkpoints')
+out_dir = OUT_DIR
 os.makedirs(out_dir, exist_ok=True)
 
 datestr = time.strftime('%m_%d_%H_%M')
 visdom_str = time.strftime('%m%d')
 
-resos = '10kb40kb'
-chunk = 40
-stride = 40
-bound = 201
-pool = 'nonpool'
-name = 'HiCARN_2'
-
-num_epochs = 100
-batch_size = 64
+num_epochs = NUM_EPOCHS
+batch_size = BATCH_SIZE
 
 # whether using GPU for training
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -45,8 +60,8 @@ print("CUDA avalable?", torch.cuda.is_available())
 print("Device being used: ", device)
 
 # prepare training dataset
-train_file = os.path.join(data_dir, f'hicarn_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_train.npz')
-train = np.load(train_file)
+train_file = TRAN_FILE
+train = np.load(train_file, allow_pickle=True)
 
 train_data = torch.tensor(train['data'], dtype=torch.float)
 train_target = torch.tensor(train['target'], dtype=torch.float)
@@ -55,8 +70,8 @@ train_inds = torch.tensor(train['inds'], dtype=torch.long)
 train_set = TensorDataset(train_data, train_target, train_inds)
 
 # prepare valid dataset
-valid_file = os.path.join(data_dir, f'hicarn_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_valid.npz')
-valid = np.load(valid_file)
+valid_file = VALID_FILE
+valid = np.load(valid_file, allow_pickle=True)
 
 valid_data = torch.tensor(valid['data'], dtype=torch.float)
 valid_target = torch.tensor(valid['target'], dtype=torch.float)
@@ -204,10 +219,26 @@ for epoch in range(1, num_epochs + 1):
     if now_ssim > best_ssim:
         best_ssim = now_ssim
         print(f'Now, Best ssim is {best_ssim:.6f}')
-        best_ckpt_file = f'{datestr}_bestg_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_{name}.pytorch'
+        best_ckpt_file = f'{datestr}_bestg.pytorch'
         torch.save(netG.state_dict(), os.path.join(out_dir, best_ckpt_file))
 
-
+    ##################################################################
+        
+    if epoch%10 == 0:
+        sec = time.time()-start
+        times = str(datetime.timedelta(seconds=sec))
+        short = times.split(".")[0]
+            
+        train_epoch.append(epoch)
+        train_time.append(short)        
+        train_loss.append(now_ssim)
+        
+        ckpt_file = f"{epoch}_{short}.pytorch"
+        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file))
+    
+    ##################################################################
+    
+    
 ######### Uncomment to track scores across epochs #########
 # ssim_scores = ssim_scores.cpu()
 # psnr_scores = psnr_scores.cpu()
@@ -224,8 +255,10 @@ for epoch in range(1, num_epochs + 1):
 # np.savetxt(f'valid_mse_scores_{name}', X=mse_scores, delimiter=',')
 # np.savetxt(f'valid_mae_scores_{name}', X=mae_scores, delimiter=',')
 
-final_ckpt_g = f'{datestr}_finalg_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_{name}.pytorch'
-final_ckpt_d = f'{datestr}_finald_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_{name}.pytorch'
+final_ckpt_g = f'{datestr}_finalg.pytorch'
+final_ckpt_d = f'{datestr}_finald.pytorch'
 
 torch.save(netG.state_dict(), os.path.join(out_dir, final_ckpt_g))
 torch.save(netD.state_dict(), os.path.join(out_dir, final_ckpt_d))
+
+np.save("HiCARN2_time_loss.npy", [train_epoch, train_time, train_loss])

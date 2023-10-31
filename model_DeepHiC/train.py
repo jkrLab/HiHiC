@@ -1,6 +1,6 @@
 import os
 import time
-# import visdom ###################### install
+# import visdom 
 import numpy as np
 from tqdm import tqdm
 
@@ -16,37 +16,36 @@ from math import log10
 
 from all_parser import root_dir
 
+
+##################################################################
+
+DATA_DIR = os.path.join(root_dir, 'data')
+OUT_DIR = os.path.join(root_dir, 'checkpoints')
+TRAIN_FILE = '/data/mohyelim7/intergrate_hihic_data/DeepHiC/Train_and_Validation/train_ratio16.npz'
+VALID_FILE = '/data/mohyelim7/intergrate_hihic_data/DeepHiC/Train_and_Validation/valid_ratio16.npz'
+
+##################################################################
+
+
 cs = np.column_stack
 
 torch.autograd.set_detect_anomaly(True) ######### 코드 점검
 # data_dir: directory storing processed data
-data_dir = os.path.join(root_dir, 'data')
+data_dir = DATA_DIR
 
 # out_dir: directory storing checkpoint files
-out_dir = os.path.join(root_dir, 'checkpoints')
+out_dir = OUT_DIR
 os.makedirs(out_dir, exist_ok=True)
 
 datestr = time.strftime('%m_%d_%H_%M')
 # visdom_str=time.strftime('%m%d')
 
-resos = '10kb40kb'
-chunk = 40
-stride = 40
-bound = 201
-pool = 'nonpool'
-
-upscale = 1
-num_epochs = 200
-batch_size = 64
 
 # whether using GPU for training
-# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu') ###################### 버전이 안 맞아서 일단 'cpu'
-device = 'cpu'
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # prepare training dataset
-# train_file = os.path.join(data_dir, f'deephic_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_train.npz') ######################
-train_file = '/data/mohyelim7/intergrate_hihic_data/DeepHiC/Train_and_Validation/train_ratio16.npz' 
-# train = np.load(train_file) #################
+train_file = TRAIN_FILE 
 train = np.load(train_file, allow_pickle=True)
 
 train_data = torch.tensor(train['data'], dtype=torch.float)
@@ -56,9 +55,7 @@ train_inds = torch.tensor(train['inds'], dtype=torch.long)
 train_set = TensorDataset(train_data, train_target, train_inds)
 
 # prepare valid dataset
-# valid_file = os.path.join(data_dir, f'deephic_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_valid.npz') ######################
-valid_file = '/data/mohyelim7/intergrate_hihic_data/DeepHiC/Train_and_Validation/valid_ratio16.npz'
-# valid = np.load(valid_file) ##############
+valid_file = VALID_FILE
 valid = np.load(valid_file, allow_pickle=True) 
 
 valid_data = torch.tensor(valid['data'], dtype=torch.float)
@@ -119,7 +116,7 @@ for epoch in range(1, num_epochs+1):
         g_loss = criterionG(fake_out.mean(), fake_img, real_img)
         g_loss.backward()
         
-        # optimizerD.step() ############# github에 issue about training step 참고 수정
+        # optimizerD.step() ############# github에 issue about training step 참고 수정함
         optimizerG.step()
 
         run_result['g_loss'] += g_loss.item() * batch_size
@@ -191,8 +188,7 @@ for epoch in range(1, num_epochs+1):
         # best_ckpt_file = f'{datestr}_bestg_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_deephic.pytorch' ######################
         best_ckpt_file = f'{datestr}_bestg_deephic.pytorch'
         torch.save(netG.state_dict(), os.path.join(out_dir, best_ckpt_file))
-# final_ckpt_g = f'{datestr}_finalg_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_deephic.pytorch' ######################
-# final_ckpt_d = f'{datestr}_finald_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_deephic.pytorch' ######################
+
 final_ckpt_g = f'{datestr}_finalg_deephic.pytorch'
 final_ckpt_d = f'{datestr}_finald_deephic.pytorch'
 
