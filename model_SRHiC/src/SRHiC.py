@@ -8,11 +8,13 @@ import numpy as np
 import os
 
 import random
+import time, datetime
+LOSS_LOG = 'train_loss_SRHiC.npy'
 
 # params
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
-epoch_size = 256
+epoch_size = 10
 
 
 def res_block(_input, feature_size=32):
@@ -30,6 +32,14 @@ def model(train_input_dir,
           feature_size=32,
           iterations_size=10,
           ):
+    ##################################################################
+    start = time.time()
+
+    train_epoch = [] 
+    train_loss = []
+    train_time = []
+    ##################################################################
+
     input_x = tf.placeholder(tf.float32, [None, 40, 40, 1], name="input_x")
     input_y = tf.placeholder(tf.float32, [None, 28, 28, 1], name="input_y")
 
@@ -57,7 +67,7 @@ def model(train_input_dir,
     tf.summary.scalar("loss", loss)
     tf.summary.scalar("pearson", pearson)
 
-    Saver = tf.train.Saver(tf.global_variables(), max_to_keep=3)
+    Saver = tf.train.Saver(tf.global_variables(), max_to_keep=50)
     if not os.path.exists(saver_dir):
         os.mkdir(saver_dir)
 
@@ -79,72 +89,87 @@ def model(train_input_dir,
 
         train_writer = tf.summary.FileWriter(saver_dir + "/train", sess.graph)
 
-        # input_list = os.listdir(train_input_dir)
-        input_list =["/data/mohyelim7/intergrate_hihic_data/SRHiC/train_data_raw_ratio16.npy"]
+        input_list = os.listdir(train_input_dir)
         mean_valid_loss = 1e6 #Initialize to a very large value
-        try:
-            for epoch in range(iterations_size):
-                for file in input_list:
-                    # x = np.load(train_input_dir + file).astype(np.float32)
-                    x = np.load("/data/mohyelim7/intergrate_hihic_data/SRHiC/train_data_raw_ratio16.npy").astype(np.float32)
-                    x = np.reshape(x, [x.shape[0], 40, 68, 1])
-                    size_input = int(x.shape[0] / epoch_size) + 1
-                    np.random.shuffle(x)
-                    total_loss = 0  # Total loss per iteration
-                    for i in range(size_input):
-                        if i * epoch_size + epoch_size <= x.shape[0]:
-                            input = x[i * epoch_size:i * epoch_size + epoch_size, :, 0:40]
-                            truth = x[i * epoch_size:i * epoch_size + epoch_size, 0:28, 40:68]
-                            Loss, Pearson, Merged, Step, _ = sess.run(
-                                [loss, pearson, merged, step_op, train_op],
-                                feed_dict={input_x: input,
-                                           input_y: truth,})
-
-                            train_writer.add_summary(Merged, Step)
-                            total_loss += Loss
-                            if Step % 10 == 1:
-                                print("in the %sth iteration  %sth step" % (epoch, Step), " the training loss is  ",
-                                      Loss)
-                                print("in the %sth iteration  %sth step" % (epoch, Step),
-                                      " the training pearson is  ",
-                                      Pearson)
-                            if Step % 50 == 1 and epoch >= 10:
-                                Saver.save(sess, saver_dir + '/model/', global_step=step)
-                    print("the train file {0}  the train mean loss is {1}".format(file, total_loss / size_input))
-
-                if epoch > 20 and epoch % 5 == 2:
-                    # valid_file = os.listdir(valid_input_dir)
-                    # valid_file = valid_input_dir + valid_file[0]
-                    valid_file = '/data/mohyelim7/intergrate_hihic_data/SRHiC/valid_data_raw_ratio16.npy'
-                    x = np.load(valid_file).astype(np.float32)
-                    x = np.reshape(x, [x.shape[0], 40, 68, 1])
-                    size_input = int(x.shape[0] / epoch_size) + 1
-                    np.random.shuffle(x)
-                    valid_total_loss = 0
-                    for i in range(size_input - 1):
+        # try:
+        for epoch in range(iterations_size+1):
+            for file in input_list:
+                x = np.load(train_input_dir + file).astype(np.float32)
+                x = np.reshape(x, [x.shape[0], 40, 68, 1])
+                size_input = int(x.shape[0] / epoch_size) + 1
+                np.random.shuffle(x)
+                total_loss = 0  # Total loss per iteration
+                for i in range(size_input):
+                    if i * epoch_size + epoch_size <= x.shape[0]:
                         input = x[i * epoch_size:i * epoch_size + epoch_size, :, 0:40]
                         truth = x[i * epoch_size:i * epoch_size + epoch_size, 0:28, 40:68]
-                        Loss, Pearson, _ = sess.run(
-                            [loss, pearson, train_op],
+                        Loss, Pearson, Merged, Step, _ = sess.run(
+                            [loss, pearson, merged, step_op, train_op],
                             feed_dict={input_x: input,
-                                       input_y: truth})
-                        valid_total_loss += Loss
-                        print("in the %sth iteration  %sth step" % (epoch, Step),
-                              "the validing the loss is  ", Loss)
-                        print("in the %sth iteration  %sth step" % (epoch, Step),
-                              " the validing pearson is  ", Pearson)
+                                        input_y: truth,})
 
-                    temp_mean_valid_loss = valid_total_loss / size_input
-                    print(temp_mean_valid_loss)
-                    if temp_mean_valid_loss > mean_valid_loss:
-                        raise Exception("error is small!")
-                    mean_valid_loss = temp_mean_valid_loss
+                        train_writer.add_summary(Merged, Step)
+                        total_loss += Loss
+                        if Step % 10 == 1:
+                            print("in the %sth iteration  %sth step" % (epoch, Step), " the training loss is  ",
+                                    Loss)
+                            print("in the %sth iteration  %sth step" % (epoch, Step),
+                                    " the training pearson is  ",
+                                    Pearson)
+                        # if Step % 50 == 1 and epoch >= 10:
+                        #     Saver.save(sess, saver_dir + '/model/', global_step=step)
+                print("the train file {0}  the train mean loss is {1}".format(file, total_loss / size_input))
 
-        except Exception as e:
-            print(e)
-        finally:
-            Saver.save(sess, saver_dir + '/model/', global_step=step)
-            print("training is over...")
+            if epoch > 20 and epoch % 5 == 2:
+                valid_file = os.listdir(valid_input_dir)
+                valid_file = valid_input_dir + valid_file[0]
+                x = np.load(valid_file).astype(np.float32)
+                x = np.reshape(x, [x.shape[0], 40, 68, 1])
+                size_input = int(x.shape[0] / epoch_size) + 1
+                np.random.shuffle(x)
+                valid_total_loss = 0
+                for i in range(size_input - 1):
+                    input = x[i * epoch_size:i * epoch_size + epoch_size, :, 0:40]
+                    truth = x[i * epoch_size:i * epoch_size + epoch_size, 0:28, 40:68]
+                    Loss, Pearson, _ = sess.run(
+                        [loss, pearson, train_op],
+                        feed_dict={input_x: input,
+                                    input_y: truth})
+                    valid_total_loss += Loss
+                    print("in the %sth iteration  %sth step" % (epoch, Step),
+                            "the validing the loss is  ", Loss)
+                    print("in the %sth iteration  %sth step" % (epoch, Step),
+                            " the validing pearson is  ", Pearson)
+
+                temp_mean_valid_loss = valid_total_loss / size_input
+                print(temp_mean_valid_loss)
+                # if temp_mean_valid_loss > mean_valid_loss:
+                #     raise Exception("error is small!")
+                mean_valid_loss = temp_mean_valid_loss
+
+            ##################################################################            
+            if epoch%10 == 0:
+                sec = time.time()-start
+                times = str(datetime.timedelta(seconds=sec))
+                short = times.split(".")[0].replace(':','.')
+                    
+                train_epoch.append(epoch)
+                train_time.append(short)        
+                train_loss.append(f"{mean_valid_loss:.2f}")
+                
+                ckpt_file = f"{str(epoch).zfill(5)}_{short}"
+                Saver.save(sess, os.path.join(saver_dir, ckpt_file), write_meta_graph=False)
+            ##################################################################
+                    
+        # except Exception as e:
+        #     print(e)
+        # finally:
+        #     Saver.save(sess, saver_dir + '/model/', global_step=step)
+        #     print("training is over...")
+            
+    ##################################################################        
+    np.save(LOSS_LOG, [train_epoch, train_time, train_loss])
+    ##################################################################
 
 
 

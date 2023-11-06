@@ -239,7 +239,7 @@ def hicplus_data_split(chrom_list):
     assert len(chrom_list)>0
     hr_mats,lr_mats,hr_coordinates,lr_coordinates=[],[],[],[]
     for chrom in chrom_list:
-        crop_mats_hr,crop_mats_lr,distance,coordinates_hr,coordinates_lr = crop_hic_matrix_by_chrom(chrom,size=28,for_model='hicplus',thred=200)
+        crop_mats_hr,crop_mats_lr,distance,coordinates_hr,coordinates_lr = crop_hic_matrix_by_chrom(chrom,size=40,for_model='hicplus',thred=200)
         distance_all+=distance
         hr_mats.append(crop_mats_hr)
         lr_mats.append(crop_mats_lr)

@@ -7,7 +7,8 @@ import numpy as np
 import pickle
 import os
 import gzip
-from hicplus import model
+# from hicplus 
+import model
 from torch.utils import data
 import torch
 import torch.optim as optim
@@ -16,8 +17,7 @@ from time import gmtime, strftime
 import sys
 import torch.nn as nn
 import argparse
-
-
+import os, time, datetime
 
 
 use_gpu = 1
@@ -31,9 +31,9 @@ conv2d3_filters_size = 5
 
 
 down_sample_ratio = 16
-epochs = 10
+epochs = 500 # 10
 HiC_max_value = 100
-batch_size = 512
+batch_size = 64 # 512
 
 
 # This block is the actual training data used in the training. The training data is too large to put on Github, so only toy data is used.
@@ -55,8 +55,24 @@ batch_size = 512
 #high_resolution_samples = np.load(gzip.GzipFile('/home/zhangyan/SRHiC_samples/original10k/_IMR90_HindIII_original_chr1_8.npy.gz', "r")).astype(np.float32)
 
 def train(lowres,highres, outModel):
-    low_resolution_samples = lowres.astype(np.float32) * down_sample_ratio
+    
+    ##################################################################
 
+    ROOT_DIR = './'
+    os.chdir(ROOT_DIR)
+    LOSS_LOG = 'train_loss_hicplus.npy'
+
+    start = time.time()
+
+    train_epoch = [] 
+    train_loss = []
+    train_time = []
+
+    os.makedirs(outModel, exist_ok=True)
+
+    ##################################################################
+    
+    low_resolution_samples = lowres.astype(np.float32) * down_sample_ratio
     high_resolution_samples = highres.astype(np.float32)
 
     low_resolution_samples = np.minimum(HiC_max_value, low_resolution_samples)
@@ -99,7 +115,7 @@ def train(lowres,highres, outModel):
 
     # write the log file to record the training process
     with open('HindIII_train.txt', 'w') as log:
-        for epoch in range(0, 3500):
+        for epoch in range(0, 501): # 3500
             for i, (v1, v2) in enumerate(zip(lowres_loader, hires_loader)):
                 if (i == len(lowres_loader) - 1):
                     continue
@@ -120,6 +136,20 @@ def train(lowres,highres, outModel):
                 optimizer.step()
 		
                 running_loss += loss.item()
+
+            ##################################################################                
+            if epoch%10 == 0:
+                sec = time.time()-start
+                times = str(datetime.timedelta(seconds=sec))
+                short = times.split(".")[0].replace(':','.')
+                    
+                train_epoch.append(epoch)
+                train_time.append(short)        
+                train_loss.append(f"{running_loss/i:.2f}")
+                
+                ckpt_file = f"{str(epoch).zfill(5)}_{short}"
+                torch.save(Net.state_dict(), os.path.join(outModel, ckpt_file))            
+            ##################################################################
         
         print('-------', i, epoch, running_loss/i, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 	
@@ -127,6 +157,11 @@ def train(lowres,highres, outModel):
         running_loss = 0.0
         running_loss_validate = 0.0
 	# save the model every 100 epoches
-        if (epoch % 100 == 0):
-            torch.save(Net.state_dict(), outModel + str(epoch) + str('.model'))
-        pass
+        # if (epoch % 100 == 0):
+        #     torch.save(Net.state_dict(), outModel + str(epoch) + str('.model'))
+        # pass
+    
+    ##################################################################    
+    np.save(LOSS_LOG, [train_epoch, train_time, train_loss])        
+    ##################################################################
+    

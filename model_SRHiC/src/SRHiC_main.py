@@ -6,30 +6,44 @@ import SRHiC
 import tensorflow as tf
 
 
+##################################################################
+
+import os
+
+ROOT_DIR = './'
+OUT_DIR = os.path.join(ROOT_DIR, 'checkpoints_SRHiC')
+TRAIN_DIR = "/data/HiHiC-main/data_SRHiC/train/"
+VALID_DIR = "/data/HiHiC-main/data_SRHiC/valid/"
+NUM_EPOCHS = 500
+TRAIN = 'train'
+
+##################################################################
+
+
 
 sess = tf.compat.v1.Session()
 
 # paramers
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer("iterations_size", 200, " ")
+tf.app.flags.DEFINE_integer("iterations_size", NUM_EPOCHS, " ")
 tf.app.flags.DEFINE_integer("feature_size", 32, "")
 tf.app.flags.DEFINE_float("epsilon",1e-6," ")
 
 # tf.app.flags.DEFINE_string("train_input_dir","Please enter your input data folder path/"," ")
-tf.app.flags.DEFINE_string("train_input_dir","/data/mohyelim7/intergrate_hihic_data/SRHiC/train_data_raw_ratio16.npy"," ")
+tf.app.flags.DEFINE_string("train_input_dir",TRAIN_DIR," ")
 
 # tf.app.flags.DEFINE_string("valid_input_dir", "Please enter your valid data folder path/"," ")
-tf.app.flags.DEFINE_string("valid_input_dir", "/data/mohyelim7/intergrate_hihic_data/SRHiC/valid_data_raw_ratio16.npy"," ")
+tf.app.flags.DEFINE_string("valid_input_dir", VALID_DIR," ")
 
 # tf.app.flags.DEFINE_string("SRHiC_saver_dir","Please enter your model-saver folder path/"," ")
-tf.app.flags.DEFINE_string("SRHiC_saver_dir","/data/mohyelim7/SRHiC-master/model/"," ")
+tf.app.flags.DEFINE_string("SRHiC_saver_dir",OUT_DIR," ")
 
 
 # # tf.app.flags.DEFINE_string("test_input_dir","Please enter your test input data folder path/"," ")
-# tf.app.flags.DEFINE_string("test_input_dir","/data/mohyelim7/SRHiC-master/data/GM12878_combined_10_kb_16_chr21_test.npy"," ")
+# tf.app.flags.DEFINE_string("test_input_dir",""," ")
 
 # tf.app.flags.DEFINE_string("SRHiC_checkpoint_dir","Please enter your model-saver folder path/model"," ")
-tf.app.flags.DEFINE_string("SRHiC_checkpoint_dir","/data/mohyelim7/SRHiC-master/model/"," ")
+# tf.app.flags.DEFINE_string("SRHiC_checkpoint_dir",OUT_DIR," ")
 
 
 
@@ -52,6 +66,6 @@ def main(training):
         )
 
 if __name__ == '__main__':
-    # main(training=False)
-    main(training=True)
+    if TRAIN == 'train':
+        main(training=True)
     pass

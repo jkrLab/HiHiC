@@ -8,37 +8,37 @@ HiHiC
 ------------------------------------
 1. Clone HiHiC repository
 ```
-git clone HiHiC
+git clone jkrLab/HiHiC
 ```
 2. Run the docker image for data processing
 ```
 docker run --rm --gpus all -it --name hihic_preprocess -v ${PWD}:${PWD} jkrlab/hihic_preprocess
 ```
 >Every docker image should be run in the parent directory of HiHiC.
-3. Make symbolic link Juicer tools in the workspace of docker to HiHiC directory
+3. Make a symbolic link to Juicer tools in the docker workspace to the HiHiC directory
 ```
-ln -s /workspace/juicer_tools.jar /path/to/HiHiC/directory
+ln -s /workspace/juicer_tools.jar /path/to/HiHiC/directory/
 ```
 
   
-Ⅱ. Data generation for each deep learning models
+Ⅱ. Data generation for each deep learning model
 -------------------------------------------------
 1. Change your working directory to HiHiC
 ```
 cd /path/to/HiHiC/directory
 ```
-2. Prepare HiC-sequencing read data and randomly sample reads for low resolution data
+2. Prepare HiC-sequencing data and randomly sample for making low-resolution data
 ```
 bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz GSM1551550_HIC001 hg19 16 ./juicer_tools.jar
 ```
 >We download and process GM12879 cell line, which is aligned based on hg19.
->You can modify argments, **data download url, file name, reference genome, downsampling ratio**, and **path of juicer tools** in bash script, as you need.
->If you put this argments in command line, these should be put in order as above.
-3. Generate input data of each deep leaning models
+>You can modify arguments, **data download URL, file name, reference genome, downsampling ratio**, and **path of juicer tools** in the bash script, as you need. 
+>If you put these arguments in the command line, these should be placed in the order as above: data download URL, saving file name, reference genome, downsampling ratio, path of juicer tools
+3. Generate input data for each deep learning model
 ```
 python data_generate.py -i ./data -d ./data_downsampled_16 -m DFHiC -g ./hg19.txt -r 16 -o ./
 ```
->This python code needs chromosome length .txt file of reference genome like **hg19.txt** in HiHiC directory. You also should specify **required argments** as below.
+>You should specify **required arguments** as above. This Python code needs a chromosome length of reference genome .txt file like **hg19.txt** in the HiHiC directory. 
 >```
 >-i : Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) - (example) /HiHiC/data   
 >-d : Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) - (example) /HiHiC/data_downsampled_16   
@@ -62,19 +62,20 @@ docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/h
 
 Ⅳ. Training and Test
 --------------------- 
-> You should specified required argments of the model you want. The model codes were downloaded from github of the each author. For lightening storage, pretrained weights and data were removed.
+> You should specify the required arguments of the model you'd like to use.
+> All model codes were downloaded from each author's GitHub and modified for performance comparison. For light memory storage, pre-trained weights and data have been removed.
 >```
->-g : Number of gpu for training
->-i : Hi-C data directory containig numpy matrix files (Directory of Hi-C matrix for training input)
->-m : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC)
->-e : Number of train epoch
->-o : Directory to save training weight (Directory for saving pretrained model)
->-p : Directory to save training performance
+>- Number of GPUs for training
+>- Hi-C data directory containing Numpy matrix files (Directory of Hi-C matrix for training input)
+>- Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC)
+>- Number of train epoch
+>- Directory to save training weight (Directory for saving pre-trained model)
+>- Directory to save training performance
 >```
 
 Ⅴ. HiC contact map enhancement
 --------------------------------------
-> Without training, you can use pretrained models in our platform. The pretrained model weights are can be downloaded by transfer protocol.
+> Without training, you can use pre-trained models in our platform. The pre-trained model weights can be downloaded by transfer protocol.
 ```
 
 ```
