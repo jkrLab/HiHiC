@@ -166,4 +166,5 @@ cython_debug/
 data/
 data_downsampled_*/
 data_*/
+checkpoints_*/
 juicer_tools.jar

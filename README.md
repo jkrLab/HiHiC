@@ -14,6 +14,7 @@ git clone HiHiC
 ```
 docker run --rm --gpus all -it --name hihic_preprocess -v ${PWD}:${PWD} jkrlab/hihic_preprocess
 ```
+>Every docker image should be run in the parent directory of HiHiC.
 3. Make symbolic link Juicer tools in the workspace of docker to HiHiC directory
 ```
 ln -s /workspace/juicer_tools.jar /path/to/HiHiC/directory
@@ -31,8 +32,8 @@ cd /path/to/HiHiC/directory
 bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz GSM1551550_HIC001 hg19 16 ./juicer_tools.jar
 ```
 >We download and process GM12879 cell line, which is aligned based on hg19.
->You can modify options, **data download url, file name, reference genome, downsampling ratio**, and **path of juicer tools** in bash script, as you need.
->If you put this argments in command line, these should be put in order.
+>You can modify argments, **data download url, file name, reference genome, downsampling ratio**, and **path of juicer tools** in bash script, as you need.
+>If you put this argments in command line, these should be put in order as above.
 3. Generate input data of each deep leaning models
 ```
 python data_generate.py -i ./data -d ./data_downsampled_16 -m DFHiC -g ./hg19.txt -r 16 -o ./

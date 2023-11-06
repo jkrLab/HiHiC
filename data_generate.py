@@ -14,7 +14,7 @@ req_args.add_argument('-i', dest='input_data_dir', required=True,
                       help='REQUIRED: Hi-C data directory containing .txt files (Directory of Hi-C contact pares) ==== (example) /HiHiC-main/data ====')
 req_args.add_argument('-d', dest='input_downsample_dir', required=True,
                       help='REQUIRED: Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pares) ==== (example) /HiHiC-main/data_downsampled_16 ====')
-req_args.add_argument('-m', dest='model', required=True, choices=['HiCARN', 'DeepHiC', 'HiCNN2', 'HiCSR', 'DFHiC', 'hicplus', 'SRHiC'],
+req_args.add_argument('-m', dest='model', required=True, choices=['HiCARN', 'DeepHiC', 'HiCNN', 'HiCSR', 'DFHiC', 'hicplus', 'SRHiC'],
                       help='REQUIRED: Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) ==== (example) DFHiC ====')
 req_args.add_argument('-g', dest='ref_chrom', required=True,
                       help='REQUIRED: Reference genome length file, your data is based on ==== (example) /HiHiC-main/hg19.txt ====')
@@ -270,7 +270,7 @@ if model == "DFHiC":
     np.savez(save_dir+f'train_data_raw_ratio{data_ratio}.npz', train_lr=lr_mats_train,train_hr=hr_mats_train,distance=distance_train)
     np.savez(save_dir+f'test_data_raw_ratio{data_ratio}.npz', test_lr=lr_mats_test,test_hr=hr_mats_test,distance=distance_test)
 
-elif model == "deepHiC":      
+elif model == "DeepHiC":      
     hr_mats_train,lr_mats_train,coordinates_train = DeepHiC_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train:1~15
     hr_mats_valid,lr_mats_valid,coordinates_valid = DeepHiC_data_split([f'chr{idx}' for idx in list(range(15,18))]) # valid:15~17
     hr_mats_test,lr_mats_test,coordinates_test = DeepHiC_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
@@ -302,7 +302,7 @@ elif model == "HiCARN":
     np.savez(save_dir+f'Train_and_Validation/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,size=size)
     np.savez(save_dir+f'Test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,size=size)
 
-elif model == "HiCNN" or "HiCNN2":     
+elif model == "HiCNN":     
     hr_mats_train,lr_mats_train,hr_coordinates_train,lr_coordinates_train = HiCNN_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train:1~14
     hr_mats_valid,lr_mats_valid,hr_coordinates_valid,lr_coordinates_valid = HiCNN_data_split([f'chr{idx}' for idx in list(range(15,18))]) # valid:15~17
     # hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = HiCNN_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
@@ -329,7 +329,7 @@ elif model == "SRHiC":
     np.save(save_dir+f'valid_data_raw_ratio{data_ratio}', valid)
     
 else:
-    assert model == "hicplus"
+    assert model == "hicplus", "    model name is not correct "
     hr_mats_train,lr_mats_train,hr_coordinates_train,lr_coordinates_train = hicplus_data_split([f'chr{idx}' for idx in list(range(1,18))]) # train:1~17
     hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = hicplus_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
     print(f"\n  ...Done cropping whole matrix into submatrix for {model} training...")

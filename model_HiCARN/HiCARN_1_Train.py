@@ -16,10 +16,11 @@ from math import log10
 import datetime
 
 ROOT_DIR = './'
-OUT_DIR = os.path.join(ROOT_DIR, 'HiCARN1_checkpoints')
-TRAN_FILE = '/data/HiHiC/data_HiCARN/Train_and_Validation/train_ratio16.npz'
-VALID_FILE = '/data/mohyelim7/intergrate_hihic_data/HiCARN/Train_and_Validation/valid_ratio16.npz'
-NUM_EPOCHS = 100
+OUT_DIR = os.path.join(ROOT_DIR, 'checkpoints_HiCARN1')
+TRAIN_FILE = '/data/HiHiC-main/data_HiCARN/Train_and_Validation/train_ratio16.npz'
+VALID_FILE = '/data/HiHiC-main/data_HiCARN/Train_and_Validation/train_ratio16.npz'
+LOSS_LOG = 'train_loss_HiCARN1.npy'
+NUM_EPOCHS = 500
 BATCH_SIZE = 64
 
 start = time.time()
@@ -58,7 +59,7 @@ print("CUDA available? ", torch.cuda.is_available())
 print("Device being used: ", device)
 
 # prepare training dataset
-train_file = TRAN_FILE
+train_file = TRAIN_FILE
 train = np.load(train_file, allow_pickle=True)
 
 train_data = torch.tensor(train['data'], dtype=torch.float)
@@ -188,13 +189,13 @@ for epoch in range(1, num_epochs + 1):
     if epoch%10 == 0:
         sec = time.time()-start
         times = str(datetime.timedelta(seconds=sec))
-        short = times.split(".")[0]
+        short = times.split(".")[0].replace(':','.')
             
         train_epoch.append(epoch)
         train_time.append(short)        
-        train_loss.append(now_ssim)
+        train_loss.append(f"{now_ssim:.2f}")
         
-        ckpt_file = f"{epoch}_{short}.pytorch"
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}.pytorch"
         torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file))
     
     ##################################################################
@@ -219,4 +220,9 @@ final_ckpt_g = f'{datestr}_finalg.pytorch'
 
 torch.save(netG.state_dict(), os.path.join(out_dir, final_ckpt_g))
 
-np.save("HiCARN1_time_loss.npy", [train_epoch, train_time, train_loss])
+
+##################################################################
+
+np.save(LOSS_LOG, [train_epoch, train_time, train_loss])
+
+##################################################################

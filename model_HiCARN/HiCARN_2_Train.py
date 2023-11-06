@@ -16,10 +16,11 @@ from math import log10
 import datetime
 
 ROOT_DIR = './'
-OUT_DIR = os.path.join(ROOT_DIR, 'HiCARN2_checkpoints')
-TRAN_FILE = '/data/HiHiC/data_HiCARN/Train_and_Validation/train_ratio16.npz'
-VALID_FILE = '/data/mohyelim7/intergrate_hihic_data/HiCARN/Train_and_Validation/valid_ratio16.npz'
-NUM_EPOCHS = 100
+OUT_DIR = os.path.join(ROOT_DIR, 'checkpoints_HiCARN1')
+TRAIN_FILE = '/data/HiHiC-main/data_HiCARN/Train_and_Validation/train_ratio16.npz'
+VALID_FILE = '/data/HiHiC-main/data_HiCARN/Train_and_Validation/train_ratio16.npz'
+LOSS_LOG = 'train_loss_HiCARN1.npy'
+NUM_EPOCHS = 500
 BATCH_SIZE = 64
 
 start = time.time()
@@ -49,7 +50,7 @@ out_dir = OUT_DIR
 os.makedirs(out_dir, exist_ok=True)
 
 datestr = time.strftime('%m_%d_%H_%M')
-visdom_str = time.strftime('%m%d')
+#visdom_str = time.strftime('%m%d')
 
 num_epochs = NUM_EPOCHS
 batch_size = BATCH_SIZE
@@ -60,7 +61,7 @@ print("CUDA avalable?", torch.cuda.is_available())
 print("Device being used: ", device)
 
 # prepare training dataset
-train_file = TRAN_FILE
+train_file = TRAIN_FILE
 train = np.load(train_file, allow_pickle=True)
 
 train_data = torch.tensor(train['data'], dtype=torch.float)
@@ -227,13 +228,13 @@ for epoch in range(1, num_epochs + 1):
     if epoch%10 == 0:
         sec = time.time()-start
         times = str(datetime.timedelta(seconds=sec))
-        short = times.split(".")[0]
+        short = times.split(".")[0].replace(':','.')
             
         train_epoch.append(epoch)
         train_time.append(short)        
-        train_loss.append(now_ssim)
+        train_loss.append(f"{now_ssim:.2f}")
         
-        ckpt_file = f"{epoch}_{short}.pytorch"
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}.pytorch"
         torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file))
     
     ##################################################################
@@ -261,4 +262,8 @@ final_ckpt_d = f'{datestr}_finald.pytorch'
 torch.save(netG.state_dict(), os.path.join(out_dir, final_ckpt_g))
 torch.save(netD.state_dict(), os.path.join(out_dir, final_ckpt_d))
 
-np.save("HiCARN2_time_loss.npy", [train_epoch, train_time, train_loss])
+##################################################################
+
+np.save(LOSS_LOG, [train_epoch, train_time, train_loss])
+
+##################################################################

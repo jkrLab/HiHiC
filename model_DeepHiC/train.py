@@ -19,19 +19,30 @@ from all_parser import root_dir
 
 ##################################################################
 
-DATA_DIR = os.path.join(root_dir, 'data')
-OUT_DIR = os.path.join(root_dir, 'checkpoints')
-TRAIN_FILE = '/data/mohyelim7/intergrate_hihic_data/DeepHiC/Train_and_Validation/train_ratio16.npz'
-VALID_FILE = '/data/mohyelim7/intergrate_hihic_data/DeepHiC/Train_and_Validation/valid_ratio16.npz'
+import datetime
+
+ROOT_DIR = './'
+OUT_DIR = os.path.join(ROOT_DIR, 'checkpoints_deepHiC')
+TRAIN_FILE = '/data/HiHiC-main/data_DeepHiC/Train_and_Validation/train_ratio16.npz'
+VALID_FILE = '/data/HiHiC-main/data_DeepHiC/Train_and_Validation/valid_ratio16.npz'
+LOSS_LOG = 'train_loss_deepHiC.npy'
+NUM_EPOCHS = 500
+BATCH_SIZE = 64
+
+start = time.time()
+
+train_epoch = [] 
+train_loss = []
+train_time = []
 
 ##################################################################
 
 
 cs = np.column_stack
 
-torch.autograd.set_detect_anomaly(True) ######### 코드 점검
+torch.autograd.set_detect_anomaly(True)
 # data_dir: directory storing processed data
-data_dir = DATA_DIR
+# data_dir = DATA_DIR
 
 # out_dir: directory storing checkpoint files
 out_dir = OUT_DIR
@@ -40,6 +51,9 @@ os.makedirs(out_dir, exist_ok=True)
 datestr = time.strftime('%m_%d_%H_%M')
 # visdom_str=time.strftime('%m%d')
 
+upscale = 1
+num_epochs = NUM_EPOCHS
+batch_size = BATCH_SIZE
 
 # whether using GPU for training
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -112,11 +126,11 @@ for epoch in range(1, num_epochs+1):
 
         ######### Train generator #########
         netG.zero_grad()
-        fake_out = netD(fake_img) ##################### 추가함
+        fake_out = netD(fake_img) ######### Added by MovmntR
         g_loss = criterionG(fake_out.mean(), fake_img, real_img)
         g_loss.backward()
         
-        # optimizerD.step() ############# github에 issue about training step 참고 수정함
+        # optimizerD.step() ############### Deleted by MovnmtR (refer to GitHub issue; issue about training step)
         optimizerG.step()
 
         run_result['g_loss'] += g_loss.item() * batch_size
@@ -189,9 +203,30 @@ for epoch in range(1, num_epochs+1):
         best_ckpt_file = f'{datestr}_bestg_deephic.pytorch'
         torch.save(netG.state_dict(), os.path.join(out_dir, best_ckpt_file))
 
+    ##################################################################
+        
+    if epoch%10 == 0:
+        sec = time.time()-start
+        times = str(datetime.timedelta(seconds=sec))
+        short = times.split(".")[0].replace(':','.')
+            
+        train_epoch.append(epoch)
+        train_time.append(short)        
+        train_loss.append(f"{now_ssim:.2f}")
+        
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}.pytorch"
+        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file))
+    
+    ##################################################################
+    
 final_ckpt_g = f'{datestr}_finalg_deephic.pytorch'
 final_ckpt_d = f'{datestr}_finald_deephic.pytorch'
 
 torch.save(netG.state_dict(), os.path.join(out_dir, final_ckpt_g))
 torch.save(netD.state_dict(), os.path.join(out_dir, final_ckpt_d))
 
+##################################################################
+
+np.save(LOSS_LOG, [train_epoch, train_time, train_loss])
+
+##################################################################

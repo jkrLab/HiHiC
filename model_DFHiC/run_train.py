@@ -1,6 +1,6 @@
 # coding: utf-8
 import os, time, pickle, random, sys, math
-from datetime import datetime
+import datetime
 import numpy as np
 from time import localtime, strftime
 import logging, scipy
@@ -14,19 +14,31 @@ from skimage.measure import compare_ssim
 
 
 ##################################################################
-GPU_ID = 'cpu' #sys.argv[1]
-CHECKPOINT_PATH = './checkpoint' # sys.argv[2]
-# GRAPH_PATH = './graph' #sys.argv[3]
-BLOCK_SIZE = 40 # int(sys.argv[4])
-BATCH_SISE = 128 # int(sys.argv[5])  #128
-TRAIN_DATA = '/data/HiHiC/data_DFHiC/train_data_raw_ratio16.npz'
+
+ROOT_DIR = './'
+OUT_DIR = os.path.join(ROOT_DIR, 'checkpoints_DFHiC')
+TRAIN_DATA = '/data/HiHiC-main/data_DFHiC/train_data_raw_ratio16.npz'
+LOSS_LOG = 'train_loss_DFHiC.npy'
+NUM_EPOCHS = 500
+BATCH_SISE = 64
+BLOCK_SIZE = 40
+GPU_ID = '0'
+
+start = time.time()
+
+train_epoch = [] 
+train_loss = []
+train_time = []
+
+os.makedirs(OUT_DIR, exist_ok=True)
+
 ##################################################################
 
 
 #GPU setting and Global parameters
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = GPU_ID
-checkpoint = CHECKPOINT_PATH
+checkpoint = OUT_DIR
 # graph_dir = GRAPH_PATH
 block_size = BLOCK_SIZE
 tl.global_flag['mode']='DFHiC'
@@ -37,7 +49,7 @@ lr_init = 1e-4
 
 beta1 = 0.9
 n_epoch_init = 100
-n_epoch = 500
+n_epoch = NUM_EPOCHS
 lr_decay = 0.1
 decay_every = int(n_epoch / 2)
 ni = int(np.sqrt(batch_size))
@@ -116,7 +128,7 @@ wait=0
 patience=20
 best_mse_val = np.inf
 best_epoch=0
-for epoch in range(0, n_epoch + 1):
+for epoch in range(0, n_epoch +1):
     ## update learning rate
     if epoch != 0 and (epoch % decay_every == 0):
         #new_lr_decay = lr_decay**(epoch // decay_every)
@@ -145,13 +157,13 @@ for epoch in range(0, n_epoch + 1):
         hr_mats_pre[batch_size*i:batch_size*(i+1)] = sess.run(net_test.outputs, {t_matrix: lr_mats_valid[batch_size*i:batch_size*(i+1)]})
     hr_mats_pre[batch_size*(i+1):] = sess.run(net_test.outputs, {t_matrix: lr_mats_valid[batch_size*(i+1):]})
     mse_val=np.median(list(map(compare_mse,hr_mats_pre[:,:,:,0],hr_mats_valid[:,:,:,0])))
-    # if mse_val < best_mse_val:
-    #     wait=0
-    #     best_mse_val = mse_val
-    #     #save the model with minimal MSE in validation samples
-    #     tl.files.save_npz(net.all_params, name=checkpoint + '/{}_best.npz'.format(tl.global_flag['mode']), sess=sess)
-    #     best_epoch=epoch
-    #     np.savetxt(checkpoint + 'best_epoch.txt',np.array(best_epoch))
+    if mse_val < best_mse_val:
+        wait=0
+        best_mse_val = mse_val
+        #save the model with minimal MSE in validation samples
+        tl.files.save_npz(net.all_params, name=checkpoint + '/{}_best.npz'.format(tl.global_flag['mode']), sess=sess)
+        best_epoch=epoch
+        # np.savetxt(checkpoint + 'best_epoch.txt',np.array(best_epoch))
     # else:
     #     wait+=1
     #     if wait >= patience:
@@ -164,5 +176,27 @@ for epoch in range(0, n_epoch + 1):
     # summary=sess.run(merged_summary,{t_matrix: b_mats_input, t_target_matrix: b_mats_target})
     # summary_writer.add_summary(summary, epoch)
     
+    ##################################################################
+        
+    if epoch%10 == 0:
+        sec = time.time()-start
+        times = str(datetime.timedelta(seconds=sec))
+        short = times.split(".")[0].replace(':','.')
+            
+        train_epoch.append(epoch)
+        train_time.append(short)        
+        train_loss.append(f"{mse_val:.2f}")
+        
+        ckpt_file = f"{str(epoch).zfill(5)}_{mse_val}.npz"
+        tl.files.save_npz(net.all_params, name=os.path.join(checkpoint, ckpt_file), sess=sess)
+    
+    ##################################################################    
+    
 print("epoch")
 print(best_epoch)
+
+##################################################################
+
+np.save(LOSS_LOG, [train_epoch, train_time, train_loss])
+
+##################################################################
