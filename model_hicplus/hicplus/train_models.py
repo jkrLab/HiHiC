@@ -23,6 +23,7 @@ ROOT_DIR = './'
 OUT_DIR = os.path.join(ROOT_DIR, 'checkpoints_hicplus')
 TRAIN_DATA = '/data/HiHiC-main/data_hicplus/subMats_train_ratio16.npy'
 TRAIN_TARGET = '/data/HiHiC-main/data_hicplus/subMats_train_target_ratio16.npy'
+NUM_EPOCH = '500'
 
 ##################################################################
 
@@ -52,7 +53,7 @@ def main():
     #np.save(infile+"lowres",lowres_sub)
 
     print('start training...')
-    trainConvNet.train(lowres_sub,highres_sub,OUT_DIR)
+    trainConvNet.train(lowres_sub,highres_sub,OUT_DIR,NUM_EPOCH)
 
     print('finished...')
 

@@ -54,7 +54,7 @@ batch_size = 64 # 512
 #low_resolution_samples = np.load(gzip.GzipFile('/home/zhangyan/SRHiC_samples/IMR90_down_HINDIII16_chr1_8.npy.gz', "r")).astype(np.float32) * down_sample_ratio
 #high_resolution_samples = np.load(gzip.GzipFile('/home/zhangyan/SRHiC_samples/original10k/_IMR90_HindIII_original_chr1_8.npy.gz', "r")).astype(np.float32)
 
-def train(lowres,highres, outModel):
+def train(lowres, highres, outModel, EPOCH):
     
     ##################################################################
 
@@ -72,13 +72,14 @@ def train(lowres,highres, outModel):
 
     ##################################################################
     
-    low_resolution_samples = lowres.astype(np.float32) * down_sample_ratio
+    # low_resolution_samples = lowres.astype(np.float32) * down_sample_ratio
+    # high_resolution_samples = highres.astype(np.float32)
+    low_resolution_samples = lowres.astype(np.float32)
     high_resolution_samples = highres.astype(np.float32)
 
-    low_resolution_samples = np.minimum(HiC_max_value, low_resolution_samples)
-    high_resolution_samples = np.minimum(HiC_max_value, high_resolution_samples)
-
-
+    # low_resolution_samples = np.minimum(HiC_max_value, low_resolution_samples)
+    # high_resolution_samples = np.minimum(HiC_max_value, high_resolution_samples)
+    
 
     # Reshape the high-quality Hi-C sample as the target value of the training.
     sample_size = low_resolution_samples.shape[-1]
@@ -114,48 +115,48 @@ def train(lowres,highres, outModel):
     reg_loss = 0.0
 
     # write the log file to record the training process
-    with open('HindIII_train.txt', 'w') as log:
-        for epoch in range(0, 501): # 3500
-            for i, (v1, v2) in enumerate(zip(lowres_loader, hires_loader)):
-                if (i == len(lowres_loader) - 1):
-                    continue
-                _lowRes, _ = v1
-                _highRes, _ = v2
-                
-                _lowRes = Variable(_lowRes)
-                _highRes = Variable(_highRes).unsqueeze(1)
+    # with open('HindIII_train.txt', 'w') as log:
+    for epoch in range(0, int(EPOCH)): # 3500
+        for i, (v1, v2) in enumerate(zip(lowres_loader, hires_loader)):
+            if (i == len(lowres_loader) - 1):
+                continue
+            _lowRes, _ = v1
+            _highRes, _ = v2
+            
+            _lowRes = Variable(_lowRes)
+            _highRes = Variable(_highRes).unsqueeze(1)
 
-                if use_gpu:
-                    _lowRes = _lowRes.cuda()
-                    _highRes = _highRes.cuda()
-                optimizer.zero_grad()
-                y_prediction = Net(_lowRes)
-		
-                loss = _loss(y_prediction, _highRes)
-                loss.backward()
-                optimizer.step()
-		
-                running_loss += loss.item()
+            if use_gpu:
+                _lowRes = _lowRes.cuda()
+                _highRes = _highRes.cuda()
+            optimizer.zero_grad()
+            y_prediction = Net(_lowRes)
+    
+            loss = _loss(y_prediction, _highRes)
+            loss.backward()
+            optimizer.step()
+    
+            running_loss += loss.item()
 
-            ##################################################################                
-            if epoch%10 == 0:
-                sec = time.time()-start
-                times = str(datetime.timedelta(seconds=sec))
-                short = times.split(".")[0].replace(':','.')
-                    
-                train_epoch.append(epoch)
-                train_time.append(short)        
-                train_loss.append(f"{running_loss/i:.2f}")
+        ##################################################################                
+        if epoch%10 == 0:
+            sec = time.time()-start
+            times = str(datetime.timedelta(seconds=sec))
+            short = times.split(".")[0].replace(':','.')
                 
-                ckpt_file = f"{str(epoch).zfill(5)}_{short}"
-                torch.save(Net.state_dict(), os.path.join(outModel, ckpt_file))            
-            ##################################################################
-        
-        print('-------', i, epoch, running_loss/i, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-	
-        log.write(str(epoch) + ', ' + str(running_loss/i,) +', '+ strftime("%Y-%m-%d %H:%M:%S", gmtime())+ '\n')
-        running_loss = 0.0
-        running_loss_validate = 0.0
+            train_epoch.append(epoch)
+            train_time.append(short)        
+            train_loss.append(f"{running_loss/i:.2f}")
+            
+            ckpt_file = f"{str(epoch).zfill(5)}_{short}"
+            torch.save(Net.state_dict(), os.path.join(outModel, ckpt_file))            
+        ##################################################################
+    
+    print('-------', i, epoch, running_loss/i, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+
+    # log.write(str(epoch) + ', ' + str(running_loss/i,) +', '+ strftime("%Y-%m-%d %H:%M:%S", gmtime())+ '\n')
+    running_loss = 0.0
+    running_loss_validate = 0.0
 	# save the model every 100 epoches
         # if (epoch % 100 == 0):
         #     torch.save(Net.state_dict(), outModel + str(epoch) + str('.model'))

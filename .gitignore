@@ -166,6 +166,9 @@ cython_debug/
 data/
 data_downsampled_*/
 data_*/
+
+# others
 checkpoints_*/
 juicer_tools.jar
-HindIII_train.txt
+loss_trend.png
+train.ipynb
