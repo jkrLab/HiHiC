@@ -168,6 +168,7 @@ data_downsampled_*/
 data_*/
 
 # others
+log/
 checkpoints_*/
 juicer_tools.jar
 loss_trend.png

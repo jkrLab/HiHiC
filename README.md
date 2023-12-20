@@ -63,9 +63,9 @@ docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/h
 Ⅳ. Training and Test
 --------------------- 
 ```
-bash model_train.sh DFHiC 500 0 /HiHiC /HiHiC /HiHiC/data_DFHiC/train /HiHiC/data_DFHiC/valid
+bash model_train.sh DFHiC 500 128 0 ./checkpoints_DFHiC ./log ./data_DFHiC/train ./data_DFHiC/valid
 ```
-> You should specify the required arguments of the model you'd like to use, such as **model name, training epoch, GPU ID, output model directory, loss log directory, training data directory**, and **validation data directory**. When you use hicplus, the validation data directory is not required.
+> You should specify the required arguments of the model you'd like to use, such as **model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory**, and **validation data directory**. When you use hicplus, the validation data directory is not required.
 > If you put these arguments in the command line, these should be placed in the following order: model name, training epoch, GPU ID, output model directory, loss log directory, training data directory, and validation data directory.   
 > *All model codes were downloaded from each author's GitHub and modified for performance comparison. For light memory storage, pre-trained weights and data have been removed*.
 

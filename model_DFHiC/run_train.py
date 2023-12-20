@@ -13,16 +13,35 @@ from skimage.measure import compare_mse
 from skimage.measure import compare_ssim
 
 
-##################################################################
+######################################################## Added by HiHiC ######
+##############################################################################
 
-ROOT_DIR = './'
-OUT_DIR = os.path.join(ROOT_DIR, 'checkpoints_DFHiC')
-TRAIN_DATA = '/data/HiHiC-main/data_DFHiC/train_data_raw_ratio16.npz'
-LOSS_LOG = 'train_loss_DFHiC.npy'
-NUM_EPOCHS = 500
-BATCH_SISE = 64
-BLOCK_SIZE = 40
-GPU_ID = '0'
+import argparse
+
+parser = argparse.ArgumentParser(description='DFHiC training process')
+parser._action_groups.pop()
+required = parser.add_argument_group('required arguments')
+optional = parser.add_argument_group('optional arguments')
+
+required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
+                      help='HiHiC directory')
+required.add_argument('--model', type=str, metavar='DFHiC', required=True,
+                      help='model name')
+required.add_argument('--epoch', type=int, default=128, metavar='[2]', required=True,
+                      help='training epoch (default: 128)')
+required.add_argument('--batch_size', type=int, default=64, metavar='[3]', required=True,
+                      help='input batch size for training (default: 64)')
+required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
+                      help='GPU ID for training (defalut: 0)')
+required.add_argument('--output_model_dir', type=str, default='./checkpoints_DFHiC', metavar='[5]', required=True,
+                      help='directory path of training model (default: HiHiC/checkpoints_DFHiC)')
+required.add_argument('--loss_log_dir', type=str, default='./log', metavar='[6]', required=True,
+                      help='directory path of training log (default: HiHiC/log)')
+required.add_argument('--train_data_dir', type=str, metavar='[7]', required=True,
+                      help='directory path of training data')
+optional.add_argument('--valid_data_dir', type=str, metavar='[8]',
+                      help="directory path of validation data, but hicplus doesn't need")
+args = parser.parse_args()
 
 start = time.time()
 
@@ -30,26 +49,28 @@ train_epoch = []
 train_loss = []
 train_time = []
 
-os.makedirs(OUT_DIR, exist_ok=True)
-
-##################################################################
+os.makedirs(args.loss_log_dir, exist_ok=True)
+##############################################################################
+##############################################################################
 
 
 #GPU setting and Global parameters
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = GPU_ID
-checkpoint = OUT_DIR
-# graph_dir = GRAPH_PATH
-block_size = BLOCK_SIZE
+os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
+#checkpoint = "checkpoint"
+checkpoint = args.output_model_dir
+# graph_dir = sys.argv[3]
+block_size = 40
 tl.global_flag['mode']='DFHiC'
-tl.files.exists_or_mkdir(checkpoint)
+tl.files.exists_or_mkdir(checkpoint) 
 # tl.files.exists_or_mkdir(graph_dir)
-batch_size = BATCH_SISE
+batch_size = args.batch_size
 lr_init = 1e-4
 
 beta1 = 0.9
-n_epoch_init = 100
-n_epoch = NUM_EPOCHS
+# n_epoch_init = 100
+# n_epoch_init = 1
+n_epoch = args.epoch
 lr_decay = 0.1
 decay_every = int(n_epoch / 2)
 ni = int(np.sqrt(batch_size))
@@ -64,16 +85,36 @@ def calculate_ssim(mat1,mat2):
     data_range=np.max(mat1)-np.min(mat1)
     return compare_ssim(mat1,mat2,data_range=data_range)
 
-train_data=np.load(TRAIN_DATA)
-lr_mats_full=train_data['train_lr']
-hr_mats_full=train_data['train_hr']
+# train_data=np.load("preprocess/data/GM12878/train_data_raw_ratio16.npz")
+# lr_mats_full=train_data['train_lr']
+# hr_mats_full=train_data['train_hr']
 
-lr_mats_train = lr_mats_full[:int(0.95*len(lr_mats_full))]
-hr_mats_train = hr_mats_full[:int(0.95*len(hr_mats_full))]
+# lr_mats_train = lr_mats_full[:int(0.95*len(lr_mats_full))]
+# hr_mats_train = hr_mats_full[:int(0.95*len(hr_mats_full))]
 
-lr_mats_valid = lr_mats_full[int(0.95*len(lr_mats_full)):]
-hr_mats_valid = hr_mats_full[int(0.95*len(hr_mats_full)):]
+# lr_mats_valid = lr_mats_full[int(0.95*len(lr_mats_full)):]
+# hr_mats_valid = hr_mats_full[int(0.95*len(hr_mats_full)):]
 
+data_all = [np.load(os.path.join(args.train_data_dir, fname), allow_pickle=True) for fname in os.listdir(args.train_data_dir)] ### Added by HiHiC ##
+train = {'data': [], 'target': []} #################################################################################################################
+for data in data_all:
+    for k, v in data.items():
+        if k in train: 
+            train[k].append(v)
+train = {k: np.concatenate(v, axis=0) for k, v in train.items()}
+
+data_all = [np.load(os.path.join(args.valid_data_dir, fname), allow_pickle=True) for fname in os.listdir(args.valid_data_dir)] 
+valid = {'data': [], 'target': []}
+for data in data_all:
+    for k, v in data.items():
+        if k in valid: 
+            valid[k].append(v) #####################################################################################################################
+valid = {k: np.concatenate(v, axis=0) for k, v in valid.items()} ###################################################################################
+
+lr_mats_train = train['data']
+hr_mats_train = train['target']
+lr_mats_valid = valid['data']
+hr_mats_valid = valid['target']
 
 # zssr
 def DFHiC(t_matrix, is_train=False, reuse=False):
@@ -176,27 +217,18 @@ for epoch in range(0, n_epoch +1):
     # summary=sess.run(merged_summary,{t_matrix: b_mats_input, t_target_matrix: b_mats_target})
     # summary_writer.add_summary(summary, epoch)
     
-    ##################################################################
         
-    if epoch%10 == 0:
-        sec = time.time()-start
+    if epoch%10 == 0: ######################################################## Added by HiHiC #####
+        sec = time.time()-start ###################################################################
         times = str(datetime.timedelta(seconds=sec))
         short = times.split(".")[0].replace(':','.')
-            
         train_epoch.append(epoch)
         train_time.append(short)        
         train_loss.append(f"{mse_val:.2f}")
-        
-        ckpt_file = f"{str(epoch).zfill(5)}_{mse_val}.npz"
-        tl.files.save_npz(net.all_params, name=os.path.join(checkpoint, ckpt_file), sess=sess)
-    
-    ##################################################################    
+        ckpt_file = f"{str(epoch).zfill(5)}_{mse_val}.npz"#########################################
+        tl.files.save_npz(net.all_params, name=os.path.join(checkpoint, ckpt_file), sess=sess) ####
     
 print("epoch")
 print(best_epoch)
 
-##################################################################
-
-np.save(LOSS_LOG, [train_epoch, train_time, train_loss])
-
-##################################################################
+np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss])### Added by HiHiC ##

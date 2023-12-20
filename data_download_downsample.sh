@@ -9,15 +9,15 @@ download_url=$1
 file_name=$2
 ref_genome=$3
 downsample_ratio=$4
-juicertools=$5 # path to juicer_tool.jar
+juicertools=$5
 
 echo ""
-echo "  ...Current working directory is ${path}."
-echo "      Sequencing read data is acquired from ${download_url}."
-echo "      The data will be downloaded in the name as ${file_name}"
-echo "      and it had referenced genome ${ref_genome}."
-echo "      We will downsample 1/${downsample_ratio},"
-echo "      for this, ${juicertools} will be used"
+echo "  ...current working directory is $(pwd)"
+echo "      data_download_url = ${download_url}"
+echo "      file_name = ${file_name}"
+echo "      ref_genome = ${ref_genome}"
+echo "      downsample_ratio = ${downsample_ratio}"
+echo "      juicertools = ${juicertools}" # path to juicer_tool.jar of docker image
 echo ""
 
 ### read data download ###

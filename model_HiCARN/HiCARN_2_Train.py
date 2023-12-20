@@ -11,17 +11,36 @@ from Utils.SSIM import ssim
 from math import log10
 
 
-##################################################################
+################################################## Added by HiHiC ######
+########################################################################
 
-import datetime
+import datetime, argparse
 
-ROOT_DIR = './'
-OUT_DIR = os.path.join(ROOT_DIR, 'checkpoints_HiCARN1')
-TRAIN_FILE = '/data/HiHiC-main/data_HiCARN/Train_and_Validation/train_ratio16.npz'
-VALID_FILE = '/data/HiHiC-main/data_HiCARN/Train_and_Validation/train_ratio16.npz'
-LOSS_LOG = 'train_loss_HiCARN1.npy'
-NUM_EPOCHS = 500
-BATCH_SIZE = 64
+parser = argparse.ArgumentParser(description='HiCARN2 training process')
+parser._action_groups.pop()
+required = parser.add_argument_group('required arguments')
+optional = parser.add_argument_group('optional arguments')
+
+required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
+                      help='HiHiC directory')
+required.add_argument('--model', type=str, metavar='HiCARN2', required=True,
+                      help='model name')
+required.add_argument('--epoch', type=int, default=128, metavar='[2]', required=True,
+                      help='training epoch (default: 128)')
+required.add_argument('--batch_size', type=int, default=64, metavar='[3]', required=True,
+                      help='input batch size for training (default: 64)')
+required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
+                      help='GPU ID for training (defalut: 0)')
+required.add_argument('--output_model_dir', type=str, default='./checkpoints_HiCARN2', metavar='[5]', required=True,
+                      help='directory path of training model (default: HiHiC/checkpoints_HiCARN2/)')
+required.add_argument('--loss_log_dir', type=str, default='./log', metavar='[6]', required=True,
+                      help='directory path of training log (default: HiHiC/log/)')
+required.add_argument('--train_data_dir', type=str, metavar='[7]', required=True,
+                      help='directory path of training data')
+optional.add_argument('--valid_data_dir', type=str, metavar='[8]',
+                      help="directory path of validation data, but hicplus doesn't need")
+args = parser.parse_args()
+
 
 start = time.time()
 
@@ -29,13 +48,13 @@ train_epoch = []
 train_loss = []
 train_time = []
 
-##################################################################
-
+os.makedirs(args.loss_log_dir, exist_ok=True)
+########################################################################
+########################################################################
 
 cs = np.column_stack
 
-root_dir = ROOT_DIR
-
+root_dir = args.root_dir
 
 def adjust_learning_rate(epoch):
     lr = 0.0003 * (0.1 ** (epoch // 30))
@@ -43,26 +62,37 @@ def adjust_learning_rate(epoch):
 
 
 # data_dir: directory storing processed data
-data_dir = DATA_DIR
+# data_dir = DATA_DIR
 
 # out_dir: directory storing checkpoint files
-out_dir = OUT_DIR
+out_dir = args.output_model_dir
 os.makedirs(out_dir, exist_ok=True)
 
 datestr = time.strftime('%m_%d_%H_%M')
-#visdom_str = time.strftime('%m%d')
+# visdom_str = time.strftime('%m%d')
 
-num_epochs = NUM_EPOCHS
-batch_size = BATCH_SIZE
+# resos = '10kb40kb'
+# chunk = 40
+# stride = 40
+# bound = 201
+# pool = 'nonpool'
+# name = 'HiCARN_1'
+
+num_epochs = args.epoch
+batch_size = args.batch_size
 
 # whether using GPU for training
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print("CUDA avalable?", torch.cuda.is_available())
+device = torch.device(f'cuda:{args.gpu_id}' if torch.cuda.is_available() else 'cpu')
+print("CUDA available? ", torch.cuda.is_available())
 print("Device being used: ", device)
 
 # prepare training dataset
-train_file = TRAIN_FILE
-train = np.load(train_file, allow_pickle=True)
+# train_file = os.path.join(data_dir, f'hicarn_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_train.npz')
+# train = np.load(train_file)
+data_all = [np.load(os.path.join(args.train_data_dir, fname), allow_pickle=True) for fname in os.listdir(args.train_data_dir)] ### Added by HiHiC ##
+train = {} #########################################################################################################################################
+for data in data_all: ##############################################################################################################################
+    [train.update({k: v}) for k, v in data.items()] ################################################################################################
 
 train_data = torch.tensor(train['data'], dtype=torch.float)
 train_target = torch.tensor(train['target'], dtype=torch.float)
@@ -71,8 +101,12 @@ train_inds = torch.tensor(train['inds'], dtype=torch.long)
 train_set = TensorDataset(train_data, train_target, train_inds)
 
 # prepare valid dataset
-valid_file = VALID_FILE
-valid = np.load(valid_file, allow_pickle=True)
+# valid_file = os.path.join(data_dir, f'hicarn_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_valid.npz')
+# valid = np.load(valid_file)
+data_all = [np.load(os.path.join(args.valid_data_dir, fname), allow_pickle=True) for fname in os.listdir(args.valid_data_dir)] ### Added by HiHiC ##
+valid = {} #########################################################################################################################################
+for data in data_all: ##############################################################################################################################
+    [valid.update({k: v}) for k, v in data.items()] ################################################################################################
 
 valid_data = torch.tensor(valid['data'], dtype=torch.float)
 valid_target = torch.tensor(valid['target'], dtype=torch.float)
@@ -223,23 +257,20 @@ for epoch in range(1, num_epochs + 1):
         best_ckpt_file = f'{datestr}_bestg.pytorch'
         torch.save(netG.state_dict(), os.path.join(out_dir, best_ckpt_file))
 
-    ##################################################################
-        
-    if epoch%10 == 0:
-        sec = time.time()-start
+        if epoch%10 == 0: ################################# Added by HiHiC #####
+        sec = time.time()-start ################################################
         times = str(datetime.timedelta(seconds=sec))
-        short = times.split(".")[0].replace(':','.')
-            
-        train_epoch.append(epoch)
-        train_time.append(short)        
-        train_loss.append(f"{now_ssim:.2f}")
+        short = times.split(".")[0].replace(':','.') 
+        train_epoch.append(epoch) 
+        train_time.append(short)       
+        train_loss.append(f"{now_ssim:.2f}") 
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}.pytorch" ##################
+        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) #######
+    
         
-        ckpt_file = f"{str(epoch).zfill(5)}_{short}.pytorch"
-        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file))
-    
-    ##################################################################
-    
-    
+# final_ckpt_g = f'{datestr}_finalg_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_{name}.pytorch'        
+final_ckpt_g = f'{datestr}_finalg.pytorch'
+
 ######### Uncomment to track scores across epochs #########
 # ssim_scores = ssim_scores.cpu()
 # psnr_scores = psnr_scores.cpu()
@@ -256,14 +287,6 @@ for epoch in range(1, num_epochs + 1):
 # np.savetxt(f'valid_mse_scores_{name}', X=mse_scores, delimiter=',')
 # np.savetxt(f'valid_mae_scores_{name}', X=mae_scores, delimiter=',')
 
-final_ckpt_g = f'{datestr}_finalg.pytorch'
-final_ckpt_d = f'{datestr}_finald.pytorch'
-
 torch.save(netG.state_dict(), os.path.join(out_dir, final_ckpt_g))
-torch.save(netD.state_dict(), os.path.join(out_dir, final_ckpt_d))
 
-##################################################################
-
-np.save(LOSS_LOG, [train_epoch, train_time, train_loss])
-
-##################################################################
+np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss]) ### Added by HiHiC ##

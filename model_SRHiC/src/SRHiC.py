@@ -9,12 +9,11 @@ import os
 
 import random
 import time, datetime
-LOSS_LOG = 'train_loss_SRHiC.npy'
 
 # params
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
-epoch_size = 10
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+# epoch_size = 256
 
 
 def res_block(_input, feature_size=32):
@@ -29,16 +28,24 @@ def res_block(_input, feature_size=32):
 def model(train_input_dir,
           valid_input_dir,
           saver_dir,
-          feature_size=32,
-          iterations_size=10,
+          iterations_size,
+          LOSS_LOG_DIR,
+          GPU_ID,
+          BATCH_SIZE,
+          feature_size=32
           ):
-    ##################################################################
+    ################################################## Added by HiHiC ######
+    ########################################################################
     start = time.time()
 
     train_epoch = [] 
     train_loss = []
     train_time = []
-    ##################################################################
+    
+    os.environ["CUDA_VISIBLE_DEVICES"] = GPU_ID
+    epoch_size = BATCH_SIZE
+    ########################################################################
+    ########################################################################
 
     input_x = tf.placeholder(tf.float32, [None, 40, 40, 1], name="input_x")
     input_y = tf.placeholder(tf.float32, [None, 28, 28, 1], name="input_y")
@@ -147,7 +154,8 @@ def model(train_input_dir,
                 #     raise Exception("error is small!")
                 mean_valid_loss = temp_mean_valid_loss
 
-            ##################################################################            
+            ################################################## Added by HiHiC ######
+            ########################################################################            
             if epoch%10 == 0:
                 sec = time.time()-start
                 times = str(datetime.timedelta(seconds=sec))
@@ -159,7 +167,8 @@ def model(train_input_dir,
                 
                 ckpt_file = f"{str(epoch).zfill(5)}_{short}"
                 Saver.save(sess, os.path.join(saver_dir, ckpt_file), write_meta_graph=False)
-            ##################################################################
+            ########################################################################
+            ########################################################################
                     
         # except Exception as e:
         #     print(e)
@@ -167,9 +176,7 @@ def model(train_input_dir,
         #     Saver.save(sess, saver_dir + '/model/', global_step=step)
         #     print("training is over...")
             
-    ##################################################################        
-    np.save(LOSS_LOG, [train_epoch, train_time, train_loss])
-    ##################################################################
+    np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_SRHiC'), [train_epoch, train_time, train_loss])### Added by HiHiC ##
 
 
 
