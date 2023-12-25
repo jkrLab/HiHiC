@@ -268,13 +268,13 @@ if model == "DFHiC":
     hr_mats_test,lr_mats_test,distance_test = DFHiC_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test: 18~22
     print(f"\n  ...Done cropping whole matrix into submatrix for {model} training...")
 
-    os.makedirs(save_dir+'Train/', exist_ok=True)
-    os.makedirs(save_dir+'Valid/', exist_ok=True)
-    os.makedirs(save_dir+'Test/', exist_ok=True)
+    os.makedirs(save_dir+'train/', exist_ok=True)
+    os.makedirs(save_dir+'valid/', exist_ok=True)
+    os.makedirs(save_dir+'test/', exist_ok=True)
 
-    np.savez(save_dir+f'Train/train_ratio{data_ratio}.npz', train_lr=lr_mats_train,train_hr=hr_mats_train,distance=distance_train)
-    np.savez(save_dir+f'Valid/valid_ratio{data_ratio}.npz', valid_lr=lr_mats_valid,valid_hr=hr_mats_valid,distance=distance_valid)
-    np.savez(save_dir+f'Test/test_ratio{data_ratio}.npz', test_lr=lr_mats_test,test_hr=hr_mats_test,distance=distance_test)
+    np.savez(save_dir+f'train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,distance=distance_train)
+    np.savez(save_dir+f'valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,distance=distance_valid)
+    np.savez(save_dir+f'test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,distance=distance_test)
 
 
 elif model == "DeepHiC":      
@@ -286,13 +286,13 @@ elif model == "DeepHiC":
     compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in hr_contacts_dict.items()}
     size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{ref_chrom}').readlines()}
 
-    os.makedirs(save_dir+'Train/', exist_ok=True)
-    os.makedirs(save_dir+'Valid/', exist_ok=True)
-    os.makedirs(save_dir+'Test/', exist_ok=True)
+    os.makedirs(save_dir+'train/', exist_ok=True)
+    os.makedirs(save_dir+'valid/', exist_ok=True)
+    os.makedirs(save_dir+'test/', exist_ok=True)
 
-    np.savez(save_dir+f'Train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,size=size)
-    np.savez(save_dir+f'Valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,size=size)
-    np.savez(save_dir+f'Test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,size=size)
+    np.savez(save_dir+f'train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,size=size)
+    np.savez(save_dir+f'valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,size=size)
+    np.savez(save_dir+f'test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,size=size)
     
 elif model == "HiCARN":          
     hr_mats_train,lr_mats_train,coordinates_train = HiCARN_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train:1~14
@@ -303,13 +303,13 @@ elif model == "HiCARN":
     compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in hr_contacts_dict.items()}
     size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{ref_chrom}').readlines()}
 
-    os.makedirs(save_dir+'Train/', exist_ok=True)
-    os.makedirs(save_dir+'Valid/', exist_ok=True)
-    os.makedirs(save_dir+'Test/', exist_ok=True)
+    os.makedirs(save_dir+'train/', exist_ok=True)
+    os.makedirs(save_dir+'valid/', exist_ok=True)
+    os.makedirs(save_dir+'test/', exist_ok=True)
 
-    np.savez(save_dir+f'Train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,size=size)
-    np.savez(save_dir+f'Valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,size=size)
-    np.savez(save_dir+f'Test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,size=size)
+    np.savez(save_dir+f'train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,size=size)
+    np.savez(save_dir+f'valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,size=size)
+    np.savez(save_dir+f'test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,size=size)
 
 elif model == "HiCNN":     
     hr_mats_train,lr_mats_train,hr_coordinates_train,lr_coordinates_train = HiCNN_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train:1~14
@@ -317,11 +317,11 @@ elif model == "HiCNN":
     # hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = HiCNN_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
     print(f"\n  ...Done cropping whole matrix into submatrix for {model} training...")
 
-    os.makedirs(save_dir+'Train/', exist_ok=True)
-    os.makedirs(save_dir+'Valid/', exist_ok=True)
+    os.makedirs(save_dir+'train/', exist_ok=True)
+    os.makedirs(save_dir+'valid/', exist_ok=True)
 
-    np.savez(save_dir+f'Train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds_data=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
-    np.savez(save_dir+f'Valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds_data=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
+    np.savez(save_dir+f'train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
+    np.savez(save_dir+f'valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
     
     # np.save(save_dir+f'subMats_train_target_ratio{data_ratio}', hr_mats_train)
     # np.save(save_dir+f'subMats_train_ratio{data_ratio}', lr_mats_train)
@@ -337,14 +337,14 @@ elif model == "SRHiC":
     hr_mats_valid,lr_mats_valid = SRHiC_data_split([f'chr{idx}' for idx in list(range(15,18))]) # valid:15~17
     print(f"\n  ...Done cropping whole matrix into submatrix for {model} training...")
 
-    os.makedirs(save_dir+'Train/', exist_ok=True)
-    os.makedirs(save_dir+'Valid/', exist_ok=True)
+    os.makedirs(save_dir+'train/', exist_ok=True)
+    os.makedirs(save_dir+'valid/', exist_ok=True)
     
     train = np.concatenate((lr_mats_train[:,0,:,:], np.concatenate((hr_mats_train[:,0,:,:],np.zeros((hr_mats_train.shape[0],12,28))), axis=1)), axis=2)
     valid = np.concatenate((lr_mats_valid[:,0,:,:], np.concatenate((hr_mats_valid[:,0,:,:],np.zeros((hr_mats_valid.shape[0],12,28))), axis=1)), axis=2)
 
-    np.save(save_dir+f'Train/train_ratio{data_ratio}', train)
-    np.save(save_dir+f'Valid/valid_ratio{data_ratio}', valid)
+    np.save(save_dir+f'train/train_ratio{data_ratio}', train)
+    np.save(save_dir+f'valid/valid_ratio{data_ratio}', valid)
     
 else:
     assert model == "hicplus", "    model name is not correct "
@@ -352,11 +352,11 @@ else:
     hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = hicplus_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
     print(f"\n  ...Done cropping whole matrix into submatrix for {model} training...")
 
-    os.makedirs(save_dir+'Train/', exist_ok=True)
-    os.makedirs(save_dir+'Valid/', exist_ok=True)
+    os.makedirs(save_dir+'train/', exist_ok=True)
+    os.makedirs(save_dir+'valid/', exist_ok=True)
 
-    np.savez(save_dir+f'Train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds_data=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
-    np.savez(save_dir+f'Valid/valid_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds_data=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
+    np.savez(save_dir+f'train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
+    np.savez(save_dir+f'valid/valid_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
 
     # np.save(save_dir+f'subMats_train_target_ratio{data_ratio}', hr_mats_train)
     # np.save(save_dir+f'subMats_train_ratio{data_ratio}', lr_mats_train)

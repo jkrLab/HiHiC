@@ -54,6 +54,7 @@ conv2d3_filters_size = 5
 #low_resolution_samples = np.load(gzip.GzipFile('/home/zhangyan/SRHiC_samples/IMR90_down_HINDIII16_chr1_8.npy.gz', "r")).astype(np.float32) * down_sample_ratio
 #high_resolution_samples = np.load(gzip.GzipFile('/home/zhangyan/SRHiC_samples/original10k/_IMR90_HindIII_original_chr1_8.npy.gz', "r")).astype(np.float32)
 
+# def train(lowres,highres, outModel):
 def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
     
     ########################################################## Added by HiHiC ##
@@ -82,7 +83,6 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
     padding = conv2d1_filters_size + conv2d2_filters_size + conv2d3_filters_size - 3
     half_padding = padding // 2
     output_length = sample_size - padding
-    
     Y = []
     for i in range(high_resolution_samples.shape[0]):
         no_padding_sample = high_resolution_samples[i][0][half_padding:(sample_size-half_padding) , half_padding:(sample_size - half_padding)]
@@ -106,8 +106,7 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
 
     optimizer = optim.SGD(Net.parameters(), lr = 0.00001)
     _loss = nn.MSELoss()
-    # Net.train()
-    Net.to(device)
+    Net.train()
 
     running_loss = 0.0
     running_loss_validate = 0.0
@@ -115,13 +114,14 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
 
     # write the log file to record the training process
     # with open('HindIII_train.txt', 'w') as log:
-    for epoch in range(0, int(EPOCH)): # 3500
+    # for epoch in range(0, 3500):
+    for epoch in range(1, int(EPOCH)+1):
         for i, (v1, v2) in enumerate(zip(lowres_loader, hires_loader)):
             if (i == len(lowres_loader) - 1):
                 continue
             _lowRes, _ = v1
             _highRes, _ = v2
-            
+
             _lowRes = Variable(_lowRes)
             _highRes = Variable(_highRes).unsqueeze(1)
 
@@ -131,9 +131,8 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
             _lowRes = _lowRes.to(device)
             _highRes = _highRes.to(device)
             optimizer.zero_grad()
-            # y_prediction = Net(_lowRes)
-            y_prediction = Net.to(device)
-    
+            y_prediction = Net(_lowRes)
+
             loss = _loss(y_prediction, _highRes)
             loss.backward()
             optimizer.step()

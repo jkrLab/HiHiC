@@ -12,8 +12,7 @@ from math import log10
 
 
 ################################################## Added by HiHiC ######
-########################################################################
-import datetime, argparse
+import datetime, argparse ##############################################
 
 parser = argparse.ArgumentParser(description='HiCARN1 training process')
 parser._action_groups.pop()
@@ -47,8 +46,7 @@ train_epoch = []
 train_loss = []
 train_time = []
 
-os.makedirs(args.loss_log_dir, exist_ok=True)
-########################################################################
+os.makedirs(args.loss_log_dir, exist_ok=True) ##########################
 ########################################################################
 
 cs = np.column_stack
@@ -89,26 +87,29 @@ print("Device being used: ", device)
 # train_file = os.path.join(data_dir, f'hicarn_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_train.npz')
 # train = np.load(train_file)
 data_all = [np.load(os.path.join(args.train_data_dir, fname), allow_pickle=True) for fname in os.listdir(args.train_data_dir)] ### Added by HiHiC ##
-train = {'data': [], 'target': [], 'inds': []} #################################################################################################################
+train = {'data': [], 'target': [], 'inds': []} #####################################################################################################
 for data in data_all:
     for k, v in data.items():
         if k in train: 
-            train[k].append(v)
-train = {k: np.concatenate(v, axis=0) for k, v in train.items()}
+            train[k].append(v) #####################################################################################################################
+train = {k: np.concatenate(v, axis=0) for k, v in train.items()} ###################################################################################
 
 train_data = torch.tensor(train['data'], dtype=torch.float)
 train_target = torch.tensor(train['target'], dtype=torch.float)
 train_inds = torch.tensor(train['inds'], dtype=torch.long)
 
-train_set = TensorDataset(train_data, train_target, train_inds)
+train_set = TensorDataset(train_data, train_target, train_inds) 
 
 # prepare valid dataset
 # valid_file = os.path.join(data_dir, f'hicarn_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_valid.npz')
 # valid = np.load(valid_file)
 data_all = [np.load(os.path.join(args.valid_data_dir, fname), allow_pickle=True) for fname in os.listdir(args.valid_data_dir)] ### Added by HiHiC ##
-valid = {} #########################################################################################################################################
-for data in data_all: ##############################################################################################################################
-    [valid.update({k: v}) for k, v in data.items()] ################################################################################################
+valid = {'data': [], 'target': [], 'inds': []} #####################################################################################################
+for data in data_all:
+    for k, v in data.items():
+        if k in valid: 
+            valid[k].append(v) #####################################################################################################################
+valid = {k: np.concatenate(v, axis=0) for k, v in valid.items()} ###################################################################################
 
 valid_data = torch.tensor(valid['data'], dtype=torch.float)
 valid_target = torch.tensor(valid['target'], dtype=torch.float)

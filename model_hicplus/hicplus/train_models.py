@@ -7,16 +7,16 @@ from math import log10
 #import torch.optim as optim
 #from torch.autograd import Variable
 #from torch.utils.data import DataLoader
-# from hicplus import utils # 가져다 쓴 util 없어서 주석처리
+# from hicplus import utils
 #import model
-# import argparse
-# from hicplus 
+import argparse
+# from hicplus import trainConvNet
 import trainConvNet
 import numpy as np
 
 
 ##################################################################### Added by HiHiC ##
-import os, argparse
+import os #############################################################################
 
 parser = argparse.ArgumentParser(description='hicplus training process')
 parser._action_groups.pop()
@@ -41,16 +41,9 @@ required.add_argument('--train_data_dir', type=str, metavar='[7]', required=True
                       help='directory path of training data')
 optional.add_argument('--valid_data_dir', type=str, metavar='[8]',
                       help="directory path of validation data, but hicplus doesn't need")
-args = parser.parse_args()
+args = parser.parse_args() ############################################################
+#######################################################################################
 
-args.root_dir
-args.model
-args.batch_size
-args.gpu_id
-args.loss_log_dir
-args.train_data_dir
-
-##################################################################
 
 # chrs_length = [249250621,243199373,198022430,191154276,180915260,171115067,159138663,146364022,141213431,135534747,135006516,133851895,115169878,107349540,102531392,90354753,81195210,78077248,59128983,63025520,48129895,51304566]
 
@@ -59,11 +52,6 @@ args.train_data_dir
 
 # def main(args):
 def main():
-
-    data_all = [np.load(os.path.join(args.train_data_dir, fname), allow_pickle=True) for fname in os.listdir(args.train_data_dir)] ### Added by HiHiC ##
-    train = {} #########################################################################################################################################
-    for data in data_all: ##############################################################################################################################
-        [train.update({k: v}) for k, v in data.items()] ################################################################################################
 
     # highres = utils.train_matrix_extract(args.chromosome, 10000, args.inputfile) # each chromosome matrix by juicer
      
@@ -76,11 +64,22 @@ def main():
 
     # lowres = utils.genDownsample(highres,1/float(args.scalerate))
     # lowres_sub,index = utils.train_divide(lowres) # 40X40 submatrix and index (np.array)
-    
     # print(lowres_sub.shape)
     # np.save(infile+"lowres",lowres_sub)
+    
+    data_all = [np.load(os.path.join(args.train_data_dir, fname), allow_pickle=True) for fname in os.listdir(args.train_data_dir)] ### Added by HiHiC ##
+    # print(data_all)
+    # print(data_all[0].files, "#####################")
+    train = {'data': [], 'target': [], 'inds_data': [], 'inds_target': []} #####################################################################################################
+    for data in data_all:
+        for k, v in data.items():
+            if k in train: 
+                train[k].append(v) #####################################################################################################################
+    train = {k: np.concatenate(v, axis=0) for k, v in train.items()} ###################################################################################
+ 
 
     print('start training...')
+    # trainConvNet.train(lowres_sub,highres_sub,args.outmodel)
     trainConvNet.train(train['data'],train['target'],args.output_model_dir,args.epoch,args.batch_size,args.gpu_id, args.loss_log_dir)
 
     print('finished...')

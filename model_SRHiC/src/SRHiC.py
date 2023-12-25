@@ -32,7 +32,7 @@ def model(train_input_dir,
           LOSS_LOG_DIR,
           GPU_ID,
           BATCH_SIZE,
-          feature_size=32
+          feature_size=32,
           ):
     ################################################## Added by HiHiC ######
     ########################################################################
@@ -42,7 +42,7 @@ def model(train_input_dir,
     train_loss = []
     train_time = []
     
-    os.environ["CUDA_VISIBLE_DEVICES"] = GPU_ID
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(GPU_ID)
     epoch_size = BATCH_SIZE
     ########################################################################
     ########################################################################
@@ -95,13 +95,14 @@ def model(train_input_dir,
         tf.local_variables_initializer().run()
 
         train_writer = tf.summary.FileWriter(saver_dir + "/train", sess.graph)
-
+        
         input_list = os.listdir(train_input_dir)
         mean_valid_loss = 1e6 #Initialize to a very large value
         # try:
         for epoch in range(iterations_size+1):
             for file in input_list:
-                x = np.load(train_input_dir + file).astype(np.float32)
+                # x = np.load(train_input_dir + file).astype(np.float32)
+                x = np.load(os.path.join(train_input_dir, file)).astype(np.float32) ######################################################################### Added by HiHiC ##
                 x = np.reshape(x, [x.shape[0], 40, 68, 1])
                 size_input = int(x.shape[0] / epoch_size) + 1
                 np.random.shuffle(x)
@@ -128,9 +129,11 @@ def model(train_input_dir,
                 print("the train file {0}  the train mean loss is {1}".format(file, total_loss / size_input))
 
             if epoch > 20 and epoch % 5 == 2:
-                valid_file = os.listdir(valid_input_dir)
-                valid_file = valid_input_dir + valid_file[0]
-                x = np.load(valid_file).astype(np.float32)
+                # valid_file = os.listdir(valid_input_dir)
+                # valid_file = valid_input_dir + valid_file[0]
+                # x = np.load(valid_file).astype(np.float32)
+                data_all = [np.load(os.path.join(valid_input_dir, fname), allow_pickle=True).astype(np.float32) for fname in os.listdir(valid_input_dir)] ### Added by HiHiC ##
+                x = np.concatenate(data_all, axis=0) ##########################################################################################################################
                 x = np.reshape(x, [x.shape[0], 40, 68, 1])
                 size_input = int(x.shape[0] / epoch_size) + 1
                 np.random.shuffle(x)
@@ -177,7 +180,6 @@ def model(train_input_dir,
         #     print("training is over...")
             
     np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_SRHiC'), [train_epoch, train_time, train_loss])### Added by HiHiC ##
-
 
 
 if __name__ == '__main__':
