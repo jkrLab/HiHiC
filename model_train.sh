@@ -11,6 +11,9 @@ root_dir=$(pwd)
 # train_data_dir=$7
 # valid_data_dir=$8
 
+# bash model_train.sh DFHiC 500 128 0 ./checkpoints_DFHiC ./log ./data_DFHiC/train ./data_DFHiC/valid
+# When you use hicplus, the validation data directory is not required. If you put these arguments in the command line, these should be placed in the following order: model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory, and validation data directory.
+
 while getopts :m:e:b:g:o:l:t:v: flag; 
 do
     case '$flag' in

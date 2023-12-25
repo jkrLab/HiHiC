@@ -50,7 +50,7 @@ python data_generate.py -i ./data -d ./data_downsampled_16 -m DFHiC -g ./hg19.tx
 
 
 Ⅲ. Environment for each deep learning model
---------------------------------------------
+-----------------------------------------------
 * hicplus, HiCNN, deepHiC, or HiCARN:
 ```
 docker run --rm --gpus all -it --name hihic_torch -v ${PWD}:${PWD} jkrlab/hihic_torch
@@ -60,19 +60,12 @@ docker run --rm --gpus all -it --name hihic_torch -v ${PWD}:${PWD} jkrlab/hihic_
 docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/hihic_tensorflow
 ```
 
-Ⅳ. Training
+Ⅳ. Model training
 --------------------- 
-```
-bash model_train.sh DFHiC 500 128 0 ./checkpoints_DFHiC ./log ./data_DFHiC/train ./data_DFHiC/valid
-```
-> You should specify the required arguments of the model you'd like to use, such as **model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory**, and **validation data directory**. When you use hicplus, the validation data directory is not required.
-> If you put these arguments in the command line, these should be placed in the following order: model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory, and validation data directory.   
-> *All the deep learning model codes were downloaded from each author's GitHub and modified for performance comparison. For light memory storage, pre-trained weights and data have been removed*.
-
 ```
 bash model_train.sh -m DFHiC -e 500 -b 128 -g 0 -o ./checkpoints_DFHiC -l ./log -t ./data_DFHiC/train -v ./data_DFHiC/valid
 ```
->You should specify the required arguments of the model you'd like to use, such as **model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory**, and **validation data directory**. When you use hicplus, the validation data directory is not required.
+>You should specify the required arguments of the model you'd like to use, such as **model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory**, and **validation data directory**. When you use hicplus, the validation data directory is not required.    
 > *All the deep learning model codes were downloaded from each author's GitHub and modified for performance comparison. For light memory storage, pre-trained weights and data have been removed*.
 >```
 >-m : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - (example) DFHiC   
@@ -85,8 +78,8 @@ bash model_train.sh -m DFHiC -e 500 -b 128 -g 0 -o ./checkpoints_DFHiC -l ./log 
 >-v : Directory path of input validation data - (example) ./data_DFHiC/valid
 >```
 
-Ⅴ. HiC contact map enhancement
---------------------------------------
+Ⅴ. HiC contact map enhancement with pretrained weights
+----------------------------------------------------------
 > Without training, you can use pre-trained models in our platform. The pre-trained model weights can be downloaded by transfer protocol.
 ```
 
