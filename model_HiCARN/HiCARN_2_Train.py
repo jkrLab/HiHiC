@@ -48,8 +48,7 @@ train_epoch = []
 train_loss = []
 train_time = []
 
-os.makedirs(args.loss_log_dir, exist_ok=True)
-########################################################################
+os.makedirs(args.loss_log_dir, exist_ok=True) ##########################
 ########################################################################
 
 cs = np.column_stack
@@ -263,15 +262,15 @@ for epoch in range(1, num_epochs + 1):
         best_ckpt_file = f'{datestr}_bestg.pytorch'
         torch.save(netG.state_dict(), os.path.join(out_dir, best_ckpt_file))
 
-        if epoch%10 == 0: ################################# Added by HiHiC #####
+    if epoch%10 == 0: ##################################### Added by HiHiC #####
         sec = time.time()-start ################################################
         times = str(datetime.timedelta(seconds=sec))
         short = times.split(".")[0].replace(':','.') 
         train_epoch.append(epoch) 
         train_time.append(short)       
-        train_loss.append(f"{now_ssim:.2f}") 
-        ckpt_file = f"{str(epoch).zfill(5)}_{short}.pytorch" ##################
-        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) #######
+        train_loss.append(f"{valid_gloss:.3f}") 
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{valid_gloss:.3f}" ##################
+        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) ###########
     
         
 # final_ckpt_g = f'{datestr}_finalg_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_{name}.pytorch'        

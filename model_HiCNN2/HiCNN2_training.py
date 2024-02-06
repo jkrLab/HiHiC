@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 import pickle
 import os
@@ -227,8 +226,8 @@ def main():
 			short = times.split(".")[0].replace(':','.')		
 			train_epoch.append(epoch)
 			train_time.append(short)        
-			train_loss.append(f"{loss_validate:.2f}")	
-			ckpt_file = f"{str(epoch).zfill(5)}_{short}"
+			train_loss.append(f"{loss_validate:.3f}")	
+			ckpt_file = f"{str(epoch).zfill(5)}_{short}_{loss_validate:.3f}"
 			torch.save(model.state_dict(), os.path.join(args.output_model_dir, ckpt_file)) #############################################	
 	np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss]) ########################
 

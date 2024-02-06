@@ -202,7 +202,8 @@ for epoch in range(1, n_epoch +1):
         wait=0
         best_mse_val = mse_val
         #save the model with minimal MSE in validation samples
-        tl.files.save_npz(net.all_params, name=checkpoint + '/{}_best.npz'.format(tl.global_flag['mode']), sess=sess)
+        # tl.files.save_npz(net.all_params, name=checkpoint + '/{}_best.npz'.format(tl.global_flag['mode']), sess=sess)
+        tl.files.save_npz_dict(net.all_params, name=checkpoint + '/{}_best.npz'.format(tl.global_flag['mode']), sess=sess)
         best_epoch=epoch
         # np.savetxt(checkpoint + 'best_epoch.txt',np.array(best_epoch))
     # else:
@@ -224,9 +225,9 @@ for epoch in range(1, n_epoch +1):
         short = times.split(".")[0].replace(':','.')
         train_epoch.append(epoch)
         train_time.append(short)        
-        train_loss.append(f"{mse_val:.2f}")
-        ckpt_file = f"{str(epoch).zfill(5)}_{mse_val}.npz"#########################################
-        tl.files.save_npz(net.all_params, name=os.path.join(checkpoint, ckpt_file), sess=sess) ####
+        train_loss.append(f"{mse_val:.3f}")
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{mse_val:.3f}.npz"###############################
+        tl.files.save_npz_dict(net.all_params, name=os.path.join(checkpoint, ckpt_file), sess=sess) ####                
     
 print("epoch")
 print(best_epoch)

@@ -14,6 +14,20 @@ from utils.io import spreadM, together
 
 from all_parser import *
 
+###########################################################
+root_dir = "/data/HiHiC-main"
+cell_line = "GM12878"
+low_res = "16"
+ckpt_file = "/data/HiHiC-main/checkpoints_DeepHiC/00500_7.32.32_948.927"
+ckpt_file = "/data/HiHiC-main/model_DeepHiC/deephic_raw_16.pth"
+# cuda = "0"
+device = "cpu"
+model = "HiCARN_1"
+deephic_file = "/data/HiHiC-main/data_DeepHiC/test/test_ratio16.npz"
+deephic_data = np.load(deephic_file, allow_pickle=True)
+out_dir = "/data/HiHiC-main/output"
+os.makedirs(out_dir, exist_ok=True)
+###########################################################
 
 def dataloader(data, batch_size=64):
     inputs = torch.tensor(data['data'], dtype=torch.float)
@@ -37,7 +51,9 @@ def filename_parser(filename):
     scale = 1 if info_str[3] == 'nonpool' else get_digit(info_str[3])
     return chunk, stride, bound, scale
 
-def deephic_predictor(deephic_loader, ckpt_file, scale, res_num, device):
+# def deephic_predictor(deephic_loader, ckpt_file, scale, res_num, device):
+def deephic_predictor(deephic_loader, ckpt_file, device, scale, res_num):
+
     deepmodel = deephic.Generator(scale_factor=scale, in_channel=1, resblock_num=res_num).to(device)
     if not os.path.isfile(ckpt_file):
         ckpt_file = f'save/{ckpt_file}'
@@ -55,55 +71,63 @@ def deephic_predictor(deephic_loader, ckpt_file, scale, res_num, device):
             result_inds.append(inds.numpy())
     result_data = np.concatenate(result_data, axis=0)
     result_inds = np.concatenate(result_inds, axis=0)
-    deep_hics = together(result_data, result_inds, tag='Reconstructing: ')
-    return deep_hics
+    # deep_hics = together(result_data, result_inds, tag='Reconstructing: ')
+    # return deep_hics
+    return result_data, result_inds
 
-def save_data(deep_hic, compact, size, file):
-    deephic = spreadM(deep_hic, compact, size, convert_int=False, verbose=True)
-    np.savez_compressed(file, deephic=deephic, compact=compact)
-    print('Saving file:', file)
+# def save_data(deep_hic, compact, size, file):
+#     deephic = spreadM(deep_hic, compact, size, convert_int=False, verbose=True)
+#     np.savez_compressed(file, deephic=deephic, compact=compact)
+#     print('Saving file:', file)
 
 if __name__ == '__main__':
-    args = data_predict_parser().parse_args(sys.argv[1:])
-    cell_line = args.cell_line
-    low_res = args.low_res
-    ckpt_file = args.checkpoint
-    res_num = args.resblock
-    cuda = args.cuda
+    # args = data_predict_parser().parse_args(sys.argv[1:])
+    # cell_line = args.cell_line
+    # low_res = args.low_res
+    # ckpt_file = args.checkpoint
+    # res_num = args.resblock
+    # cuda = args.cuda
     print('WARNING: Predict process needs large memory, thus ensure that your machine have ~150G memory.')
-    if multiprocessing.cpu_count() > 23:
-        pool_num = 23
-    else:
-        exit()
+    # if multiprocessing.cpu_count() > 23:
+    #     pool_num = 23
+    # else:
+    #     exit()
 
-    in_dir = os.path.join(root_dir, 'data')
-    out_dir = os.path.join(root_dir, 'predict', cell_line)
-    mkdir(out_dir)
+    # in_dir = os.path.join(root_dir, 'data')
+    # out_dir = os.path.join(root_dir, 'predict', cell_line)
+    # mkdir(out_dir)
+    os.makedirs(out_dir, exist_ok=True)
 
-    files = [f for f in os.listdir(in_dir) if f.find(low_res) >= 0]
-    deephic_file = [f for f in files if f.find(cell_line.lower()+'.npz') >= 0][0]
+    # files = [f for f in os.listdir(in_dir) if f.find(low_res) >= 0]
+    # deephic_file = [f for f in files if f.find(cell_line.lower()+'.npz') >= 0][0]
 
-    chunk, stride, bound, scale = filename_parser(deephic_file)
+    # chunk, stride, bound, scale = filename_parser(deephic_file)
 
-    device = torch.device(f'cuda:{cuda}' if (torch.cuda.is_available() and cuda>-1 and cuda<torch.cuda.device_count()) else 'cpu')
-    print(f'Using device: {device}')
+    # device = torch.device(f'cuda:{cuda}' if (torch.cuda.is_available() and cuda>-1 and cuda<torch.cuda.device_count()) else 'cpu')
+    # print(f'Using device: {device}')
     
     start = time.time()
     print(f'Loading data[DeepHiC]: {deephic_file}')
-    deephic_data = np.load(os.path.join(in_dir, deephic_file), allow_pickle=True)
+    # deephic_data = np.load(os.path.join(in_dir, deephic_file), allow_pickle=True)
     deephic_loader = dataloader(deephic_data)
     
     indices, compacts, sizes = data_info(deephic_data)
-    deep_hics = deephic_predictor(deephic_loader, ckpt_file, scale, res_num, device)
-    
-    def save_data_n(key):
-        file = os.path.join(out_dir, f'predict_chr{key}_{low_res}.npz')
-        save_data(deep_hics[key], compacts[key], sizes[key], file)
+    # deep_hics = deephic_predictor(deephic_loader, ckpt_file, scale, res_num, device)
+    result_data, result_inds = deephic_predictor(deephic_loader, ckpt_file, device, scale=1, res_num=5)
 
-    pool = multiprocessing.Pool(processes=pool_num)
-    print(f'Start a multiprocess pool with process_num = {pool_num} for saving predicted data')
-    for key in compacts.keys():
-        pool.apply_async(save_data_n, (key,))
-    pool.close()
-    pool.join()
+    # def save_data_n(key):
+    #     file = os.path.join(out_dir, f'predict_chr{key}_{low_res}.npz')
+    #     save_data(deep_hics[key], compacts[key], sizes[key], file)
+    # for key in sorted(list(np.unique(indices[:, 0]))):
+    # file = os.path.join(out_dir, f'DeepHiC_predict_chr_{low_res}.npz')
+    file = os.path.join(out_dir, f'DeepHiC_predict_{low_res}_pretrained.npz')
+    np.savez_compressed(file, data=result_data, inds=result_inds)
+    print('Saving file:', file)
+
+    # pool = multiprocessing.Pool(processes=pool_num)
+    # print(f'Start a multiprocess pool with process_num = {pool_num} for saving predicted data')
+    # for key in compacts.keys():
+    #     pool.apply_async(save_data_n, (key,))
+    # pool.close()
+    # pool.join()
     print(f'All data saved. Running cost is {(time.time()-start)/60:.1f} min.')

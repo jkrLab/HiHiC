@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import SRHiC_predict
+# import SRHiC_predict
 import SRHiC
 import tensorflow as tf
 
@@ -24,7 +24,7 @@ required.add_argument('--batch_size', type=int, default=64, metavar='[3]', requi
                       help='input batch size for training (default: 64)')
 required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
                       help='GPU ID for training (defalut: 0)')
-required.add_argument('--output_model_dir', type=str, default='./checkpoints_SRHiC', metavar='[5]', required=True,
+required.add_argument('--output_model_dir', type=str, default='./checkpoints_SRHiC__', metavar='[5]', required=True,
                       help='directory path of training model (default: HiHiC/checkpoints_SRHiC/)')
 required.add_argument('--loss_log_dir', type=str, default='./log', metavar='[6]', required=True,
                       help='directory path of training log (default: HiHiC/log/)')

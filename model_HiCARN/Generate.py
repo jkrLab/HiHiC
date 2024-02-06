@@ -47,7 +47,8 @@ if __name__ == '__main__':
     pool_str = 'nonpool' if scale == 1 else f'{pool_type}pool{scale}'
     print(f'Going to read {high_res} and {low_res} data, then deviding matrices with {pool_str}')
 
-    pool_num = 23 if multiprocessing.cpu_count() > 23 else multiprocessing.cpu_count()
+    # pool_num = 23 if multiprocessing.cpu_count() > 23 else multiprocessing.cpu_count()
+    pool_num = 5 ###################################################
 
     data_dir = os.path.join(root_dir, 'mat', cell_line)
     out_dir = os.path.join(root_dir, 'data')

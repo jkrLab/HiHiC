@@ -170,6 +170,13 @@ data_*/
 # others
 log*/
 checkpoints_*/
+whole_mats/
 juicer_tools.jar
 loss_trend.png
 train.ipynb
+*_copy.py
+*_loss_trend.png
+
+*.ipynb
+TAD*
+model_prediction.sh

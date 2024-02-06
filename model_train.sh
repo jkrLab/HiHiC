@@ -1,30 +1,24 @@
 #!/bin/bash
 seed=42
-
 root_dir=$(pwd)
-# model=$1
-# epoch=$2
-# batch_size=$3
-# gpu_id=$4
-# output_model_dir=$5
-# loss_log_dir=$6
-# train_data_dir=$7
-# valid_data_dir=$8
 
-# bash model_train.sh DFHiC 500 128 0 ./checkpoints_DFHiC ./log ./data_DFHiC/train ./data_DFHiC/valid
-# When you use hicplus, the validation data directory is not required. If you put these arguments in the command line, these should be placed in the following order: model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory, and validation data directory.
-
-while getopts :m:e:b:g:o:l:t:v: flag; 
+while getopts ":m:e:b:g:o:l:t:v:" flag; 
 do
-    case '$flag' in
-        m) model="$OPTARG";;
-        e) epoch="$OPTARG";;
-        b) batch_size="$OPTARG";;
-        g) gpu_id="$OPTARG";;
-        o) output_model_dir="$OPTARG";;
-        l) loss_log_dir="$OPTARG";;
-        t) train_data_dir="$OPTARG";;
-        v) valid_data_dir="$OPTARG";;
+    case $flag in
+        m) model=$OPTARG;;
+        e) epoch=$OPTARG;;
+        b) batch_size=$OPTARG;;
+        g) gpu_id=$OPTARG;;
+        o) output_model_dir=$OPTARG;;
+        l) loss_log_dir=$OPTARG;;
+        t) train_data_dir=$OPTARG;;
+        v) valid_data_dir=$OPTARG;;
+        \?)
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1;;
+        :)
+        echo "Option -$OPTARG requires an argument." >&2
+        exit 1;;
     esac
 done
 

@@ -247,8 +247,8 @@ for epoch in range(1, num_epochs+1):
         short = times.split(".")[0].replace(':','.')
         train_epoch.append(epoch)
         train_time.append(short)        
-        train_loss.append(f"{now_ssim:.2f}")
-        ckpt_file = f"{str(epoch).zfill(5)}_{short}.pytorch" #######################
+        train_loss.append(f"{valid_gloss:.3f}")
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{valid_gloss:.3f}" #######################
         torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) ############
     
 final_ckpt_g = f'{datestr}_finalg_deephic.pytorch'
