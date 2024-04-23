@@ -12,22 +12,38 @@ from model import model1
 from model import model2
 from model import model3
 
-###########################################################
+
+################################################## Added by HiHiC ######
+########################################################################
+
 import os
 
-root_dir = "/data/HiHiC-main"
-cell_line = "GM12878"
-low_res = "16"
-ckpt_file = "/data/HiHiC-main/checkpoints_HiCNN2/00150_3.21.11_38.857"
-# cuda = "0"
-device = "cpu"
-model = "3"
-input_file = "/data/HiHiC-main/data_HiCNN/test/test_ratio16.npz"
-# hicarn_data = np.load(HiCARN_file, allow_pickle=True)
-out_dir = "/data/HiHiC-main/output"
-batch_size = 128
-os.makedirs(out_dir, exist_ok=True)
-###########################################################
+parser = argparse.ArgumentParser(description='HiCNN2 prediction process')
+parser._action_groups.pop()
+required = parser.add_argument_group('required arguments')
+
+required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
+                      help='HiHiC directory')
+required.add_argument('--model', type=str, default='3', metavar='HiCNN2', required=True,
+                      help='model name')
+required.add_argument('--ckpt_file', type=str, metavar='[2]', required=True,
+                      help='pretrained model')
+required.add_argument('--batch_size', type=int, default=64, metavar='[3]', required=True,
+                      help='input batch size for training (default: 64)')
+required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
+                      help='GPU ID for training (defalut: 0)')
+required.add_argument('--down_ratio', type=int, metavar='[5]', required=True, 
+                      help='down sampling ratio')
+required.add_argument('--input_data', type=str, metavar='[6]', required=True,
+                      help='directory path of training model')
+required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
+                      help='directory path for saving enhanced output (default: HiHiC/output_enhanced/)')
+args = parser.parse_args()
+
+
+os.makedirs(args.output_data_dir, exist_ok=True) #######################
+########################################################################
+
 
 # parser = argparse.ArgumentParser(description='HiCNN2 predicting process')
 # parser._action_groups.pop()
@@ -52,14 +68,12 @@ os.makedirs(out_dir, exist_ok=True)
 # args = parser.parse_args()
 # use_cuda = not args.no_cuda and torch.cuda.is_available()
 # device = torch.device("cuda:0" if use_cuda else "cpu")
-device = torch.device('cpu')
+device = torch.device(f'cuda:{args.gpu_id}' if (torch.cuda.is_available() and args.gpu_id>-1 and args.gpu_id<torch.cuda.device_count()) else 'cpu')
 
-# if args.model == 1:
-if model == 1:
+if args.model == 1:
 	print("Using HiCNN2-1...")
 	Net = model1.Net().to(device).eval()
-# elif args.model == 2:
-elif model == 2:
+elif args.model == 2:
 	print("Using HiCNN2-2...")
 	Net = model2.Net().to(device).eval()
 else:
@@ -67,13 +81,12 @@ else:
 	Net = model3.Net().to(device).eval()
 
 # Net.load_state_dict(torch.load(args.file_best_model))
-Net.load_state_dict(torch.load(ckpt_file))
+Net.load_state_dict(torch.load(args.ckpt_file))
 
 # low_res_test = np.minimum(args.HiC_max, np.load(args.file_test_data).astype(np.float32) * args.down_ratio)
-# test_loader = torch.utils.data.DataLoader(data.TensorDataset(torch.from_numpy(low_res_test), torch.from_numpy(np.zeros(low_res_test.shape[0]))), batch_size=args.batch_size, shuffle=False)
-low_res_test = np.load(input_file, allow_pickle=True)
+low_res_test = np.load(args.input_data, allow_pickle=True)
 low_res_test = np.float32(low_res_test['data'])
-test_loader = torch.utils.data.DataLoader(data.TensorDataset(torch.from_numpy(low_res_test), torch.from_numpy(np.zeros(low_res_test.shape[0]))), batch_size=batch_size, shuffle=False)
+test_loader = torch.utils.data.DataLoader(data.TensorDataset(torch.from_numpy(low_res_test), torch.from_numpy(np.zeros(low_res_test.shape[0]))), batch_size=args.batch_size, shuffle=False)
 
 result = np.zeros((low_res_test.shape[0],1,28,28))
 for i, (data, _) in enumerate(test_loader):
@@ -81,15 +94,13 @@ for i, (data, _) in enumerate(test_loader):
 	output = Net(data2)
 	resulti = output.cpu().data.numpy()
 	resulti = np.squeeze(resulti)
-	# i1 = i * args.batch_size
-	# i2 = i1 + args.batch_size
-	i1 = i * batch_size
-	i2 = i1 + batch_size
-	# if i == int(low_res_test.shape[0]/args.batch_size):
-	if i == int(low_res_test.shape[0]/batch_size):
+	i1 = i * args.batch_size
+	i2 = i1 + args.batch_size
+	if i == int(low_res_test.shape[0]/args.batch_size):
 		i2 = low_res_test.shape[0]
 	result[i1:i2,0,:,:] = resulti
 
 # np.save(args.file_test_predicted, result)
-np.savez_compressed(os.path.join(out_dir, f"HiCNN2_predict_{low_res}.npz"), data=result)
+inds_target = np.load(args.input_data, allow_pickle=True)['inds_target']
+np.savez_compressed(os.path.join(args.output_data_dir, f"HiCNN2_predict_{args.down_ratio}_{args.ckpt_file.split('/')[-1].split('_')[0]}.npz"), data=result, inds=inds_target)
 

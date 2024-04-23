@@ -14,7 +14,6 @@ import time, datetime
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 # epoch_size = 256
-import matplotlib.pyplot as plt ####
 
 def res_block(_input, feature_size=32):
     output = slim.conv2d(_input, feature_size * 4, [1, 1])
@@ -24,6 +23,9 @@ def res_block(_input, feature_size=32):
     output = output + _input
     return output
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 def model(train_input_dir,
           valid_input_dir,
@@ -140,13 +142,7 @@ def model(train_input_dir,
                 valid_total_loss = 0
                 for i in range(size_input - 1):
                     input = x[i * epoch_size:i * epoch_size + epoch_size, :, 0:40]
-                    print(input.shape) ####
-                    plt.imshow(input[0], cmap='hot') ####
-                    plt.savefig(f'input_{i}.png') ####
                     truth = x[i * epoch_size:i * epoch_size + epoch_size, 0:28, 40:68]
-                    plt.imshow(truth[0], cmap='hot') ####
-                    plt.savefig(f'truth_{i}.png') ####
-                    print(truth.shape) ####
                     Loss, Pearson, _ = sess.run(
                         [loss, pearson, train_op],
                         feed_dict={input_x: input,
@@ -165,16 +161,17 @@ def model(train_input_dir,
 
             ################################################## Added by HiHiC ######
             ########################################################################            
-            if epoch%10 == 0:
+            if epoch:
+            # if epoch%10 == 0:
                 sec = time.time()-start
                 times = str(datetime.timedelta(seconds=sec))
                 short = times.split(".")[0].replace(':','.')
                     
                 train_epoch.append(epoch)
                 train_time.append(short)        
-                train_loss.append(f"{Loss:.3f}")
+                train_loss.append(f"{Loss:.10f}")
                 
-                ckpt_file = f"{str(epoch).zfill(5)}_{short}_{Loss:.3f}"
+                ckpt_file = f"{str(epoch).zfill(5)}_{short}_{Loss:.10f}"
                 Saver.save(sess, os.path.join(saver_dir, ckpt_file), global_step=step)
             ########################################################################
             ########################################################################

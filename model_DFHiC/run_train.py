@@ -219,14 +219,15 @@ for epoch in range(1, n_epoch +1):
     # summary_writer.add_summary(summary, epoch)
     
         
-    if epoch%10 == 0: ######################################################## Added by HiHiC #####
+    # if epoch%10 == 0: ######################################################## Added by HiHiC #####
+    if epoch: ######################################################## Added by HiHiC #####
         sec = time.time()-start ###################################################################
         times = str(datetime.timedelta(seconds=sec))
         short = times.split(".")[0].replace(':','.')
         train_epoch.append(epoch)
         train_time.append(short)        
-        train_loss.append(f"{mse_val:.3f}")
-        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{mse_val:.3f}.npz"###############################
+        train_loss.append(f"{mse_val:.10f}")
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{mse_val:.10f}.npz"###############################
         tl.files.save_npz_dict(net.all_params, name=os.path.join(checkpoint, ckpt_file), sess=sess) ####                
     
 print("epoch")

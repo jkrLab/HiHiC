@@ -14,20 +14,34 @@ from utils.io import spreadM, together
 
 from all_parser import *
 
-###########################################################
-root_dir = "/data/HiHiC-main"
-cell_line = "GM12878"
-low_res = "16"
-ckpt_file = "/data/HiHiC-main/checkpoints_DeepHiC/00500_7.32.32_948.927"
-ckpt_file = "/data/HiHiC-main/model_DeepHiC/deephic_raw_16.pth"
-# cuda = "0"
-device = "cpu"
-model = "HiCARN_1"
-deephic_file = "/data/HiHiC-main/data_DeepHiC/test/test_ratio16.npz"
-deephic_data = np.load(deephic_file, allow_pickle=True)
-out_dir = "/data/HiHiC-main/output"
-os.makedirs(out_dir, exist_ok=True)
-###########################################################
+################################################## Added by HiHiC ######
+########################################################################
+
+parser = argparse.ArgumentParser(description='DeepHiC prediction process')
+parser._action_groups.pop()
+required = parser.add_argument_group('required arguments')
+
+required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
+                      help='HiHiC directory')
+required.add_argument('--model', type=str, default='DeepHiC', metavar='DeepHiC', required=True,
+                      help='model name')
+required.add_argument('--ckpt_file', type=str, metavar='[2]', required=True,
+                      help='pretrained model')
+required.add_argument('--batch_size', type=int, default=64, metavar='[3]', required=True,
+                      help='input batch size for training (default: 64)')
+required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
+                      help='GPU ID for training (defalut: 0)')
+required.add_argument('--down_ratio', type=int, metavar='[5]', required=True, 
+                      help='down sampling ratio')
+required.add_argument('--input_data', type=str, metavar='[6]', required=True,
+                      help='directory path of training model')
+required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
+                      help='directory path for saving enhanced output (default: HiHiC/output_enhanced/)')
+args = parser.parse_args()
+
+########################################################################
+########################################################################
+
 
 def dataloader(data, batch_size=64):
     inputs = torch.tensor(data['data'], dtype=torch.float)
@@ -96,31 +110,33 @@ if __name__ == '__main__':
     # in_dir = os.path.join(root_dir, 'data')
     # out_dir = os.path.join(root_dir, 'predict', cell_line)
     # mkdir(out_dir)
-    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(args.output_data_dir, exist_ok=True)
 
     # files = [f for f in os.listdir(in_dir) if f.find(low_res) >= 0]
     # deephic_file = [f for f in files if f.find(cell_line.lower()+'.npz') >= 0][0]
 
     # chunk, stride, bound, scale = filename_parser(deephic_file)
 
-    # device = torch.device(f'cuda:{cuda}' if (torch.cuda.is_available() and cuda>-1 and cuda<torch.cuda.device_count()) else 'cpu')
-    # print(f'Using device: {device}')
+    device = torch.device(f'cuda:{args.gpu_id}' if (torch.cuda.is_available() and args.gpu_id>-1 and args.gpu_id<torch.cuda.device_count()) else 'cpu')
+    print(f'Using device: {device}')
     
     start = time.time()
-    print(f'Loading data[DeepHiC]: {deephic_file}')
+    print(f'Loading data[DeepHiC]: {args.input_data}')
     # deephic_data = np.load(os.path.join(in_dir, deephic_file), allow_pickle=True)
+    deephic_data = np.load(args.input_data, allow_pickle=True)
     deephic_loader = dataloader(deephic_data)
     
     indices, compacts, sizes = data_info(deephic_data)
     # deep_hics = deephic_predictor(deephic_loader, ckpt_file, scale, res_num, device)
-    result_data, result_inds = deephic_predictor(deephic_loader, ckpt_file, device, scale=1, res_num=5)
+    result_data, result_inds = deephic_predictor(deephic_loader, args.ckpt_file, device, scale=1, res_num=5)
 
     # def save_data_n(key):
     #     file = os.path.join(out_dir, f'predict_chr{key}_{low_res}.npz')
     #     save_data(deep_hics[key], compacts[key], sizes[key], file)
     # for key in sorted(list(np.unique(indices[:, 0]))):
     # file = os.path.join(out_dir, f'DeepHiC_predict_chr_{low_res}.npz')
-    file = os.path.join(out_dir, f'DeepHiC_predict_{low_res}_pretrained.npz')
+    th_model = args.ckpt_file.split('/')[-1].split('_')[0]
+    file = os.path.join(args.output_data_dir, f'DeepHiC_predict_{args.down_ratio}_{th_model}.npz')
     np.savez_compressed(file, data=result_data, inds=result_inds)
     print('Saving file:', file)
 

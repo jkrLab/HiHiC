@@ -166,6 +166,8 @@ cython_debug/
 data/
 data_downsampled_*/
 data_*/
+output_*/
+whole_mats/
 
 # others
 log*/
@@ -176,6 +178,7 @@ loss_trend.png
 train.ipynb
 *_copy.py
 *_loss_trend.png
+*backup*
 
 *.ipynb
 TAD*

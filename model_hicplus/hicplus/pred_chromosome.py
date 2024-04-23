@@ -15,22 +15,35 @@ from time import gmtime, strftime
 from datetime import datetime
 import argparse
 
-###########################################################
-import os
 
-root_dir = "/data/HiHiC-main"
-cell_line = "GM12878"
-low_res = "16"
-inmodel = "/data/HiHiC-main/checkpoints_hicplus/00500_0.05.56_13.614"
-# cuda = "0"
-device = "cpu"
-# model = "3"
-hicplus_file = "/data/HiHiC-main/data_hicplus/test/test_ratio16.npz"
-hicarn_data = np.load(hicplus_file, allow_pickle=True)
-out_dir = "/data/HiHiC-main/output"
-batch_size = 128
-os.makedirs(out_dir, exist_ok=True)
-###########################################################
+################################################## Added by HiHiC ######
+########################################################################
+
+parser = argparse.ArgumentParser(description='hicplus prediction process')
+parser._action_groups.pop()
+required = parser.add_argument_group('required arguments')
+
+required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
+                      help='HiHiC directory')
+required.add_argument('--model', type=str, default='hicplus', metavar='hicplus', required=True,
+                      help='model name')
+required.add_argument('--ckpt_file', type=str, metavar='[2]', required=True,
+                      help='pretrained model')
+required.add_argument('--batch_size', type=int, default=64, metavar='[3]', required=True,
+                      help='input batch size for training (default: 64)')
+required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
+                      help='GPU ID for training (defalut: 0)')
+required.add_argument('--down_ratio', type=int, metavar='[5]', required=True, 
+                      help='down sampling ratio')
+required.add_argument('--input_data', type=str, metavar='[6]', required=True,
+                      help='directory path of training model')
+required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
+                      help='directory path for saving enhanced output (default: HiHiC/output_enhanced/)')
+args = parser.parse_args()
+
+os.makedirs(args.output_data_dir, exist_ok=True) #######################
+########################################################################
+
 
 startTime = datetime.now()
 
@@ -39,7 +52,7 @@ use_gpu = True #opt.cuda
 #    raise Exception("No GPU found, please run without --cuda")
 
 def predict(M,inmodel):
-    N = M['data'].shape[0]
+    # N = M['data'].shape[0]
 
     # prediction_1 = np.zeros((N, N))
     y_predict = []
@@ -53,7 +66,7 @@ def predict(M,inmodel):
 
         lowres_set = data.TensorDataset(torch.from_numpy(low_resolution_samples), torch.from_numpy(np.zeros(low_resolution_samples.shape[0])))
         try:
-            lowres_loader = torch.utils.data.DataLoader(lowres_set, batch_size=batch_size, shuffle=False)
+            lowres_loader = torch.utils.data.DataLoader(lowres_set, batch_size=args.batch_size, shuffle=False)
         except:
             continue
 
@@ -70,7 +83,7 @@ def predict(M,inmodel):
             _lowRes = Variable(_lowRes).float()
             if use_gpu:
                 _lowRes = _lowRes.cuda()
-            _lowRes = _lowRes.unsqueeze(0) ###################### 추가함
+            _lowRes = _lowRes.unsqueeze(0) ###################### Added by HiHiC
             y_prediction = m(_lowRes)
 
         # y_predict = y_prediction.data.cpu().numpy()
@@ -80,12 +93,12 @@ def predict(M,inmodel):
     #     y_predict = np.reshape(y_predict, (y_predict.shape[0], length, length))
 
 
-    #     for i in range(0, y_predict.shape[0]):
+        # for i in range(0, y_predict.shape[0]):
 
-    #         x = int(index[i][1])
-    #         y = int(index[i][2])
-    #         #print np.count_nonzero(y_predict[i])
-    #         prediction_1[x+6:x+34, y+6:y+34] = y_predict[i]
+        #     x = int(index[i][1])
+        #     y = int(index[i][2])
+        #     #print np.count_nonzero(y_predict[i])
+        #     prediction_1[x+6:x+34, y+6:y+34] = y_predict[i]
     prediction_1 = np.concatenate(y_predict, axis=0)
 
     return(prediction_1)
@@ -105,7 +118,7 @@ def predict(M,inmodel):
 # #         chr_Mat = chr_Mat[:Nrow, :Ncol]
 # #     print(dat.head())       
 #     return(chr_Mat)
-
+hicarn_data = np.load(args.input_data, allow_pickle=True)
 
 
 # def writeBed(Mat, outname,binsize, chrN1,chrN2):
@@ -134,11 +147,13 @@ def main():
     # #outname = 'chr'+str(chrN1)+'_'+name+'_'+str(binsize//1000)+'pred.txt'
     # outname = args.outputfile
     # Mat = chr_pred(hicfile,chrN1,chrN2,binsize,inmodel)
-    Mat = predict(hicarn_data,inmodel)
+    # ckpt_file=args.ckpt_file
+    Mat = predict(hicarn_data,args.ckpt_file)
     print(Mat.shape)
     # writeBed(Mat, outname, binsize,chrN1, chrN2)
     # for key in sorted(list(np.unique(hicarn_data['indz'][:, 0]))):
-    file = os.path.join(out_dir, f'hicplus_predict_{low_res}.npz')
+    th_model = args.ckpt_file.split('/')[-1].split('_')[0]
+    file = os.path.join(args.output_data_dir, f'hicplus_predict_{args.down_ratio}_{th_model}.npz')
     np.savez_compressed(file, data=Mat, inds=hicarn_data['inds_target'])
     print('Saving file:', file)
 if __name__ == '__main__':

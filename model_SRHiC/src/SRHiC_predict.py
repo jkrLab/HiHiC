@@ -6,74 +6,98 @@ import numpy as np
 import os
 
 
-###########################################################
-root_dir = "/data/HiHiC-main"
-cell_line = "GM12878"
-low_res = "16"
-# ckpt_file = "checkpoints_HiCARN2/12_28_07_44_bestg.pytorch"
-# cuda = "0"
-# device = "cpu"
-# model = "SRHiC"
-# HiCARN_file = "/data/HiHiC-main/data_HiCARN/test/test_ratio16.npz"
-# hicarn_data = np.load(HiCARN_file, allow_pickle=True)
-predict_save_dir = "/data/HiHiC-main/output"
-# os.makedirs(out_dir, exist_ok=True)
-checkpoint_dir = "checkpoints_SRHiC_"
-test_input_dir = "/data/HiHiC-main/data_SRHiC/test"
-###########################################################
+################################################## Added by HiHiC ######
+########################################################################
 
-epoch_size=256
+import argparse
 
-def predict(test_input_dir,
-            checkpoint_dir,
+parser = argparse.ArgumentParser(description='SRHiC prediction process')
+parser._action_groups.pop()
+required = parser.add_argument_group('required arguments')
+
+required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
+                      help='HiHiC directory')
+required.add_argument('--model', type=str, default='SRHiC', metavar='SRHiC', required=True,
+                      help='model name')
+required.add_argument('--ckpt_file', type=str, metavar='[2]', required=True,
+                      help='pretrained model (.meta)')
+required.add_argument('--batch_size', type=int, default=64, metavar='[3]', required=True,
+                      help='input batch size for training (default: 64)')
+required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
+                      help='GPU ID for training (defalut: 0)')
+required.add_argument('--down_ratio', type=int, metavar='[5]', required=True, 
+                      help='down sampling ratio')
+required.add_argument('--input_data', type=str, metavar='[6]', required=True,
+                      help='directory path of training model')
+required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
+                      help='directory path for saving enhanced output (default: HiHiC/output_enhanced/)')
+args = parser.parse_args()
+
+if args.model == "HiCANR1":
+    model = "HiCARN_1"
+else:
+    model = "HiCARN_2"
+
+os.makedirs(args.output_data_dir, exist_ok=True) #######################
+########################################################################
+
+
+epoch_size=args.batch_size
+ 
+# def predict(test_input_dir,
+#             checkpoint_dir,
+#             predict_save_dir,):
+def predict(test_file,
+            meta_file,
             predict_save_dir,):
 
+    # ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
 
-    ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
-
-    if ckpt and ckpt.model_checkpoint_path:
-        graph_path = ckpt.model_checkpoint_path + '.meta'
+    # if ckpt and ckpt.model_checkpoint_path:
+    #     graph_path = ckpt.model_checkpoint_path + '.meta'
         
-        with tf.Session() as sess:
-            
-            # load model
-            tf.local_variables_initializer().run()
-            # saver = tf.train.import_meta_graph(graph_path)
-            # saver.restore(sess, ckpt.model_checkpoint_path)
-            # saver = tf.train.import_meta_graph("/data/HiHiC-main/checkpoints_SRHiC/00400_0.42.51_85.397-103458.meta")
-            # saver.restore(sess, "/data/HiHiC-main/checkpoints_SRHiC/00400_0.42.51_85.397-103458")
-            saver = tf.train.import_meta_graph("/data/HiHiC-main/model_SRHiC/-29766.meta")
-            saver.restore(sess, "/data/HiHiC-main/model_SRHiC/-29766")
-            graph = tf.get_default_graph()
-            output_x = tf.get_collection('output_x')[0]
-            input_x = graph.get_operation_by_name('input_x').outputs[0]
-            print("restoration is done...")
-            test_files=os.listdir(test_input_dir)
-            print(test_files)
-            for test_file in test_files:
-                test=os.path.join(test_input_dir,test_file)
-                x = np.load(test).astype(np.float32)[:,:,:40]
-                x = np.reshape(x, [x.shape[0], 40, 40, 1])
-                size = int(x.shape[0] / epoch_size) + 1
-                Out = np.zeros([1, 28, 28, 1])
-                for z in range(size):
-                    out = sess.run(
-                        [output_x],
-                        feed_dict={input_x: x[z * epoch_size:z * epoch_size + epoch_size]}
-                    )
+    with tf.Session() as sess:
+        
+        # load model
+        tf.local_variables_initializer().run()
+        # saver = tf.train.import_meta_graph(graph_path)
+        # saver.restore(sess, ckpt.model_checkpoint_path)
+        saver = tf.train.import_meta_graph(meta_file)
+        saver.restore(sess, meta_file.split('.meta')[0])
+        graph = tf.get_default_graph()
+        output_x = tf.get_collection('output_x')[0]
+        input_x = graph.get_operation_by_name('input_x').outputs[0]
+        print("restoration is done...")
+        # test_files=os.listdir(test_input_dir)
+        print(test_file)
+        # for test_file in test_files:
+            # test=os.path.join(test_input_dir,test_file)
+            # x = np.load(test).astype(np.float32)[:,:,:40]
+        x = np.load(test_file).astype(np.float32)[:,:,:40]
+        x = np.reshape(x, [x.shape[0], 40, 40, 1])
+        size = int(x.shape[0] / epoch_size) + 1
+        Out = np.zeros([1, 28, 28, 1])
+        for z in range(size):
+            out = sess.run(
+                [output_x],
+                feed_dict={input_x: x[z * epoch_size:z * epoch_size + epoch_size]}
+            )
 
-                    out_temp=np.array(out).reshape([-1,28,28,1])
-                    Out = np.concatenate((Out, out_temp), axis=0)
-                # name ="enhanced_{0}".format(test_file)
-                Out = Out[1:]
-                # np.save(predict_save_dir + '/predict/' + name, Out)
-                # np.savez_compressed(os.path.join(predict_save_dir, f"SRHiC_predict_{low_res}.npz"), data=Out)
-                np.savez_compressed(os.path.join(predict_save_dir, f"SRHiC_predict_{low_res}_pretrained.npz"), data=Out)
-
-
-    else:
-        print("---no checkpoint found---")
+            out_temp=np.array(out).reshape([-1,28,28,1])
+            Out = np.concatenate((Out, out_temp), axis=0)
+        # name ="enhanced_{0}".format(test_file)
+        Out = Out[1:]
+        # np.save(predict_save_dir + '/predict/' + name, Out)
+        # np.savez_compressed(os.path.join(predict_save_dir, f"SRHiC_predict_{low_res}.npz"), data=Out)      
+        index_file = os.path.join(os.path.dirname(test_file), "index_" + os.path.split(test_file)[-1][:-4] + ".npz")
+        target_inds = np.load(index_file, allow_pickle=True)['inds_target']
+        np.savez_compressed(os.path.join(predict_save_dir, f"SRHiC_predict_{args.down_ratio}_{meta_file.split('/')[-1].split('_')[0]}.npz"), data=Out, inds=target_inds)
 
 
+        # else:
+        #     print("---no checkpoint found---")
 
-predict(test_input_dir, checkpoint_dir, predict_save_dir)
+
+
+# predict(test_input_dir, checkpoint_dir, predict_save_dir)
+predict(args.input_data, args.ckpt_file, args.output_data_dir)

@@ -1,11 +1,12 @@
 # DFHiC/generate_train_data.py 수정
 
-import os, sys, math, random, argparse
+import os, sys, math, random, argparse, shutil
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 path = os.getcwd()
 random.seed(100)
-
+scaler = MinMaxScaler(feature_range=(0,1))
 
 # 인자 받기
 parser = argparse.ArgumentParser(description='Read Hi-C contact map and Divide submatrix for train and predict', add_help=True)
@@ -49,7 +50,12 @@ def hic_matrix_extraction(res=10000, norm_method='NONE'):
             else:
                 hr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
         hr_contact_matrix+= hr_contact_matrix.T - np.diag(hr_contact_matrix.diagonal())
-        hr_contacts_dict[f'chr{each}'] = hr_contact_matrix
+        if np.isnan(hr_contact_matrix).any(): ###############
+            print(f'hr_chr{each} has nan value!') ###############
+        hr_contacts_dict[f'chr{each}'] = scaler.fit_transform(np.minimum(300, hr_contact_matrix)) # (0,300) >> (0,1)
+        if np.isnan(hr_contacts_dict[f'chr{each}']).any(): ###############
+            print(f'hr_scaled chr{each} has nan value!') ###############
+
     lr_contacts_dict={}
     for each in chrom_list:
         lr_hic_file = f'{input_downsample_dir}/chr{each}_10kb.txt'
@@ -63,24 +69,26 @@ def hic_matrix_extraction(res=10000, norm_method='NONE'):
             else:
                 lr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
         lr_contact_matrix+= lr_contact_matrix.T - np.diag(lr_contact_matrix.diagonal())
-        lr_contacts_dict[f'chr{each}'] = lr_contact_matrix
+        if np.isnan(lr_contact_matrix).any(): ###############
+            print(f'lr_chr{each} has nan value!') ###############
+        lr_contacts_dict[f'chr{each}'] = scaler.fit_transform(np.minimum(300, lr_contact_matrix)) # (0,300) >> (0,1)
+        if np.isnan(lr_contacts_dict[f'chr{each}']).any(): ###############
+            print(f'lr_scaled chr{each} has nan value!') ###############
 
     ct_hr_contacts={item:sum(sum(hr_contacts_dict[item])) for item in hr_contacts_dict.keys()} # read 수
     ct_lr_contacts={item:sum(sum(lr_contacts_dict[item])) for item in lr_contacts_dict.keys()}    
     print("\n  ...Done making whole contact map by each chromosomes...")
-     
     return hr_contacts_dict,lr_contacts_dict,ct_hr_contacts,ct_lr_contacts
 
 
 # 매트릭스 자르기
-def crop_hic_matrix_by_chrom(chrom, size, for_model, thred=200): # thred=2M/resolution
+def crop_hic_matrix_by_chrom(chrom, for_model, thred=200): # thred=2M/resolution
     chr = int(chrom.split('chr')[1])
     distance=[]
-    crop_mats_hr=[]
-    crop_mats_lr=[]
-    coordinates_hr=[]    
-    coordinates_lr=[]    
-
+    hr_crop_mats=[]
+    lr_crop_mats=[]
+    hr_coordinates=[]    
+    lr_coordinates=[]
     row,col = hr_contacts_dict[chrom].shape
     if row<=thred or col<=thred: # bin 수가 200 보다 작으면 False
         print('HiC matrix size wrong!')
@@ -90,207 +98,156 @@ def crop_hic_matrix_by_chrom(chrom, size, for_model, thred=200): # thred=2M/reso
             return False
         else:
             return True
-    
-    if size == 40:
-        if for_model == "HiCNN":
-            for idx1 in range(0,row-size,28):
-                for idx2 in range(0,col-size,28):
-                    if abs(idx1-idx2)<thred:
-                        if quality_control(lr_contacts_dict[chrom][idx1:idx1+size,idx2:idx2+size]):
-                            distance.append([idx1-idx2,chrom])
-                            coordinates_hr.append([chr, idx1, idx2])
-                            coordinates_lr.append([chr, idx1, idx2])
-                            
-                            hr_contact = hr_contacts_dict[chrom][idx1:idx1+size,idx2:idx2+size]
-                            lr_contact = lr_contacts_dict[chrom][idx1:idx1+size,idx2:idx2+size]
-
-                            crop_mats_hr.append(hr_contact)                
-                            crop_mats_lr.append(lr_contact)
-
-            crop_mats_hr = np.concatenate([item[np.newaxis,:] for item in crop_mats_hr],axis=0)
-            crop_mats_lr = np.concatenate([item[np.newaxis,:] for item in crop_mats_lr],axis=0)
-        elif for_model == "HiCARN":
-            for idx1 in range(0,row-size,28):
-                for idx2 in range(0,col-size,28):
-                    if abs(idx1-idx2)<thred:
-                        if quality_control(lr_contacts_dict[chrom][idx1:idx1+size,idx2:idx2+size]):
-                            distance.append([idx1-idx2,chrom])
-                            coordinates_hr.append([chr, row, idx1, idx2])
-                            coordinates_lr.append([chr, row, idx1, idx2])
-                            
-                            hr_contact = hr_contacts_dict[chrom][idx1:idx1+size,idx2:idx2+size]
-                            lr_contact = lr_contacts_dict[chrom][idx1:idx1+size,idx2:idx2+size]
-
-                            crop_mats_hr.append(hr_contact)                
-                            crop_mats_lr.append(lr_contact)
-
-            crop_mats_hr = np.concatenate([item[np.newaxis,:] for item in crop_mats_hr],axis=0)
-            crop_mats_lr = np.concatenate([item[np.newaxis,:] for item in crop_mats_lr],axis=0) 
-        else:        
-            for idx1 in range(0,row-size,size):
-                for idx2 in range(0,col-size,size):
-                    if abs(idx1-idx2)<thred:
-                        if quality_control(lr_contacts_dict[chrom][idx1:idx1+size,idx2:idx2+size]):
-                            distance.append([idx1-idx2,chrom])
-                            coordinates_hr.append([chr, idx1, idx2])
-                            coordinates_lr.append([chr, idx1, idx2])
-                            
-                            hr_contact = hr_contacts_dict[chrom][idx1:idx1+size,idx2:idx2+size]
-                            lr_contact = lr_contacts_dict[chrom][idx1:idx1+size,idx2:idx2+size]
-
-                            crop_mats_hr.append(hr_contact)                
-                            crop_mats_lr.append(lr_contact)
-
-            crop_mats_hr = np.concatenate([item[np.newaxis,:] for item in crop_mats_hr],axis=0)
-            crop_mats_lr = np.concatenate([item[np.newaxis,:] for item in crop_mats_lr],axis=0)                
-    else:
-        assert size == 28
-        for idx1 in range(0,row-40,size):
-            for idx2 in range(0,col-40,size):
-                if abs(idx1-idx2)<thred:
-                    if quality_control(lr_contacts_dict[chrom][idx1:idx1+size,idx2:idx2+size]):
-                        distance.append([idx1-idx2,chrom])
-                        coordinates_hr.append([chr, idx1+6, idx2+6])
-                        coordinates_lr.append([chr, idx1, idx2])
-                        
+    for idx1 in range(0,row-40,28):
+        for idx2 in range(0,col-40,28):
+            if abs(idx1-idx2)<thred:
+                if quality_control(lr_contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]):
+                    distance.append([idx1-idx2,chrom]) # DFHiC
+                    lr_coordinates.append([chr, row, idx1, idx2]) # row:HiCARN                    
+                    lr_contact = lr_contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]
+                    if for_model in ["HiCARN", "DeepHiC", "DFHiC"]:
+                        hr_contact = hr_contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]
+                        hr_coordinates.append([chr, row, idx1, idx2])
+                    elif for_model in ["HiCNN", "hicplus"]: # output mat:28*28
+                        hr_contact = hr_contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]
+                        hr_coordinates.append([chr, row, idx1+6, idx2+6])
+                    else:
+                        assert for_model in ["SRHiC"]
                         hr_contact = hr_contacts_dict[chrom][idx1+6:idx1+34,idx2+6:idx2+34]
-                        lr_contact = lr_contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]
-
-                        crop_mats_hr.append(hr_contact)                
-                        crop_mats_lr.append(lr_contact)
-                      
-        crop_mats_hr = np.concatenate([item[np.newaxis,:] for item in crop_mats_hr],axis=0)
-        crop_mats_lr = np.concatenate([item[np.newaxis,:] for item in crop_mats_lr],axis=0)
-        
-    return crop_mats_hr,crop_mats_lr,distance,coordinates_hr,coordinates_lr
+                        hr_coordinates.append([chr, row, idx1+6, idx2+6]) 
+                    hr_crop_mats.append(hr_contact)                
+                    lr_crop_mats.append(lr_contact)
+    hr_crop_mats = np.concatenate([item[np.newaxis,:] for item in hr_crop_mats],axis=0)
+    lr_crop_mats = np.concatenate([item[np.newaxis,:] for item in lr_crop_mats],axis=0)
+    return hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,distance     
 
 
 # 모델별 submatrix 생성
 def DeepHiC_data_split(chrom_list):
-    distance_all=[]
     assert len(chrom_list)>0
-    hr_mats,lr_mats,hr_coordinates=[],[],[]
+    hr_mats,lr_mats,hr_coords=[],[],[]
     for chrom in chrom_list:
-        crop_mats_hr,crop_mats_lr,distance,coordinates_hr,_ = crop_hic_matrix_by_chrom(chrom,size=40,for_model='DeepHiC',thred=200)
-        distance_all+=distance
-        hr_mats.append(crop_mats_hr)
-        lr_mats.append(crop_mats_lr)
-        hr_coordinates.append(coordinates_hr)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,_,_ = crop_hic_matrix_by_chrom(chrom,for_model="DeepHiC",thred=200)
+        hr_mats.append(hr_crop_mats)
+        lr_mats.append(lr_crop_mats)
+        hr_coords.append(hr_coordinates)
     hr_mats = np.concatenate(hr_mats,axis=0)
     lr_mats = np.concatenate(lr_mats,axis=0)
     hr_mats=hr_mats[:,np.newaxis]
     lr_mats=lr_mats[:,np.newaxis]
-    hr_coordinates = sum(hr_coordinates, [])
-    return hr_mats,lr_mats,hr_coordinates
+    hr_coords = sum(hr_coords, [])
+    return hr_mats,lr_mats,hr_coords
 
 def HiCARN_data_split(chrom_list):
-    distance_all=[]
     assert len(chrom_list)>0
-    hr_mats,lr_mats,hr_coordinates=[],[],[]
+    hr_mats,lr_mats,hr_coords=[],[],[]
     for chrom in chrom_list:
-        crop_mats_hr,crop_mats_lr,distance,coordinates_hr,_ = crop_hic_matrix_by_chrom(chrom,size=40,for_model='HiCARN',thred=200)
-        distance_all+=distance
-        hr_mats.append(crop_mats_hr)
-        lr_mats.append(crop_mats_lr)
-        hr_coordinates.append(coordinates_hr)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,_,_ = crop_hic_matrix_by_chrom(chrom,for_model="HiCARN",thred=200)
+        hr_mats.append(hr_crop_mats)
+        lr_mats.append(lr_crop_mats)
+        hr_coords.append(hr_coordinates)
     hr_mats = np.concatenate(hr_mats,axis=0)
     lr_mats = np.concatenate(lr_mats,axis=0)
     hr_mats=hr_mats[:,np.newaxis]
     lr_mats=lr_mats[:,np.newaxis]
-    hr_coordinates = sum(hr_coordinates, [])
-    return hr_mats,lr_mats,hr_coordinates
+    hr_coords = sum(hr_coords, [])
+    return hr_mats,lr_mats,hr_coords
 
 def DFHiC_data_split(chrom_list):
     distance_all=[]
     assert len(chrom_list)>0
-    hr_mats,lr_mats=[],[]
+    hr_mats,lr_mats,hr_coords=[],[],[]
     for chrom in chrom_list:
-        crop_mats_hr,crop_mats_lr,distance,_,_ = crop_hic_matrix_by_chrom(chrom,size=40,for_model='DFHiC',thred=200)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,_,distance = crop_hic_matrix_by_chrom(chrom,for_model="DFHiC",thred=200)
         distance_all+=distance
-        hr_mats.append(crop_mats_hr)
-        lr_mats.append(crop_mats_lr)
+        hr_mats.append(hr_crop_mats)
+        lr_mats.append(lr_crop_mats)
+        hr_coords.append(hr_coordinates)
     hr_mats = np.concatenate(hr_mats,axis=0)
     lr_mats = np.concatenate(lr_mats,axis=0)
     hr_mats=hr_mats[:,np.newaxis]
     lr_mats=lr_mats[:,np.newaxis]
     hr_mats=hr_mats.transpose((0,2,3,1))
     lr_mats=lr_mats.transpose((0,2,3,1))
-    return hr_mats,lr_mats,distance_all
+    hr_coords = sum(hr_coords, [])
+    return hr_mats,lr_mats,hr_coords,distance_all
 
 def HiCNN_data_split(chrom_list):
-    distance_all=[]
     assert len(chrom_list)>0
-    hr_mats,lr_mats,hr_coordinates,lr_coordinates=[],[],[],[]
+    hr_mats,lr_mats,hr_coords,lr_coords=[],[],[],[]
     for chrom in chrom_list:
-        crop_mats_hr,crop_mats_lr,distance,coordinates_hr,coordinates_lr = crop_hic_matrix_by_chrom(chrom,size=40,for_model='HiCNN',thred=200)
-        distance_all+=distance
-        hr_mats.append(crop_mats_hr)
-        lr_mats.append(crop_mats_lr)
-        hr_coordinates.append(coordinates_hr)
-        lr_coordinates.append(coordinates_lr)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_= crop_hic_matrix_by_chrom(chrom,for_model="HiCNN",thred=200)
+        hr_mats.append(hr_crop_mats)
+        lr_mats.append(lr_crop_mats)
+        hr_coords.append(hr_coordinates)
+        lr_coords.append(lr_coordinates)
     hr_mats = np.concatenate(hr_mats,axis=0)
     lr_mats = np.concatenate(lr_mats,axis=0)
     hr_mats=hr_mats[:,np.newaxis]
     lr_mats=lr_mats[:,np.newaxis]
-    hr_coordinates = sum(hr_coordinates, [])
-    lr_coordinates = sum(lr_coordinates, [])
-    return hr_mats,lr_mats,hr_coordinates,lr_coordinates
+    hr_coords = sum(hr_coords, [])
+    lr_coords = sum(lr_coords, [])
+    return hr_mats,lr_mats,hr_coords,lr_coords
 
 def SRHiC_data_split(chrom_list):
-    distance_all=[]
     assert len(chrom_list)>0
-    hr_mats,lr_mats=[],[]
+    hr_mats,lr_mats,hr_coords,lr_coords=[],[],[],[]
     for chrom in chrom_list:
-        crop_mats_hr,crop_mats_lr,_,_,_ = crop_hic_matrix_by_chrom(chrom,size=28,for_model='SRHiC',thred=200)
-        hr_mats.append(crop_mats_hr)
-        lr_mats.append(crop_mats_lr)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="SRHiC",thred=200)
+        hr_mats.append(hr_crop_mats)
+        lr_mats.append(lr_crop_mats)
+        hr_coords.append(hr_coordinates)
+        lr_coords.append(lr_coordinates)
     hr_mats = np.concatenate(hr_mats,axis=0)
     lr_mats = np.concatenate(lr_mats,axis=0)
     hr_mats=hr_mats[:,np.newaxis]
     lr_mats=lr_mats[:,np.newaxis]
-    return hr_mats,lr_mats
+    hr_coords = sum(hr_coords, [])
+    lr_coords = sum(lr_coords, [])
+    return hr_mats,lr_mats,hr_coords,lr_coords
 
 def hicplus_data_split(chrom_list):
-    distance_all=[]
     assert len(chrom_list)>0
-    hr_mats,lr_mats,hr_coordinates,lr_coordinates=[],[],[],[]
-    for chrom in chrom_list:
-        crop_mats_hr,crop_mats_lr,distance,coordinates_hr,coordinates_lr = crop_hic_matrix_by_chrom(chrom,size=40,for_model='hicplus',thred=200)
-        distance_all+=distance
-        hr_mats.append(crop_mats_hr)
-        lr_mats.append(crop_mats_lr)
-        hr_coordinates.append(coordinates_hr)
-        lr_coordinates.append(coordinates_lr)
+    hr_mats,lr_mats,hr_coords,lr_coords=[],[],[],[]
+    for chrom in chrom_list: 
+        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="hicplus",thred=200)
+        hr_mats.append(hr_crop_mats)
+        lr_mats.append(lr_crop_mats)
+        hr_coords.append(hr_coordinates)
+        lr_coords.append(lr_coordinates)
     hr_mats = np.concatenate(hr_mats,axis=0)
     lr_mats = np.concatenate(lr_mats,axis=0)
     hr_mats=hr_mats[:,np.newaxis]
     lr_mats=lr_mats[:,np.newaxis]
-    hr_coordinates = sum(hr_coordinates, [])
-    lr_coordinates = sum(lr_coordinates, [])
-    return hr_mats,lr_mats,hr_coordinates,lr_coordinates
+    hr_coords = sum(hr_coords, [])
+    lr_coords = sum(lr_coords, [])
+    return hr_mats,lr_mats,hr_coords,lr_coords
 
 
 # 함수 실행
 hr_contacts_dict,lr_contacts_dict,ct_hr_contacts,ct_lr_contacts = hic_matrix_extraction()
 
 save_dir = f'{output_dir}data_{model}/'
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)   
+os.makedirs(save_dir, exist_ok=True)
+
+train_dir = save_dir + "train_KR_300/"
+valid_dir = save_dir + "valid_KR_300/"
+test_dir = save_dir + "test_KR_300/"
+os.makedirs(train_dir, exist_ok=True)
+os.makedirs(valid_dir, exist_ok=True)
+os.makedirs(test_dir, exist_ok=True)
+
 
 # 모델이 원하는 포멧으로 저장
 if model == "DFHiC":
-    hr_mats_train,lr_mats_train,distance_train = DFHiC_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train: 1~14
-    hr_mats_valid,lr_mats_valid,distance_valid = DFHiC_data_split([f'chr{idx}' for idx in list(range(15,18))]) # train: 15~17
-    hr_mats_test,lr_mats_test,distance_test = DFHiC_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test: 18~22
+    hr_mats_train,lr_mats_train,coordinates_train,distance_train = DFHiC_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train: 1~14
+    hr_mats_valid,lr_mats_valid,coordinates_valid,distance_valid = DFHiC_data_split([f'chr{idx}' for idx in list(range(15,18))]) # train: 15~17
+    hr_mats_test,lr_mats_test,coordinates_test,distance_test = DFHiC_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test: 18~22
     print(f"\n  ...Done cropping whole matrix into submatrix for {model} training...")
 
-    os.makedirs(save_dir+'train/', exist_ok=True)
-    os.makedirs(save_dir+'valid/', exist_ok=True)
-    os.makedirs(save_dir+'test/', exist_ok=True)
-
-    np.savez(save_dir+f'train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,distance=distance_train)
-    np.savez(save_dir+f'valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,distance=distance_valid)
-    np.savez(save_dir+f'test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,distance=distance_test)
+    np.savez(train_dir+f"train_ratio{data_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),distance=distance_train)
+    np.savez(valid_dir+f"valid_ratio{data_ratio}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),distance=distance_valid)
+    np.savez(test_dir+f"test_ratio{data_ratio}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),distance=distance_test)
 
 
 elif model == "DeepHiC":      
@@ -302,13 +259,10 @@ elif model == "DeepHiC":
     compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in hr_contacts_dict.items()}
     size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{ref_chrom}').readlines()}
 
-    os.makedirs(save_dir+'train/', exist_ok=True)
-    os.makedirs(save_dir+'valid/', exist_ok=True)
-    os.makedirs(save_dir+'test/', exist_ok=True)
-
-    np.savez(save_dir+f'train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,sizes=size)
-    np.savez(save_dir+f'valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,sizes=size)
-    np.savez(save_dir+f'test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(train_dir+f"train_ratio{data_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(valid_dir+f"valid_ratio{data_ratio}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(test_dir+f"test_ratio{data_ratio}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,sizes=size)
+    
     
 elif model == "HiCARN":          
     hr_mats_train,lr_mats_train,coordinates_train = HiCARN_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train:1~14
@@ -319,13 +273,10 @@ elif model == "HiCARN":
     compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in hr_contacts_dict.items()}
     size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{ref_chrom}').readlines()}
 
-    os.makedirs(save_dir+'train/', exist_ok=True)
-    os.makedirs(save_dir+'valid/', exist_ok=True)
-    os.makedirs(save_dir+'test/', exist_ok=True)
+    np.savez(train_dir+f"train_ratio{data_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(valid_dir+f"valid_ratio{data_ratio}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(test_dir+f"test_ratio{data_ratio}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,sizes=size)
 
-    np.savez(save_dir+f'train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,sizes=size)
-    np.savez(save_dir+f'valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,sizes=size)
-    np.savez(save_dir+f'test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,sizes=size)
 
 elif model == "HiCNN":     
     hr_mats_train,lr_mats_train,hr_coordinates_train,lr_coordinates_train = HiCNN_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train:1~14
@@ -333,60 +284,39 @@ elif model == "HiCNN":
     hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = HiCNN_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
     print(f"\n  ...Done cropping whole matrix into submatrix for {model} training...")
 
-    os.makedirs(save_dir+'train/', exist_ok=True)
-    os.makedirs(save_dir+'valid/', exist_ok=True)
-    os.makedirs(save_dir+'test/', exist_ok=True)
-
-    np.savez(save_dir+f'train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
-    np.savez(save_dir+f'valid/valid_ratio{data_ratio}.npz', data=lr_mats_valid,target=hr_mats_valid,inds=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
-    np.savez(save_dir+f'test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
+    np.savez(train_dir+f"train_ratio{data_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
+    np.savez(valid_dir+f"valid_ratio{data_ratio}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
+    np.savez(test_dir+f"test_ratio{data_ratio}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
     
-    # np.save(save_dir+f'subMats_train_target_ratio{data_ratio}', hr_mats_train)
-    # np.save(save_dir+f'subMats_train_ratio{data_ratio}', lr_mats_train)
-    # np.save(save_dir+f'index_train_target', hr_coordinates_train)
-    # np.save(save_dir+f'index_train_data', lr_coordinates_train)
-    # np.save(save_dir+f'subMats_valid_target_ratio{data_ratio}', hr_mats_valid)
-    # np.save(save_dir+f'subMats_valid_ratio{data_ratio}', lr_mats_valid)
-    # np.save(save_dir+f'index_valid_target', hr_coordinates_valid)
-    # np.save(save_dir+f'index_valid_data', lr_coordinates_valid)
     
 elif model == "SRHiC":  
-    hr_mats_train,lr_mats_train = SRHiC_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train: 1~14
-    hr_mats_valid,lr_mats_valid = SRHiC_data_split([f'chr{idx}' for idx in list(range(15,18))]) # valid:15~17
-    hr_mats_test,lr_mats_test = SRHiC_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
-
+    hr_mats_train,lr_mats_train,hr_coordinates_train,lr_coordinates_train = SRHiC_data_split([f'chr{idx}' for idx in list(range(1,15))]) # train: 1~14
+    hr_mats_valid,lr_mats_valid,hr_coordinates_valid,lr_coordinates_valid = SRHiC_data_split([f'chr{idx}' for idx in list(range(15,18))]) # valid:15~17
+    hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = SRHiC_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
     print(f"\n  ...Done cropping whole matrix into submatrix for {model} training...")
 
-    os.makedirs(save_dir+'train/', exist_ok=True)
-    os.makedirs(save_dir+'valid/', exist_ok=True)
-    os.makedirs(save_dir+'test/', exist_ok=True)
-    
     train = np.concatenate((lr_mats_train[:,0,:,:], np.concatenate((hr_mats_train[:,0,:,:],np.zeros((hr_mats_train.shape[0],12,28))), axis=1)), axis=2)
     valid = np.concatenate((lr_mats_valid[:,0,:,:], np.concatenate((hr_mats_valid[:,0,:,:],np.zeros((hr_mats_valid.shape[0],12,28))), axis=1)), axis=2)
     test = np.concatenate((lr_mats_test[:,0,:,:], np.concatenate((hr_mats_test[:,0,:,:],np.zeros((hr_mats_test.shape[0],12,28))), axis=1)), axis=2)
 
-    np.save(save_dir+f'train/train_ratio{data_ratio}', train)
-    np.save(save_dir+f'valid/valid_ratio{data_ratio}', valid)
-    np.save(save_dir+f'test/test_ratio{data_ratio}', test)   
+    np.savez(train_dir+f"index_train_ratio{data_ratio}.npz", inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
+    np.savez(valid_dir+f"index_valid_ratio{data_ratio}.npz", inds=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
+    np.savez(test_dir+f"index_test_ratio{data_ratio}.npz", inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
+
+    np.save(train_dir+f"train_ratio{data_ratio}", train)
+    np.save(valid_dir+f"valid_ratio{data_ratio}", valid)
+    np.save(test_dir+f"test_ratio{data_ratio}", test)   
+    
+    
 else:
     assert model == "hicplus", "    model name is not correct "
     hr_mats_train,lr_mats_train,hr_coordinates_train,lr_coordinates_train = hicplus_data_split([f'chr{idx}' for idx in list(range(1,18))]) # train:1~17
     hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = hicplus_data_split([f'chr{idx}' for idx in list(range(18,23))]) # test:18~22
     print(f"\n  ...Done cropping whole matrix into submatrix for {model} training...")
 
-    os.makedirs(save_dir+'train/', exist_ok=True)
-    os.makedirs(save_dir+'test/', exist_ok=True)
-
-    np.savez(save_dir+f'train/train_ratio{data_ratio}.npz', data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
-    np.savez(save_dir+f'test/test_ratio{data_ratio}.npz', data=lr_mats_test,target=hr_mats_test,inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
-
-    # np.save(save_dir+f'subMats_train_target_ratio{data_ratio}', hr_mats_train)
-    # np.save(save_dir+f'subMats_train_ratio{data_ratio}', lr_mats_train)
-    # np.save(save_dir+f'index_train_target', hr_coordinates_train)
-    # np.save(save_dir+f'index_train_data', lr_coordinates_train)
-    # np.save(save_dir+f'subMats_test_target_ratio{data_ratio}', hr_mats_test)
-    # np.save(save_dir+f'subMats_test_ratio{data_ratio}', lr_mats_test)
-    # np.save(save_dir+f'index_test_target', hr_coordinates_test)
-    # np.save(save_dir+f'index_test_data', lr_coordinates_test)  
+    np.savez(train_dir+f"train_ratio{data_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
+    np.savez(test_dir+f"test_ratio{data_ratio}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
+    shutil.rmtree(test_dir)
+    
     
 print(f"\n  ...Generated data is saved in {save_dir}...\n")

@@ -11,19 +11,42 @@ import Models.HiCARN_2 as HiCARN_2
 from Utils.io import spreadM, together
 from Arg_Parser import *
 
-###########################################################
-root_dir = "/data/HiHiC-main"
-cell_line = "GM12878"
-low_res = "16"
-ckpt_file = "/data/HiHiC-main/checkpoints_HiCARN2/00080_2.25.50_15.711"
-# cuda = "0"
-device = "cpu"
-model = "HiCARN_1"
-HiCARN_file = "/data/HiHiC-main/data_HiCARN/test/test_ratio16.npz"
-hicarn_data = np.load(HiCARN_file, allow_pickle=True)
-out_dir = "/data/HiHiC-main/output"
-os.makedirs(out_dir, exist_ok=True)
-###########################################################
+
+################################################## Added by HiHiC ######
+########################################################################
+
+import argparse
+
+parser = argparse.ArgumentParser(description='HiCARN prediction process')
+parser._action_groups.pop()
+required = parser.add_argument_group('required arguments')
+
+required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
+                      help='HiHiC directory')
+required.add_argument('--model', type=str, default='HiCARN2', metavar='HiCARN', required=True,
+                      help='model name')
+required.add_argument('--ckpt_file', type=str, metavar='[2]', required=True,
+                      help='pretrained model')
+required.add_argument('--batch_size', type=int, default=64, metavar='[3]', required=True,
+                      help='input batch size for training (default: 64)')
+required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
+                      help='GPU ID for training (defalut: 0)')
+required.add_argument('--down_ratio', type=int, metavar='[5]', required=True, 
+                      help='down sampling ratio')
+required.add_argument('--input_data', type=str, metavar='[6]', required=True,
+                      help='directory path of training model')
+required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
+                      help='directory path for saving enhanced output (default: HiHiC/output_enhanced/)')
+args = parser.parse_args()
+
+if args.model == "HiCANR1":
+    model = "HiCARN_1"
+else:
+    model = "HiCARN_2"
+
+os.makedirs(args.output_data_dir, exist_ok=True) #######################
+########################################################################
+
 
 def dataloader(data, batch_size=64):
     inputs = torch.tensor(data['data'], dtype=torch.float)
@@ -109,13 +132,14 @@ if __name__ == '__main__':
 
     # chunk, stride, bound, scale = filename_parser(HiCARN_file)
 
-    # device = torch.device(
-    #     f'cuda:{cuda}' if (torch.cuda.is_available() and cuda > -1 and cuda < torch.cuda.device_count()) else 'cpu')
-    # print(f'Using device: {device}')
+    device = torch.device(
+        f'cuda:{args.gpu_id}' if (torch.cuda.is_available() and int(args.gpu_id) > -1 and int(args.gpu_id) < torch.cuda.device_count()) else 'cpu')
+    print(f'Using device: {device}')
 
     start = time.time()
-    print(f'Loading data[HiCARN]: {HiCARN_file}')
+    print(f'Loading data[HiCARN]: {args.input_data}')
     # hicarn_data = np.load(os.path.join(in_dir, HiCARN_file), allow_pickle=True)
+    hicarn_data = np.load(args.input_data, allow_pickle=True)
     hicarn_loader = dataloader(hicarn_data)
 
     indices, compacts, sizes = data_info(hicarn_data)
@@ -130,14 +154,15 @@ if __name__ == '__main__':
         model = DeepHiC
 
     # hicarn_hics = hicarn_predictor(model, hicarn_loader, ckpt_file, device)
-    result_data, result_inds = hicarn_predictor(model, hicarn_loader, ckpt_file, device)
+    result_data, result_inds = hicarn_predictor(model, hicarn_loader, args.ckpt_file, device)
 
 
     # def save_data_n(key):
     #     file = os.path.join(out_dir, f'predict_chr{key}_{low_res}.npz')
     #     save_data(hicarn_hics[key], compacts[key], sizes[key], file)
     # for key in sorted(list(np.unique(indices[:, 0]))):
-    file = os.path.join(out_dir, f'HiCARN_predict_{low_res}.npz')
+    th_model = args.ckpt_file.split('/')[-1].split('_')[0]
+    file = os.path.join(args.output_data_dir, f'HiCARN_predict_{args.down_ratio}_{th_model}.npz')
     np.savez_compressed(file, data=result_data, inds=result_inds)
     print('Saving file:', file)
 

@@ -82,5 +82,15 @@ bash model_train.sh -m DFHiC -e 500 -b 128 -g 0 -o ./checkpoints_DFHiC -l ./log 
 ----------------------------------------------------------
 > Without training, you can use pre-trained models in our platform. The pre-trained model weights can be downloaded by transfer protocol.
 ```
-
+bash model_prediction.sh -m DFHiC -c ./checkpoints_DFHiC/DFHiC_best.npz -b 16 -g 0 -r 16 -i ./data_DFHiC/test/test_ratio16.npz -o ./output_enhanced 
 ```
+>You should specify the required arguments of the model you'd like to use, such as **model name, checkpoints file path, batch size, GPU ID, downsampling ratio, input data path, and output data directory for saving enhanced data**. When you use SRHiC, the checkpoint file need .meta format.
+>```
+>-m : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - (example) DFHiC
+>-c : file path of checkpoint - (example) ./checkpoints_DFHiC/DFHiC_best.npz
+>-b : Number of batch size - (example) 16
+>-g : Number of GPU ID  - (example) 0
+>-r : Numver of down sampling ratio  - (example) 16
+>-i : file path of input data - (example) ./data_DFHiC/test/test_ration16.npz
+>-o : Directory path of output ehnhanced data - (example) ./output_enhanced
+>```
