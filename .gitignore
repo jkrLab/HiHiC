@@ -175,7 +175,7 @@ checkpoints_*/
 whole_mats/
 juicer_tools.jar
 loss_trend.png
-train.ipynb
+*.ipynb
 *_copy.py
 *_loss_trend.png
 *backup*
@@ -183,3 +183,6 @@ train.ipynb
 *.ipynb
 TAD*
 model_prediction.sh
+temp_*
+*_10000
+*_10000_*

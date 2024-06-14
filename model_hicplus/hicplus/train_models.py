@@ -68,9 +68,7 @@ def main():
     # np.save(infile+"lowres",lowres_sub)
     
     data_all = [np.load(os.path.join(args.train_data_dir, fname), allow_pickle=True) for fname in os.listdir(args.train_data_dir)] ### Added by HiHiC ##
-    # print(data_all)
-    # print(data_all[0].files, "#####################")
-    train = {'data': [], 'target': [], 'inds': [], 'inds_target': []} #####################################################################################################
+    train = {'data': [], 'target': [], 'inds': [], 'inds_target': []} ##################################################################################
     for data in data_all:
         for k, v in data.items():
             if k in train: 

@@ -148,9 +148,9 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
                 
             train_epoch.append(epoch)
             train_time.append(short)        
-            train_loss.append(f"{loss:.10f}")
+            train_loss.append(f"{running_loss/i:.10f}")
             
-            ckpt_file = f"{str(epoch).zfill(5)}_{short}_{loss:.10f}"
+            ckpt_file = f"{str(epoch).zfill(5)}_{short}_{running_loss/i:.10f}"
             torch.save(Net.state_dict(), os.path.join(outModel, ckpt_file))            
         ##############################################################################
         ##############################################################################

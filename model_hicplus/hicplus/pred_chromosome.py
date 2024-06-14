@@ -73,7 +73,8 @@ def predict(M,inmodel):
         # hires_loader = lowres_loader
 
         m = model.Net(40, 28)
-        m.load_state_dict(torch.load(inmodel, map_location=torch.device('cpu')))
+        # m.load_state_dict(torch.load(inmodel, map_location=torch.device('cpu')))
+        m.load_state_dict(torch.load(inmodel, map_location=torch.device(f'cuda:{args.gpu_id}' if torch.cuda.is_available() else 'cpu')))
 
         if torch.cuda.is_available():
             m = m.cuda()
@@ -118,7 +119,7 @@ def predict(M,inmodel):
 # #         chr_Mat = chr_Mat[:Nrow, :Ncol]
 # #     print(dat.head())       
 #     return(chr_Mat)
-hicarn_data = np.load(args.input_data, allow_pickle=True)
+hicplus_data = np.load(args.input_data, allow_pickle=True)
 
 
 # def writeBed(Mat, outname,binsize, chrN1,chrN2):
@@ -148,13 +149,13 @@ def main():
     # outname = args.outputfile
     # Mat = chr_pred(hicfile,chrN1,chrN2,binsize,inmodel)
     # ckpt_file=args.ckpt_file
-    Mat = predict(hicarn_data,args.ckpt_file)
+    Mat = predict(hicplus_data,args.ckpt_file)
     print(Mat.shape)
     # writeBed(Mat, outname, binsize,chrN1, chrN2)
     # for key in sorted(list(np.unique(hicarn_data['indz'][:, 0]))):
     th_model = args.ckpt_file.split('/')[-1].split('_')[0]
     file = os.path.join(args.output_data_dir, f'hicplus_predict_{args.down_ratio}_{th_model}.npz')
-    np.savez_compressed(file, data=Mat, inds=hicarn_data['inds_target'])
+    np.savez_compressed(file, data=Mat, inds=hicplus_data['inds_target'])
     print('Saving file:', file)
 if __name__ == '__main__':
     main()
