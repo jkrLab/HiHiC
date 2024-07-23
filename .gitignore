@@ -170,6 +170,7 @@ output_*/
 whole_mats/
 
 # others
+model_EnHiC/
 log*/
 checkpoints_*/
 whole_mats/
@@ -180,7 +181,7 @@ loss_trend.png
 *_loss_trend.png
 *backup*
 
-*.ipynb
+train.ipynb
 TAD*
 model_prediction.sh
 temp_*

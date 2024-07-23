@@ -165,10 +165,8 @@ for epoch in range(1, num_epochs+1):
         ######### Train generator #########
         netG.zero_grad()
         fake_out = netD(fake_img) ############################################################# Editted by HiHiC #####
-        g_loss = criterionG(fake_out.mean(), fake_img, real_img) #####################################################
+        g_loss = criterionG(fake_out.mean(), fake_img, real_img) 
         g_loss.backward()
-        ##############################################################################################################
-        # optimizerD.step() #################################### (refer to GitHub issue; issue about training step) ##
         optimizerG.step()
 
         run_result['g_loss'] += g_loss.item() * batch_size
@@ -249,13 +247,12 @@ for epoch in range(1, num_epochs+1):
         train_epoch.append(epoch)
         train_time.append(short)        
         train_loss.append(f"{valid_gloss:.10f}")
-        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{valid_gloss:.10f}" #######################
-        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) ############
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{valid_gloss:.10f}" 
+        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) #######################################################
+        np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss])############
     
 final_ckpt_g = f'{datestr}_finalg_deephic.pytorch'
 final_ckpt_d = f'{datestr}_finald_deephic.pytorch'
 
 torch.save(netG.state_dict(), os.path.join(out_dir, final_ckpt_g))
 torch.save(netD.state_dict(), os.path.join(out_dir, final_ckpt_d))
-
-np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss]) ### Added by HiHiC ##

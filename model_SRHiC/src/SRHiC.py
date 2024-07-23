@@ -173,6 +173,7 @@ def model(train_input_dir,
                 
                 ckpt_file = f"{str(epoch).zfill(5)}_{short}_{Loss:.10f}"
                 Saver.save(sess, os.path.join(saver_dir, ckpt_file), global_step=step)
+                np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_SRHiC'), [train_epoch, train_time, train_loss])
             ########################################################################
             ########################################################################
                     
@@ -181,8 +182,6 @@ def model(train_input_dir,
         # finally:
         #     Saver.save(sess, saver_dir + '/model/', global_step=step)
         #     print("training is over...")
-            
-    np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_SRHiC'), [train_epoch, train_time, train_loss])### Added by HiHiC ##
 
 
 if __name__ == '__main__':
