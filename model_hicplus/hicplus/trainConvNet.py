@@ -139,22 +139,21 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
     
             running_loss += loss.item()
 
-        ############################################################ Added by HiHiC ##                
-        # if epoch%10 == 0: ############################################################
-        if epoch: ############################################################
+        if epoch: #################################################### Added by HiHiC ##  
             sec = time.time()-start
             times = str(datetime.timedelta(seconds=sec))
             short = times.split(".")[0].replace(':','.')
                 
             train_epoch.append(epoch)
             train_time.append(short)        
-            train_loss.append(f"{running_loss/i:.10f}")
+            train_loss.append(f"{loss:.10f}")
             
-            ckpt_file = f"{str(epoch).zfill(5)}_{short}_{running_loss/i:.10f}"
-            torch.save(Net.state_dict(), os.path.join(outModel, ckpt_file))            
+            ckpt_file = f"{str(epoch).zfill(5)}_{short}_{loss:.10f}"
+            torch.save(Net.state_dict(), os.path.join(outModel, ckpt_file))
+            np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_hicplus'), [train_epoch, train_time, train_loss])            
         ##############################################################################
         ##############################################################################
-    
+
     print('-------', i, epoch, running_loss/i, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
     # log.write(str(epoch) + ', ' + str(running_loss/i,) +', '+ strftime("%Y-%m-%d %H:%M:%S", gmtime())+ '\n')
@@ -165,5 +164,5 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
         #     torch.save(Net.state_dict(), outModel + str(epoch) + str('.model'))
         # pass
     
-    np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_hicplus'), [train_epoch, train_time, train_loss]) ### Added by HiHiC ##
+     ### Added by HiHiC ##
     

@@ -218,19 +218,17 @@ for epoch in range(1, n_epoch +1):
     # summary=sess.run(merged_summary,{t_matrix: b_mats_input, t_target_matrix: b_mats_target})
     # summary_writer.add_summary(summary, epoch)
     
-        
-    # if epoch%10 == 0: ######################################################## Added by HiHiC #####
-    if epoch: ######################################################## Added by HiHiC #####
-        sec = time.time()-start ###################################################################
+    if epoch: ##################################################################################### Added by HiHiC #####
+        sec = time.time()-start ########################################################################################
         times = str(datetime.timedelta(seconds=sec))
         short = times.split(".")[0].replace(':','.')
         train_epoch.append(epoch)
         train_time.append(short)        
         train_loss.append(f"{mse_val:.10f}")
-        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{mse_val:.10f}.npz"###############################
-        tl.files.save_npz_dict(net.all_params, name=os.path.join(checkpoint, ckpt_file), sess=sess) ####                
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{mse_val:.10f}.npz"
+        tl.files.save_npz_dict(net.all_params, name=os.path.join(checkpoint, ckpt_file), sess=sess) #####################
+        np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss]) #####                
     
 print("epoch")
 print(best_epoch)
 
-np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss])### Added by HiHiC ##

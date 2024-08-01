@@ -160,13 +160,14 @@ for epoch in range(1, num_epochs+1):
         d_loss_fake = criterionD(fake_out, torch.zeros_like(fake_out))
         d_loss = d_loss_real + d_loss_fake
         d_loss.backward(retain_graph=True)
-        optimizerD.step()
+        # optimizerD.step()############################################################# Editted by HiHiC ##### (깃헙 #4 참고하여 위치 바꿈)
 
         ######### Train generator #########
         netG.zero_grad()
-        fake_out = netD(fake_img) ############################################################# Editted by HiHiC #####
+        # fake_out = netD(fake_img) (학습이 안되어서 추가함, 추가하면 돌아는 감.)
         g_loss = criterionG(fake_out.mean(), fake_img, real_img) 
         g_loss.backward()
+        optimizerD.step() ############################################################# Editted by HiHiC ##### (깃헙 #4 참고하여 위치 바꿈)
         optimizerG.step()
 
         run_result['g_loss'] += g_loss.item() * batch_size
@@ -239,15 +240,15 @@ for epoch in range(1, num_epochs+1):
         best_ckpt_file = f'{datestr}_bestg_deephic.pytorch'
         torch.save(netG.state_dict(), os.path.join(out_dir, best_ckpt_file))
         
-    # if epoch%10 == 0: ########################################## Added by HiHiC ####
-    if epoch: ########################################## Added by HiHiC ####
-        sec = time.time()-start ####################################################
+
+    if epoch: #################################################################################### Added by HiHiC ############
+        sec = time.time()-start ##############################################################################################
         times = str(datetime.timedelta(seconds=sec))
         short = times.split(".")[0].replace(':','.')
         train_epoch.append(epoch)
         train_time.append(short)        
-        train_loss.append(f"{valid_gloss:.10f}")
-        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{valid_gloss:.10f}" 
+        train_loss.append(f"{valid_result['g_loss']:.10f}")
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{valid_result['g_loss']:.10f}" 
         torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) #######################################################
         np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss])############
     

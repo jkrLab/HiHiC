@@ -130,7 +130,7 @@ def model(train_input_dir,
                         #     Saver.save(sess, saver_dir + '/model/', global_step=step)
                 print("the train file {0}  the train mean loss is {1}".format(file, total_loss / size_input))
 
-            if epoch > 20 and epoch % 5 == 2:
+            # if epoch > 20 and epoch % 5 == 2:
                 # valid_file = os.listdir(valid_input_dir)
                 # valid_file = valid_input_dir + valid_file[0]
                 # x = np.load(valid_file).astype(np.float32)
@@ -162,16 +162,15 @@ def model(train_input_dir,
             ################################################## Added by HiHiC ######
             ########################################################################            
             if epoch:
-            # if epoch%10 == 0:
                 sec = time.time()-start
                 times = str(datetime.timedelta(seconds=sec))
                 short = times.split(".")[0].replace(':','.')
                     
                 train_epoch.append(epoch)
                 train_time.append(short)        
-                train_loss.append(f"{Loss:.10f}")
+                train_loss.append(f"{temp_mean_valid_loss:.10f}")
                 
-                ckpt_file = f"{str(epoch).zfill(5)}_{short}_{Loss:.10f}"
+                ckpt_file = f"{str(epoch).zfill(5)}_{short}_{temp_mean_valid_loss:.10f}"
                 Saver.save(sess, os.path.join(saver_dir, ckpt_file), global_step=step)
                 np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_SRHiC'), [train_epoch, train_time, train_loss])
             ########################################################################

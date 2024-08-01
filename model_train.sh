@@ -38,6 +38,9 @@ if [ -z "${valid_data_dir}" ]; then
     valid_data_dir='specified valid data directory'
 fi
 
+mkdir -p ${loss_log_dir}
+
+
 if [ ${model} = "hicplus" ]; then
     python model_hicplus/hicplus/train_models.py --root_dir ${root_dir} --model ${model} --epoch ${epoch} --batch_size ${batch_size} --gpu_id ${gpu_id} --output_model_dir ${output_model_dir} --loss_log_dir ${loss_log_dir} --train_data_dir ${train_data_dir}
 
@@ -68,4 +71,3 @@ else
 
 fi
 
-mkdir -p ${loss_log_dir}

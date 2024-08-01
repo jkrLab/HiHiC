@@ -220,8 +220,7 @@ def main():
 		# save the model
 		# torch.save(model.state_dict(), dir_models + '/'  + str(epoch))
         
-		# if epoch%10 == 0: ########################################################################################## Added by HiHiC ####
-		if epoch: ########################################################################################## Added by HiHiC ####
+		if epoch: ################################################################################################## Added by HiHiC ####
 			sec = time.time()-start ####################################################################################################
 			times = str(datetime.timedelta(seconds=sec))
 			short = times.split(".")[0].replace(':','.')		
@@ -229,8 +228,9 @@ def main():
 			train_time.append(short)        
 			train_loss.append(f"{loss_validate:.10f}")
 			ckpt_file = f"{str(epoch).zfill(5)}_{short}_{loss_validate:.10f}"
-			torch.save(model.state_dict(), os.path.join(args.output_model_dir, ckpt_file)) #############################################	
-	np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss]) ########################\
+			np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss]) ################
+			torch.save(model.state_dict(), os.path.join(args.output_model_dir, ckpt_file)) #############################################
+
 torch.autograd.set_detect_anomaly(True)
 
 if __name__ == '__main__':
