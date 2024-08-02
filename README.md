@@ -54,7 +54,7 @@ bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM155
 3. Generate input data for each deep learning model
 
 ```
-bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.txt -r 16 -o ./ -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
+bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.txt -r 16 -o ./ -s 300 -n KR -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
 ```
 >You should specify **required arguments** as above. This Python code needs a chromosome length of reference genome .txt file like **hg19.txt** in the HiHiC directory. 
 
@@ -64,7 +64,11 @@ bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.t
 - `-g` : Reference genome length file, your data is based on - (example) `./hg19.txt`  
 - `-r` : Downsampling ratio of your downsampled data - (example) `16`
 - `-o` : Parent directory path for saving output (Child directory named as the model name will be generated under this.) - (example) `./`
-
+- `-s` : Max value of Hi-C matrix - (example) `300`
+- `-n` : Normalization of Hi-C matrix - (example) `KR`
+- `-t` : Chromosome numbers of training set - (example) `"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"`
+- `-v` : Chromosome numbers of validation set - (example) `"15 16 17"` 
+- `-p` : Chromosome numbers of prediction set - (example)  `"18 19 20 21 22"`
 
 
 

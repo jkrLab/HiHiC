@@ -72,10 +72,12 @@ end=23
 
 # 결과를 저장할 폴더 생성​​
 mkdir ${path}/data
+mkdir ${path}/${saved_in}
 # 전체 크로모좀에 대하여 반복문으로 명령 실행
 for ((chrom=1; chrom<end; chrom++))
 do
-    java -jar ${juicertools} dump observed NONE ./${file_name}.hic ${chrom} ${chrom} BP 10000 ${path}/data/chr${chrom}_10kb.txt
+    java -jar ${juicertools} dump observed KR ./${file_name}.hic ${chrom} ${chrom} BP 10000 ${path}/${saved_in}/chr${chrom}_10kb.txt
+    #java -jar ${juicertools} dump observed NONE ./${file_name}.hic ${chrom} ${chrom} BP 10000 ${path}/data/chr${chrom}_10kb.txt
 done
 echo ""
 echo "  ...Intra chromosome contact matrix are generated: ./data/"
@@ -85,7 +87,8 @@ mkdir ${path}/data_downsampled_${downsample_ratio}
 # 전체 크로모좀에 대하여 반복문으로 명령 실행
 for ((chrom=1; chrom<end; chrom++))
 do
-    java -jar ${juicertools} dump observed NONE ./${file_name}_ds_${downsample_ratio}.hic ${chrom} ${chrom} BP 10000 ${path}/data_downsampled_${downsample_ratio}/chr${chrom}_10kb.txt
+    java -jar ${juicertools} dump observed KR ./${file_name}_ds_${downsample_ratio}.hic ${chrom} ${chrom} BP 10000 ${path}/${saved_in}_downsampled_${downsample_ratio}/chr${chrom}_10kb.txt
+    # java -jar ${juicertools} dump observed NONE ./${file_name}_ds_${downsample_ratio}.hic ${chrom} ${chrom} BP 10000 ${path}/data_downsampled_${downsample_ratio}/chr${chrom}_10kb.txt
 done
 echo "  ...Downsampled contact matrix are generated: ./data_downsampled_${downsample_ratio}/"
 echo ""

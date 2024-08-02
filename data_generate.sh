@@ -63,6 +63,7 @@ echo ""
 
 # Python 스크립트 비버퍼링 모드로 실행
 if [ "${model}" = "iEnhance" ]; then
+    # python -u model_iEnhance/divide-data.py -i "${input_data_dir}" -d "${input_downsample_dir}" -m "${model}" -g "${ref_chrom}" -r "${down_ratio}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
     python -u model_iEnhance/construct_sets.py -i "${output_dir}/data_${model}/chrs_${max_value}_${normalization}/" -m "${model}" -r "${down_ratio}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
 else
     python -u data_generate.py -i "${input_data_dir}" -d "${input_downsample_dir}" -m "${model}" -g "${ref_chrom}" -r "${down_ratio}" -o "${output_dir}/" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}" -s "${max_value}" -n "${KR}"
