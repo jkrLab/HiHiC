@@ -81,7 +81,7 @@ else:
 	Net = model3.Net().to(device).eval()
 
 # Net.load_state_dict(torch.load(args.file_best_model))
-Net.load_state_dict(torch.load(args.ckpt_file))
+Net.load_state_dict(torch.load(args.ckpt_file, map_location=torch.device(device)))
 
 # low_res_test = np.minimum(args.HiC_max, np.load(args.file_test_data).astype(np.float32) * args.down_ratio)
 low_res_test = np.load(args.input_data, allow_pickle=True)

@@ -186,3 +186,4 @@ temp_*
 *_10000
 *_10000_*
 data_downsampling.sh
+train.ipynb

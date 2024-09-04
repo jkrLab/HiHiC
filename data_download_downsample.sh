@@ -2,22 +2,27 @@
 seed=42
 
 # example
-# bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz GSM1551550_HIC001 hg19 16 ./juicer_tools.jar
+# bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz GSM1551550_HIC001 hg19 16 ./juicer_tools.jar KR data
 
+### you can modifiy here as string type with ""!!!
 path=$(pwd)
 download_url=$1
 file_name=$2
 ref_genome=$3
 downsample_ratio=$4
 juicertools=$5
+normalization=$6
+saved_in=$7
 
 echo ""
 echo "  ...current working directory is $(pwd)"
-echo "      data_download_url = ${download_url}"
-echo "      file_name = ${file_name}"
-echo "      ref_genome = ${ref_genome}"
-echo "      downsample_ratio = ${downsample_ratio}"
-echo "      juicertools = ${juicertools}" # path to juicer_tool.jar of docker image
+echo "      data download url : ${download_url}"
+echo "      raw data file : ${file_name}.txt.gz"
+echo "      refrence genome : ${ref_genome}"
+echo "      downsampling ratio : ${downsample_ratio}"
+echo "      juicertools : ${juicertools}" # path to juicer_tool.jar of docker image
+echo "      normalization method : ${normalization}"
+echo "      intra chromosome data : ${saved_in}/ and ${saved_in}_downsampled_${downsample_ratio}/"
 echo ""
 
 ### read data download ###
@@ -71,24 +76,23 @@ start=1
 end=23
 
 # 결과를 저장할 폴더 생성​​
-mkdir ${path}/data
 mkdir ${path}/${saved_in}
 # 전체 크로모좀에 대하여 반복문으로 명령 실행
 for ((chrom=1; chrom<end; chrom++))
 do
-    java -jar ${juicertools} dump observed KR ./${file_name}.hic ${chrom} ${chrom} BP 10000 ${path}/${saved_in}/chr${chrom}_10kb.txt
+    java -jar ${juicertools} dump observed ${normalization} ./${file_name}.hic ${chrom} ${chrom} BP 10000 ${path}/${saved_in}/chr${chrom}_10kb.txt
     #java -jar ${juicertools} dump observed NONE ./${file_name}.hic ${chrom} ${chrom} BP 10000 ${path}/data/chr${chrom}_10kb.txt
 done
 echo ""
-echo "  ...Intra chromosome contact matrix are generated: ./data/"
+echo "  ...Intra chromosome contact matrix are generated: ./${saved_in}/"
 
 # 결과를 저장할 폴더 생성​​
 mkdir ${path}/data_downsampled_${downsample_ratio}
 # 전체 크로모좀에 대하여 반복문으로 명령 실행
 for ((chrom=1; chrom<end; chrom++))
 do
-    java -jar ${juicertools} dump observed KR ./${file_name}_ds_${downsample_ratio}.hic ${chrom} ${chrom} BP 10000 ${path}/${saved_in}_downsampled_${downsample_ratio}/chr${chrom}_10kb.txt
+    java -jar ${juicertools} dump observed ${normalization} ./${file_name}_ds_${downsample_ratio}.hic ${chrom} ${chrom} BP 10000 ${path}/${saved_in}_downsampled_${downsample_ratio}/chr${chrom}_10kb.txt
     # java -jar ${juicertools} dump observed NONE ./${file_name}_ds_${downsample_ratio}.hic ${chrom} ${chrom} BP 10000 ${path}/data_downsampled_${downsample_ratio}/chr${chrom}_10kb.txt
 done
-echo "  ...Downsampled contact matrix are generated: ./data_downsampled_${downsample_ratio}/"
+echo "  ...Downsampled contact matrix are generated: ./${saved_in}_downsampled_${downsample_ratio}/"
 echo ""

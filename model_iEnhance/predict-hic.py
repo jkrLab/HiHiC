@@ -2,7 +2,7 @@ import numpy as np
 import multiprocessing
 import torch as t
 import time
-import cooler
+# import cooler
 
 from normga4 import Construct
 from model import iEnhance
@@ -58,7 +58,7 @@ def make_whole_40(predicted):
 
 model = t.load(args.ckpt_file,map_location = t.device('cpu'))
 input_data = np.load(args.input_data, allow_pickle=True) #chromosome 별로 들어 있는 whole matrix (.npz)
-chrs_input = make_whole_40(input_data)
+chrs_input = make_whole_40(input_data['lr_sample'])
 chrs_list = chrs_input.keys()
 
 model.eval()
@@ -164,14 +164,14 @@ def Combine(d_size,jump,lens,hic_m):
     Hrmat = t.triu(Hrmat,diagonal=1).T + t.triu(Hrmat)
     return Hrmat
 
-def Readcooler(fn,chr,b = False):
-    # print('--')
-    rdata = cooler.Cooler(fn)
+# def Readcooler(fn,chr,b = False):
+#     # print('--')
+#     rdata = cooler.Cooler(fn)
     
-    rmat = rdata.matrix(balance=b).fetch(chr)
-    # rmat, _ = remove_zeros(rmat)
-    rmat[np.isnan(rmat)] = 0
-    return rmat
+#     rmat = rdata.matrix(balance=b).fetch(chr)
+#     # rmat, _ = remove_zeros(rmat)
+#     rmat[np.isnan(rmat)] = 0
+#     return rmat
 
 
 def predict(c):

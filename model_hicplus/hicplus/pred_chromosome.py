@@ -47,9 +47,11 @@ os.makedirs(args.output_data_dir, exist_ok=True) #######################
 
 startTime = datetime.now()
 
-use_gpu = True #opt.cuda
+# use_gpu = True #opt.cuda
 #if use_gpu and not torch.cuda.is_available():
 #    raise Exception("No GPU found, please run without --cuda")
+use_gpu = torch.cuda.is_available() ##################################################### Added by HiHiC
+device = torch.device(f'cuda:{args.gpu_id}' if use_gpu else 'cpu') ###################### Added by HiHiC
 
 def predict(M,inmodel):
     # N = M['data'].shape[0]
@@ -76,14 +78,17 @@ def predict(M,inmodel):
         # m.load_state_dict(torch.load(inmodel, map_location=torch.device('cpu')))
         m.load_state_dict(torch.load(inmodel, map_location=torch.device(f'cuda:{args.gpu_id}' if torch.cuda.is_available() else 'cpu')))
 
-        if torch.cuda.is_available():
-            m = m.cuda()
+        # if torch.cuda.is_available():
+        #     m = m.cuda()
+        if use_gpu:
+            m =m.to(device)
 
         for i, v1 in enumerate(lowres_loader):
             _lowRes, _ = v1
             _lowRes = Variable(_lowRes).float()
             if use_gpu:
-                _lowRes = _lowRes.cuda()
+                # _lowRes = _lowRes.cuda()
+                _lowRes = _lowRes.to(device)
             _lowRes = _lowRes.unsqueeze(0) ###################### Added by HiHiC
             y_prediction = m(_lowRes)
 

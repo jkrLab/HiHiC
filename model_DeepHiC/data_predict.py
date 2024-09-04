@@ -71,7 +71,8 @@ def deephic_predictor(deephic_loader, ckpt_file, device, scale, res_num):
     deepmodel = deephic.Generator(scale_factor=scale, in_channel=1, resblock_num=res_num).to(device)
     if not os.path.isfile(ckpt_file):
         ckpt_file = f'save/{ckpt_file}'
-    deepmodel.load_state_dict(torch.load(ckpt_file))
+    # deepmodel.load_state_dict(torch.load(ckpt_file))
+    deepmodel.load_state_dict(torch.load(ckpt_file, map_location=torch.device(device)))
     print(f'Loading DeepHiC checkpoint file from "{ckpt_file}"')
     result_data = []
     result_inds = []
