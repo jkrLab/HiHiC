@@ -119,14 +119,14 @@ bash model_train.sh -m DFHiC -e 500 -b 128 -g 0 -o ./checkpoints_DFHiC -l ./log 
 > *All the deep learning model codes were downloaded from each author's GitHub and modified for performance comparison. For light memory storage, pre-trained weights and data have been removed*.
 
 
-`-m` : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, SRHiC, iEnhance) - (example) `DFHiC`   
-`-e` : Number of train epoch - (example) `500`   
-`-b` : Number of batch size - (example) `128`   
-`-g` : Number of GPU ID  - (example) `0`  
-`-o` : Directory path of output models  - (example) `./checkpoints_DFHiC`
-`-l` : Directory path of training log - (example) `./log`
-`-t` : Directory path of input training data - (example) `./data_DFHiC/train`
-`-v` : Directory path of input validation data - (example) `./data_DFHiC/valid`
+>`-m` : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, SRHiC, iEnhance) - (example) `DFHiC`   
+>`-e` : Number of train epoch - (example) `500`   
+>`-b` : Number of batch size - (example) `128`   
+>`-g` : Number of GPU ID  - (example) `0`  
+>`-o` : Directory path of output models  - (example) `./checkpoints_DFHiC`
+>`-l` : Directory path of training log - (example) `./log`
+>`-t` : Directory path of input training data - (example) `./data_DFHiC/train`
+>`-v` : Directory path of input validation data - (example) `./data_DFHiC/valid`
 
 
 
@@ -152,11 +152,11 @@ bash model_prediction.sh -m DFHiC -c ./checkpoints_DFHiC/DFHiC_best.npz -b 16 -g
 
 >You should specify the required arguments of the model you'd like to use, such as **model name, checkpoints file path, batch size, GPU ID, downsampling ratio, input data path, and output data directory for saving enhanced data**. When you use SRHiC, the checkpoint file need .meta format.
 
-`-m` : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - (example) `DFHiC`
-`-c` : file path of checkpoint - (example) `./checkpoints_DFHiC/DFHiC_best.npz`
-`-b` : Number of batch size - (example) `8`
-`-g` : Number of GPU ID  - (example) `0`
-`-r` : Numver of down sampling ratio  - (example) `16`
-`-i` : file path of input data - (example) `./data_DFHiC/test/test_ration16.npz`
-`-o` : Directory path of output ehnhanced data - (example) `./output_enhanced`
+>`-m` : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - (example) `DFHiC`   
+>`-c` : file path of checkpoint - (example) `./checkpoints_DFHiC/DFHiC_best.npz`   
+>`-b` : Number of batch size - (example) `8`   
+>`-g` : Number of GPU ID  - (example) `0`   
+>`-r` : Numver of down sampling ratio  - (example) `16`   
+>`-i` : file path of input data - (example) `./data_DFHiC/test/test_ration16.npz`   
+>`-o` : Directory path of output ehnhanced data - (example) `./output_enhanced`   
 
