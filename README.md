@@ -16,8 +16,13 @@ git clone jkrLab/HiHiC
 
 
 2. Run the docker image for data processing
++ With GPU (CUDA 11.4)
 ```
 docker run --rm --gpus all -it --name hihic_preprocess -v ${PWD}:${PWD} jkrlab/hihic_preprocess
+```
++ Without GPU
+```
+docker run --rm -it --name hihic_preprocess -v ${PWD}:${PWD} jkrlab/hihic_preprocess
 ```
 >Every docker image should be run in the parent directory of HiHiC.
 
@@ -47,8 +52,8 @@ cd /path/to/HiHiC/directory
 bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz GSM1551550_HIC001 hg19 16 ./juicer_tools.jar KR data
 ```
 >We download and process GM12879 cell line, which is aligned based on hg19.
->You can modify arguments, **data download URL, file name, reference genome, downsampling ratio, path of juicer tools, normalization method(NONE, KR, VC, etc.)** and **intra chromosome data after juicer tools** in the bash script, as you need. 
->If you put these arguments in the command line, these should be placed in the order as above: data download URL, saving file name, reference genome, downsampling ratio, path of juicer tools, normalization method, intra chromosome data folder.
+>You can modify arguments, **data download URL, file name, reference genome, downsampling ratio, path of juicer tools, normalization method(NONE, KR, VC, etc.)** and **intra chromosome data directory name** in the bash script, as you need. 
+>If you put these arguments in the command line, these should be placed in the order as above: data download URL, saving file name, reference genome, downsampling ratio, path of juicer tools, normalization method, intra chromosome data folder name.
 
 
 3. Generate input data for each deep learning model
@@ -58,17 +63,17 @@ bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.t
 ```
 >You should specify **required arguments** as above. This Python code needs a chromosome length of reference genome .txt file like **hg19.txt** in the HiHiC directory. 
 
-`-i` : Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) - (example) `/HiHiC/data`   
-`-d` : Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) - (example) `/HiHiC/data_downsampled_16`   
-`-m` : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - (example) `DFHiC`   
-`-g` : Reference genome length file, your data is based on - (example) `./hg19.txt`     
-`-r` : Downsampling ratio of your downsampled data - (example) `16`   
-`-o` : Parent directory path for saving output (Child directory named as the model name will be generated under this.) - (example) `./`   
-`-s` : Max value of Hi-C matrix - (example) `300`   
-`-n` : Normalization of Hi-C matrix - (example) `KR`   
-`-t` : Chromosome numbers of training set - (example) `"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"`   
-`-v` : Chromosome numbers of validation set - (example) `"15 16 17"`   
-`-p` : Chromosome numbers of prediction set - (example)  `"18 19 20 21 22"`   
+* `-i` : Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) - (example) `/HiHiC/data`   
+* `-d` : Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) - (example) `/HiHiC/data_downsampled_16`   
+* `-m` : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - (example) `DFHiC`   
+* `-g` : Reference genome length file, your data is based on - (example) `./hg19.txt`     
+* `-r` : Downsampling ratio of your downsampled data - (example) `16`   
+* `-o` : Parent directory path for saving output (Child directory named as the model name will be generated under this.) - (example) `./`   
+* `-s` : Max value of Hi-C matrix - (example) `300`   
+* `-n` : Normalization of Hi-C matrix - (example) `KR`   
+* `-t` : Chromosome numbers of training set - (example) `"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"`   
+* `-v` : Chromosome numbers of validation set - (example) `"15 16 17"`   
+* `-p` : Chromosome numbers of prediction set - (example)  `"18 19 20 21 22"`   
 
 
 
@@ -87,14 +92,23 @@ cd /path/to/HiHiC/parent/directory
 2. Run Docker environment
 
 * hicplus, HiCNN, deepHiC, HiCARN, or iEnhance:
-```
-docker run --rm --gpus all -it --name hihic_torch -v ${PWD}:${PWD} jkrlab/hihic_torch
-```
+   + With GPU (CUDA 11.4)
+   ```
+   docker run --rm --gpus all -it --name hihic_torch -v ${PWD}:${PWD} jkrlab/hihic_torch
+   ```
+   + Without GPU
+   ```
+   docker run --rm -it --name hihic_torch -v ${PWD}:${PWD} jkrlab/hihic_torch
+   ```
 * SRHiC or DFHiC:
-```
-docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/hihic_tensorflow
-```
-
+   + With GPU (CUDA 11.4)
+   ```
+   docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/hihic_tensorflow
+   ```
+   + Without GPU
+   ```
+   docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/hihic_tensorflow
+   ```
 
 
 
@@ -119,14 +133,14 @@ bash model_train.sh -m DFHiC -e 500 -b 128 -g 0 -o ./checkpoints_DFHiC -l ./log 
 > *All the deep learning model codes were downloaded from each author's GitHub and modified for performance comparison. For light memory storage, pre-trained weights and data have been removed*.
 
 
->`-m` : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, SRHiC, iEnhance) - (example) `DFHiC`   
->`-e` : Number of train epoch - (example) `500`   
->`-b` : Number of batch size - (example) `128`   
->`-g` : Number of GPU ID  - (example) `0`  
->`-o` : Directory path of output models  - (example) `./checkpoints_DFHiC`   
->`-l` : Directory path of training log - (example) `./log`   
->`-t` : Directory path of input training data - (example) `./data_DFHiC/train`   
->`-v` : Directory path of input validation data - (example) `./data_DFHiC/valid`   
+* `-m` : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, SRHiC, iEnhance) - (example) `DFHiC`   
+* `-e` : Number of train epoch - (example) `500`   
+* `-b` : Number of batch size - (example) `128`   
+* `-g` : Number of GPU ID  - (example) `0`  
+* `-o` : Directory path of output models  - (example) `./checkpoints_DFHiC`   
+* `-l` : Directory path of training log - (example) `./log`   
+* `-t` : Directory path of input training data - (example) `./data_DFHiC/train`   
+* `-v` : Directory path of input validation data - (example) `./data_DFHiC/valid`   
 
 
 
