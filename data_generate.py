@@ -45,7 +45,9 @@ def hic_matrix_extraction(chrom_list, res=10000):
         hr_contact_matrix = np.zeros((mat_dim,mat_dim))
         for line in open(hr_hic_file).readlines():
             idx1, idx2, value = int(line.strip().split('\t')[0]),int(line.strip().split('\t')[1]),float(line.strip().split('\t')[2])
-            if idx2/res>=mat_dim or idx1/res>=mat_dim:
+            if np.isnan(value):
+                continue
+            elif idx2/res>=mat_dim or idx1/res>=mat_dim:
                 continue
             else:
                 hr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
@@ -53,8 +55,6 @@ def hic_matrix_extraction(chrom_list, res=10000):
         if np.isnan(hr_contact_matrix).any(): ###############
             print(f'hr_chr{each} has nan value!', flush=True) ###############
         hr_contacts_dict[f'chr{each}'] = scaler.fit_transform(np.minimum(max_value, hr_contact_matrix)) # (0,300) >> (0,1)
-        if np.isnan(hr_contacts_dict[f'chr{each}']).any(): ###############
-            print(f'hr_scaled chr{each} has nan value!', flush=True) ###############
 
     lr_contacts_dict={}
     for each in chrom_list:
@@ -64,7 +64,9 @@ def hic_matrix_extraction(chrom_list, res=10000):
         lr_contact_matrix = np.zeros((mat_dim,mat_dim))
         for line in open(lr_hic_file).readlines():
             idx1, idx2, value = int(line.strip().split('\t')[0]),int(line.strip().split('\t')[1]),float(line.strip().split('\t')[2])
-            if idx2/res>=mat_dim or idx1/res>=mat_dim:
+            if np.isnan(value):
+                continue
+            elif idx2/res>=mat_dim or idx1/res>=mat_dim:
                 continue
             else:
                 lr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
@@ -72,14 +74,11 @@ def hic_matrix_extraction(chrom_list, res=10000):
         if np.isnan(lr_contact_matrix).any(): ###############
             print(f'lr_chr{each} has nan value!', flush=True) ###############
         lr_contacts_dict[f'chr{each}'] = scaler.fit_transform(np.minimum(max_value, lr_contact_matrix)) # (0,300) >> (0,1)
-        if np.isnan(lr_contacts_dict[f'chr{each}']).any(): ###############
-            print(f'lr_scaled chr{each} has nan value!', flush=True) ###############
 
     ct_hr_contacts={item:sum(sum(hr_contacts_dict[item])) for item in hr_contacts_dict.keys()} # read 수
     ct_lr_contacts={item:sum(sum(lr_contacts_dict[item])) for item in lr_contacts_dict.keys()}    
     print("\n  ...Done making whole contact map by each chromosomes...", flush=True)
     return hr_contacts_dict,lr_contacts_dict,ct_hr_contacts,ct_lr_contacts
-
 
 # 매트릭스 자르기
 def crop_hic_matrix_by_chrom(chrom, for_model, thred=200): # thred=2M/resolution

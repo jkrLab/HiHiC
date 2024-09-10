@@ -81,7 +81,6 @@ mkdir ${path}/${saved_in}
 for ((chrom=1; chrom<end; chrom++))
 do
     java -jar ${juicertools} dump observed ${normalization} ./${file_name}.hic ${chrom} ${chrom} BP 10000 ${path}/${saved_in}/chr${chrom}_10kb.txt
-    #java -jar ${juicertools} dump observed NONE ./${file_name}.hic ${chrom} ${chrom} BP 10000 ${path}/data/chr${chrom}_10kb.txt
 done
 echo ""
 echo "  ...Intra chromosome contact matrix are generated: ./${saved_in}/"
@@ -92,7 +91,6 @@ mkdir ${path}/data_downsampled_${downsample_ratio}
 for ((chrom=1; chrom<end; chrom++))
 do
     java -jar ${juicertools} dump observed ${normalization} ./${file_name}_ds_${downsample_ratio}.hic ${chrom} ${chrom} BP 10000 ${path}/${saved_in}_downsampled_${downsample_ratio}/chr${chrom}_10kb.txt
-    # java -jar ${juicertools} dump observed NONE ./${file_name}_ds_${downsample_ratio}.hic ${chrom} ${chrom} BP 10000 ${path}/data_downsampled_${downsample_ratio}/chr${chrom}_10kb.txt
 done
 echo "  ...Downsampled contact matrix are generated: ./${saved_in}_downsampled_${downsample_ratio}/"
 echo ""

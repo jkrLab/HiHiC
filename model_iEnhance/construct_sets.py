@@ -67,7 +67,7 @@ for c in trainlist:
 lrtraind = np.concatenate(lrtraind,axis=0)
 hrtraind = np.concatenate(hrtraind,axis=0)
 # np.savez(fn + "_train.npz",hr_sample = hrtraind,lr_sample = lrtraind)
-np.savez(train_dir + f"train_{args.data_ratio}.npz",hr_sample = hrtraind,lr_sample = lrtraind)
+np.savez(train_dir + f"train_ratio{args.data_ratio}.npz",hr_sample = hrtraind,lr_sample = lrtraind)
 
 for c in testlist:
     datashr = np.load(deal_fd + 'chr' + c + '.npz')['hr_sample']
@@ -84,7 +84,7 @@ for c in testlist:
 lrtestd = np.concatenate(lrtestd,axis=0)
 hrtestd = np.concatenate(hrtestd,axis=0)
 # np.savez(fn + "_test.npz",hr_sample = hrtestd,lr_sample = lrtestd)
-np.savez(test_dir + f"test_{args.data_ratio}.npz",hr_sample = hrtestd,lr_sample = lrtestd)
+np.savez(test_dir + f"test_ratio{args.data_ratio}.npz",hr_sample = hrtestd,lr_sample = lrtestd)
 
 ############################################################################ by HiHiC #########
 validlist = args.valid_set.split()
@@ -106,5 +106,5 @@ for c in validlist:
 lrvalid = np.concatenate(lrvalid,axis=0)
 hrvalid = np.concatenate(hrvalid,axis=0)
 # np.savez(fn + "_test.npz",hr_sample = hrtestd,lr_sample = lrtestd)
-np.savez(valid_dir + f"valid_{args.data_ratio}.npz",hr_sample = hrvalid,lr_sample = lrvalid)
+np.savez(valid_dir + f"valid_ratio{args.data_ratio}.npz",hr_sample = hrvalid,lr_sample = lrvalid)
 ###################################################################################################
