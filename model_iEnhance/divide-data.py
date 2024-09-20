@@ -30,7 +30,7 @@ optional.add_argument('-v', '--valid_set', dest='valid_set', type=str, required=
 optional.add_argument('-p', '--test_set', dest='test_set', type=str, required=False, help='Prediction set chromosome: "18 19 20 21 22"')
 
 args = parser.parse_args()
-chrs_list = args.train_set.split() + args.valid_set.split() + args.test_set.split()
+chrs_list = args.train_set.split() + args.valid_set.split() 
 input_data_dir = args.input_data_dir
 input_downsample_dir = args.input_downsample_dir
 ref_chrom = args.ref_chrom
@@ -80,6 +80,36 @@ def hic_matrix_extraction(chr, res=10000):
     
     print(f"  ...Done making whole contact map of chr{chr}...\n", flush=True)
     return hr_contact,lr_contact
+
+# def divide_hicm_with_indices(hic_m,d_size,jump,chr):
+
+#     lens = hic_m.shape[0]
+#     out = [] 
+#     indices = []
+
+#     # 슬라이딩 윈도우 방식으로 행렬을 나누기
+#     for l in range(0,lens,jump):
+#         lifb = False
+#         if(l + d_size >= lens):
+#             l = lens - d_size
+#             lifb = True
+
+#         for c in range(l,lens,jump):
+#             cifb = False
+#             if(c + d_size >= lens):
+#                 temp_m = hic_m[l:l+d_size,lens - d_size:lens]
+#                 indices.append([chr, l, l+d_size, lens-d_size, lens])
+#                 cifb = True
+#             else:
+#                 temp_m = hic_m[l:l+d_size,c:c+d_size]
+#                 indices.append([chr, l, l+d_size, c, c+d_size])
+#             result = np.triu(temp_m,k=1).T + np.triu(temp_m)
+            
+#             out.append(result)
+#             if(cifb):
+#                 break
+#         if(lifb): break
+#     return np.array(out),indices
 #########################################################
 
 
@@ -127,7 +157,7 @@ def DownSampling(rmat,ratio = 2):
     return np.array(sample_m) # (m, m)
 
 
-def divide_hicm(hic_m,d_size,jump):
+def divide_hicm(hic_m,d_size,jump):    
     '''
     
     '''
@@ -201,7 +231,7 @@ def divide(c, rmat, lrmat, save_dir):
     bgood = np.percentile(block_sum,80)
     bmedian = np.percentile(block_sum,60)
     
-    print(f"total {len(block_sum)}blocks, good: over {bgood}, median: over {bmedian}") #### by HiHiC
+    print(f"total {len(block_sum)} blocks, good: over {bgood}, median: over {bmedian}") #### by HiHiC
 
     layeridx = [np.array(block_sum <= bmedian),
                 np.array(block_sum >= bgood),
@@ -246,7 +276,7 @@ def divide(c, rmat, lrmat, save_dir):
     piece_lr = np.concatenate(lrout,axis=0)
     # np.savez(out_path + "chr-" + c + ".npz",hr_sample = piece_hr,lr_sample = piece_lr)
 
-    np.savez(save_dir + f"chr{c}" ,hr_sample = piece_hr,lr_sample = piece_lr)
+    np.savez(save_dir + f"chr{c}" , target = piece_hr, data = piece_lr)
     ## logw = 'chr ' + c + " hr sample sum :" + str(piece_hr.shape)
     ## logw = logw + "\n" + 'chr ' + c + " lr sample sum:" + str(piece_lr.shape) + "\n"
     ## wlog(log_name,logw)
@@ -261,15 +291,19 @@ if __name__ == '__main__':
     # start = time.time()
     # print(f'Start a multiprocess pool with process_num = {pool_num}')
     # pool = multiprocessing.Pool(pool_num)
-    
-    
+        
     for chr in chrs_list:
         # pool.apply_async(func = divide, args=(chr,))
         
-        ################################## by HiHiC #####
+    ################################## by HiHiC #####
         rmat,lmat = hic_matrix_extraction(chr)
         divide(chr,rmat,lmat,save_dir) 
-        #################################################
+    
+    for chr in args.test_set.split():
+        rmat,lmat = hic_matrix_extraction(chr)
+        np.savez(save_dir + f"chr{chr}_whole_mat", target = rmat, data = lmat)
+    #################################################
+    
     # pool.close()
     # pool.join()
     print(f'All downsampling processes done. Running cost is {(time.time()-start)/60:.1f} min.\n', flush=True)

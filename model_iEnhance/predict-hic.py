@@ -12,13 +12,13 @@ from model import iEnhance
 ########################################################################
 import os, argparse
 
-parser = argparse.ArgumentParser(description='DeepHiC prediction process')
+parser = argparse.ArgumentParser(description='iEnhance prediction process')
 parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
 
 required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
                       help='HiHiC directory')
-required.add_argument('--model', type=str, default='DeepHiC', metavar='DeepHiC', required=True,
+required.add_argument('--model', type=str, default='iEnhance', metavar='iEnhance', required=True,
                       help='model name')
 required.add_argument('--ckpt_file', type=str, metavar='[2]', required=True,
                       help='pretrained model')
@@ -30,24 +30,18 @@ required.add_argument('--down_ratio', type=int, metavar='[5]', required=True,
                       help='down sampling ratio')
 required.add_argument('--input_data', type=str, metavar='[6]', required=True,
                       help='directory path of training model')
-required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
-                      help='directory path for saving enhanced output (default: HiHiC/output_enhanced/)')
+required.add_argument('--output_data_dir', type=str, default='./output_iEnhance', metavar='[7]', required=True,
+                      help='directory path for saving enhanced output (default: HiHiC/output_iEnhance/)')
 args = parser.parse_args()
 
-def make_whole_40(predicted):
-    predicted = np.load(predicted, allow_pickle=True)
-    mats = {}
-    unique_chrom = np.unique(predicted['inds'][:, 0])
-    for chrom in sorted(unique_chrom):
-        chrom_indices = predicted['inds'][:, 0] == chrom
-        mat_dim = predicted['inds'][chrom_indices][0, 1] + 1
-        inds = predicted['inds'][chrom_indices][:, -2:] + [6, 6]
-        submats = np.squeeze(predicted['data'])[chrom_indices, 6:34, 6:34]    
-        mat = np.zeros((mat_dim, mat_dim))
-        for ind, submat in zip(inds, submats):
-            mat[ind[0]:ind[0]+28, ind[1]:ind[1]+28] = submat
-        mats[str(chrom)] = np.triu(mat) + np.triu(mat, k=1).T # mats[str(chrom)] = mat
-    return mats
+
+model = Construct() 
+state_dict = t.load(args.ckpt_file, map_location = t.device('cpu'))
+model.load_state_dict(state_dict) 
+
+input_data = dict(np.load(args.input_data, allow_pickle=True))
+chrs_list = input_data.keys()
+
 ########################################################################
 ########################################################################
 
@@ -55,11 +49,6 @@ def make_whole_40(predicted):
 # fn = "./HiCdata/Rao2014-K562-MboI-allreps-filtered.10kb.cool"
 # chrs_list = ['2' ,'4' ,'6' ,'8' ,'10' ,'12','16','17' ,'18','20','21']
 # cell_line_name = "K562"
-
-model = t.load(args.ckpt_file,map_location = t.device('cpu'))
-input_data = np.load(args.input_data, allow_pickle=True) #chromosome 별로 들어 있는 whole matrix (.npz)
-chrs_input = make_whole_40(input_data['lr_sample'])
-chrs_list = chrs_input.keys()
 
 model.eval()
 
@@ -176,7 +165,7 @@ def Combine(d_size,jump,lens,hic_m):
 
 def predict(c):
     # rdata = Readcooler(fn,'chr' + c)
-    rdata = chrs_input[str(c)] ######
+    rdata = input_data[str(c)] ###### by HiHiC
     lrmat = rdata.astype(np.float32)
     hic_m = t.from_numpy(lrmat)
     fakemat = Combine(150,50,lrmat.shape[0],hic_m)
@@ -187,20 +176,14 @@ def predict(c):
     np.savez(file,fakeh = fakemat.numpy(),lhr = lrmat)
 
 if __name__ == '__main__':
-    pool_num = len(chrs_list) if multiprocessing.cpu_count() > len(chrs_list) else multiprocessing.cpu_count()
+    # pool_num = len(chrs_list) if multiprocessing.cpu_count() > len(chrs_list) else multiprocessing.cpu_count()
 
     start = time.time()
-    print(f'Start a multiprocess pool with process_num = {pool_num}')
+    # print(f'Start a multiprocess pool with process_num = {pool_num}')
     # pool = multiprocessing.Pool(pool_num)
     for chr in chrs_list:
         # pool.apply_async(func = predict,args=(chr,))
-        predict(chr) ######
+        predict(chr) ###### by HiHiC
     # pool.close()
     # pool.join()
     print(f'All predicting processes done. Running cost is {(time.time()-start)/60:.1f} min.')
-
-
-
-
-
-

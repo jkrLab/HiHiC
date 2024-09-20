@@ -25,31 +25,31 @@ while getopts ":i:d:m:g:r:o:s:n:t:v:p:" flag; do
     esac
 done
 
-# # 필수 인자 체크
-# if [ -z "${input_data_dir}" ] || [ -z "${input_downsample_dir}" ] || [ -z "${model}" ] || [ -z "${ref_chrom}" ] || [ -z "${down_ratio}" ] || [ -z "${output_dir}" ]; then
-#     echo "Usage: $0 -i <input_data_path> -d <input_downsample_path> -m <model_name> -g <ref_chromosome_length> -r <downsample_ratio> -o <output_path> -s <max_value> -n normalization -t <train_set_chromosome> -v <valid_set_chromosome> -p <prediction_set_chromosome>" >&2
-#     exit 1
-# fi
+# 필수 인자 체크
+if [ -z "${input_data_dir}" ] || [ -z "${input_downsample_dir}" ] || [ -z "${model}" ] || [ -z "${ref_chrom}" ] || [ -z "${down_ratio}" ] || [ -z "${output_dir}" ]; then
+    echo "Usage: $0 -i <input_data_path> -d <input_downsample_path> -m <model_name> -g <ref_chromosome_length> -r <downsample_ratio> -o <output_path> -s <max_value> -n normalization -t <train_set_chromosome> -v <valid_set_chromosome> -p <prediction_set_chromosome>" >&2
+    exit 1
+fi
 
-# # 데이터셋 split 기본값 설정
-# if [ "${model}" = "hicplus" ]; then
-#     train_set=${train_set:-"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"}
-#     prediction_set=${prediction_set:-"18 19 20 21 22"}
-#     echo ""
-#     echo "  ...For training set, chromosome ${train_set}"
-#     echo "     For test set, chromosome ${prediction_set}"
-# elif [[ "${model}" =~ ^(HiCNN2|SRHiC|deepHiC|HiCARN|DFHiC|iEnhance)$ ]]; then
-#     train_set=${train_set:-"1 2 3 4 5 6 7 8 9 10 11 12 13 14"}
-#     valid_set=${valid_set:-"15 16 17"}
-#     prediction_set=${prediction_set:-"18 19 20 21 22"}
-#     echo ""
-#     echo "  ...For training set, chromosome ${train_set}" 
-#     echo "     For validation set, chromosome ${valid_set}"
-#     echo "     For test set, chromosome ${prediction_set}"
-# else
-#     echo "Model name should be one of the hicplus, HiCNN2, SRHiC, deepHiC, HiCARN, DFHiC, and iEnhance."
-#     exit 1
-# fi
+# 데이터셋 split 기본값 설정
+if [ "${model}" = "hicplus" ]; then
+    train_set=${train_set:-"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"}
+    prediction_set=${prediction_set:-"18 19 20 21 22"}
+    echo ""
+    echo "  ...For training set, chromosome ${train_set}"
+    echo "     For test set, chromosome ${prediction_set}"
+elif [[ "${model}" =~ ^(HiCNN2|SRHiC|deepHiC|HiCARN|DFHiC|iEnhance)$ ]]; then
+    train_set=${train_set:-"1 2 3 4 5 6 7 8 9 10 11 12 13 14"}
+    valid_set=${valid_set:-"15 16 17"}
+    prediction_set=${prediction_set:-"18 19 20 21 22"}
+    echo ""
+    echo "  ...For training set, chromosome ${train_set}" 
+    echo "     For validation set, chromosome ${valid_set}"
+    echo "     For test set, chromosome ${prediction_set}"
+else
+    echo "Model name should be one of the hicplus, HiCNN2, SRHiC, deepHiC, HiCARN, DFHiC, and iEnhance."
+    exit 1
+fi
 
 # 저장 디렉토리 존재하지 않는 경우 생성
 if [ ! -d "$output_dir" ]; then

@@ -103,14 +103,14 @@ class MyData_train(Dataset): ###################################################
 
         # rdata = np.load(fp)
         data_all = [np.load(os.path.join(args.train_data_dir, fname), allow_pickle=True) for fname in fp] 
-        rdata = {'lr_sample': [], 'hr_sample': []} 
+        rdata = {'data': [], 'target': []} 
         for data in data_all:
             for k, v in data.items():
                 if k in rdata: 
                     rdata[k].append(v) 
         rdata = {k: np.concatenate(v, axis=0) for k, v in rdata.items()} 
-        self.lr = rdata['lr_sample']
-        self.hr = rdata['hr_sample']
+        self.lr = rdata['data']
+        self.hr = rdata['target']
 
     def __getitem__(self, index):
 
@@ -125,14 +125,14 @@ class MyData_valid(Dataset):
 
         # rdata = np.load(fp)
         data_all = [np.load(os.path.join(args.valid_data_dir, fname), allow_pickle=True) for fname in fp] 
-        rdata = {'lr_sample': [], 'hr_sample': []} 
+        rdata = {'data': [], 'target': []} 
         for data in data_all:
             for k, v in data.items():
                 if k in rdata: 
                     rdata[k].append(v) 
         rdata = {k: np.concatenate(v, axis=0) for k, v in rdata.items()} 
-        self.lr = rdata['lr_sample']
-        self.hr = rdata['hr_sample']
+        self.lr = rdata['data']
+        self.hr = rdata['target']
 
     def __getitem__(self, index):
 

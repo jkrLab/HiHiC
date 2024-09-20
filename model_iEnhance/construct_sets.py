@@ -48,13 +48,13 @@ testlist = args.test_set.split()
 validlist = args.valid_set.split()
 
 lrtraind = []
-lrtestd = []
+# lrtestd = []
 hrtraind = []
-hrtestd = []
+# hrtestd = []
 
 for c in trainlist:
-    datashr = np.load(deal_fd + 'chr' + c + '.npz')['hr_sample']
-    dataslr = np.load(deal_fd + 'chr' + c + '.npz')['lr_sample']
+    datashr = np.load(deal_fd + 'chr' + c + '.npz')['target']
+    dataslr = np.load(deal_fd + 'chr' + c + '.npz')['data']
 
     bnum = dataslr.shape[0]
     idx = np.random.choice(np.arange(bnum),int(bnum/2),replace=False)
@@ -67,33 +67,32 @@ for c in trainlist:
 lrtraind = np.concatenate(lrtraind,axis=0)
 hrtraind = np.concatenate(hrtraind,axis=0)
 # np.savez(fn + "_train.npz",hr_sample = hrtraind,lr_sample = lrtraind)
-np.savez(train_dir + f"train_ratio{args.data_ratio}.npz",hr_sample = hrtraind,lr_sample = lrtraind)
+np.savez(train_dir + f"train_ratio{args.data_ratio}.npz",target = hrtraind,data = lrtraind)
 
-for c in testlist:
-    datashr = np.load(deal_fd + 'chr' + c + '.npz')['hr_sample']
-    dataslr = np.load(deal_fd + 'chr' + c + '.npz')['lr_sample']
+# for c in testlist:
+#     datashr = np.load(deal_fd + 'chr-' + c + '.npz')['hr_sample']
+#     dataslr = np.load(deal_fd + 'chr-' + c + '.npz')['lr_sample']
 
-    bnum = dataslr.shape[0]
-    idx = np.random.choice(np.arange(bnum),int(bnum/2),replace=False)
-    lrout = dataslr[idx,...]
-    hrout = datashr[idx,...]
+#     bnum = dataslr.shape[0]
+#     idx = np.random.choice(np.arange(bnum),int(bnum/2),replace=False)
+#     lrout = dataslr[idx,...]
+#     hrout = datashr[idx,...]
 
-    lrtestd.append(lrout)
-    hrtestd.append(hrout)
+#     lrtestd.append(lrout)
+#     hrtestd.append(hrout)
 
-lrtestd = np.concatenate(lrtestd,axis=0)
-hrtestd = np.concatenate(hrtestd,axis=0)
+# lrtestd = np.concatenate(lrtestd,axis=0)
+# hrtestd = np.concatenate(hrtestd,axis=0)
 # np.savez(fn + "_test.npz",hr_sample = hrtestd,lr_sample = lrtestd)
-np.savez(test_dir + f"test_ratio{args.data_ratio}.npz",hr_sample = hrtestd,lr_sample = lrtestd)
 
 ############################################################################ by HiHiC #########
-validlist = args.valid_set.split()
+
 lrvalid = []
 hrvalid = []
 
 for c in validlist:
-    datashr = np.load(deal_fd + 'chr' + c + '.npz')['hr_sample']
-    dataslr = np.load(deal_fd + 'chr' + c + '.npz')['lr_sample']
+    datashr = np.load(deal_fd + 'chr' + c + '.npz')['target']
+    dataslr = np.load(deal_fd + 'chr' + c + '.npz')['data']
 
     bnum = dataslr.shape[0]
     idx = np.random.choice(np.arange(bnum),int(bnum/2),replace=False)
@@ -106,5 +105,21 @@ for c in validlist:
 lrvalid = np.concatenate(lrvalid,axis=0)
 hrvalid = np.concatenate(hrvalid,axis=0)
 # np.savez(fn + "_test.npz",hr_sample = hrtestd,lr_sample = lrtestd)
-np.savez(valid_dir + f"valid_ratio{args.data_ratio}.npz",hr_sample = hrvalid,lr_sample = lrvalid)
+np.savez(valid_dir + f"valid_ratio{args.data_ratio}.npz",target = hrvalid,data = lrvalid)
+
+
+whole_hrmat = {}
+whole_lrmat = {}
+
+for c in testlist:
+
+    datashr = np.load(deal_fd + 'chr' + c + '_whole_mat.npz')['target']
+    dataslr = np.load(deal_fd + 'chr' + c + '_whole_mat.npz')['data']
+    
+    whole_hrmat[c] = datashr
+    whole_lrmat[c] = dataslr
+
+np.savez(test_dir + f"test_ratio{args.data_ratio}_target.npz", **whole_hrmat)
+np.savez(test_dir + f"test_ratio{args.data_ratio}.npz", **whole_lrmat)
+
 ###################################################################################################
