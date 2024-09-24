@@ -173,7 +173,8 @@ def predict(c):
     # np.savez('./' + cell_line_name +'HiC-Predict-chr'+c+'.npz',fakeh = fakemat.numpy(),lhr = lrmat)
     th_model = args.ckpt_file.split('/')[-1].split('_')[0]
     file = os.path.join(args.output_data_dir, f'iEnhance_predict_chr{str(c)}_{args.down_ratio}_{th_model}.npz')
-    np.savez(file,fakeh = fakemat.numpy(),lhr = lrmat)
+    # np.savez(file,fakeh = fakemat.numpy(),lhr = lrmat)
+    np.savez(file,data = fakemat.numpy())
 
 if __name__ == '__main__':
     # pool_num = len(chrs_list) if multiprocessing.cpu_count() > len(chrs_list) else multiprocessing.cpu_count()

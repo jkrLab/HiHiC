@@ -1,4 +1,4 @@
-# DFHiC/generate_train_data.py 수정
+# DFHiC/generate_train_data.py 참고
 
 import os, sys, math, random, argparse, shutil
 import numpy as np

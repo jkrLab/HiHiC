@@ -184,3 +184,4 @@ TAD*
 temp_*
 data_downsampling.sh
 train.ipynb
+out_put_*
