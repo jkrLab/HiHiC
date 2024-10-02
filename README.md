@@ -11,7 +11,7 @@ HiHiC
 
 1. Clone HiHiC repository
 ```
-git clone jkrLab/HiHiC
+git clone https://github.com/jkrLab/HiHiC.git
 ```
 
 
@@ -107,7 +107,7 @@ cd /path/to/HiHiC/parent/directory
    ```
    + Without GPU
    ```
-   docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/hihic_tensorflow
+   docker run --rm -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/hihic_tensorflow
    ```
 
 
