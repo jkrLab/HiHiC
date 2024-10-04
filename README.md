@@ -59,7 +59,7 @@ bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM155
 3. Generate input data for each deep learning model
 
 ```
-bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.txt -r 16 -o ./ -s 300 -n KR -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
+bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.txt -r 16 -o ./ -n KR -s 300 -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
 ```
 >You should specify **required arguments** as above. This Python code needs a chromosome length of reference genome .txt file like **hg19.txt** in the HiHiC directory. 
 
@@ -129,7 +129,7 @@ cd /path/to/HiHiC/directory
 2. Train the model you want with options 
 
 ```
-bash model_train.sh -m DFHiC -e 500 -b 128 -g 0 -o ./checkpoints_DFHiC -l ./log -t ./data_DFHiC/train -v ./data_DFHiC/valid
+bash model_train.sh -m DFHiC -e 500 -b 16 -g 0 -o ./checkpoints_DFHiC -l ./log -t ./data_DFHiC/train -v ./data_DFHiC/valid
 ```
 >You should specify the required arguments of the model you'd like to use, such as **model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory**, and **validation data directory**. 
 >Note: In the case of hicplus, if validation data is provided, it will be automatically incorporated into the training set.
@@ -141,12 +141,12 @@ bash model_train.sh -m DFHiC -e 500 -b 128 -g 0 -o ./checkpoints_DFHiC -l ./log 
 |----------|-------------|---------|
 | `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, SRHiC, iEnhance) | `DFHiC` |   
 | `-e` | Number of train epoch | `500` |
-| `-b` | Number of batch size | `128` | 
+| `-b` | Number of batch size | `16` | 
 | `-g` | Number of GPU ID  | `0` |
 | `-o` | Directory path of output models  | `./checkpoints_DFHiC` |   
 | `-l` | Directory path of training log | `./log` |
-| `-t` | Directory path of input training data | `./data_DFHiC/train` | 
-| `-v` | Directory path of input validation data | `./data_DFHiC/valid` |   
+| `-t` | Directory path of input training data | `./data_DFHiC/train_KR_300` | 
+| `-v` | Directory path of input validation data | `./data_DFHiC/valid_KR_300` |   
 
 
 
