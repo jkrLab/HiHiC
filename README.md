@@ -66,17 +66,17 @@ bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.t
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-i` : Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) | `/HiHiC/data` |
-| `-d` : Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) | `/HiHiC/data_downsampled_16` |
-| `-m` : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) | `DFHiC` |
-| `-g` : Reference genome length file, your data is based on | `./hg19.txt` |
-| `-r` : Downsampling ratio of your downsampled data | `16` |
-| `-o` : Parent directory path for saving output (Child directory named as the model name will be generated under this.) | `./` |
-| `-s` : Max value of Hi-C matrix | `300` |
-| `-n` : Normalization of Hi-C matrix | `KR` |
-| `-t` : Chromosome numbers of training set | `"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"` |
-| `-v` : Chromosome numbers of validation set | `"15 16 17"` |
-| `-p` : Chromosome numbers of prediction set | `"18 19 20 21 22"` |
+| `-i` | Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) | `/HiHiC/data` |
+| `-d` | Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) | `/HiHiC/data_downsampled_16` |
+| `-m` | Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) | `DFHiC` |
+| `-g` | Reference genome length file, your data is based on | `./hg19.txt` |
+| `-r` | Downsampling ratio of your downsampled data | `16` |
+| `-o` | Parent directory path for saving output (Child directory named as the model name will be generated under this.) | `./` |
+| `-s` | Max value of Hi-C matrix | `300` |
+| `-n` | Normalization of Hi-C matrix | `KR` |
+| `-t` | Chromosome numbers of training set | `"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"` |
+| `-v` | Chromosome numbers of validation set | `"15 16 17"` |
+| `-p` | Chromosome numbers of prediction set | `"18 19 20 21 22"` |
 
 
 
