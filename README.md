@@ -63,17 +63,20 @@ bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.t
 ```
 >You should specify **required arguments** as above. This Python code needs a chromosome length of reference genome .txt file like **hg19.txt** in the HiHiC directory. 
 
-* `-i` : Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) - (example) `/HiHiC/data`   
-* `-d` : Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) - (example) `/HiHiC/data_downsampled_16`   
-* `-m` : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - (example) `DFHiC`   
-* `-g` : Reference genome length file, your data is based on - (example) `./hg19.txt`     
-* `-r` : Downsampling ratio of your downsampled data - (example) `16`   
-* `-o` : Parent directory path for saving output (Child directory named as the model name will be generated under this.) - (example) `./`   
-* `-s` : Max value of Hi-C matrix - (example) `300`   
-* `-n` : Normalization of Hi-C matrix - (example) `KR`   
-* `-t` : Chromosome numbers of training set - (example) `"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"`   
-* `-v` : Chromosome numbers of validation set - (example) `"15 16 17"`   
-* `-p` : Chromosome numbers of prediction set - (example)  `"18 19 20 21 22"`   
+
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `-i` : Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) | `/HiHiC/data` |
+| `-d` : Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) | `/HiHiC/data_downsampled_16` |
+| `-m` : Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) | `DFHiC` |
+| `-g` : Reference genome length file, your data is based on | `./hg19.txt` |
+| `-r` : Downsampling ratio of your downsampled data | `16` |
+| `-o` : Parent directory path for saving output (Child directory named as the model name will be generated under this.) | `./` |
+| `-s` : Max value of Hi-C matrix | `300` |
+| `-n` : Normalization of Hi-C matrix | `KR` |
+| `-t` : Chromosome numbers of training set | `"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"` |
+| `-v` : Chromosome numbers of validation set | `"15 16 17"` |
+| `-p` : Chromosome numbers of prediction set | `"18 19 20 21 22"` |
 
 
 
@@ -148,7 +151,6 @@ bash model_train.sh -m DFHiC -e 500 -b 128 -g 0 -o ./checkpoints_DFHiC -l ./log 
 
 
 
-
 Ⅴ. HiC contact map enhancement with pretrained weights
 ----------------------------------------------------------
 
@@ -168,13 +170,16 @@ bash model_prediction.sh -m DFHiC -c ./checkpoints_DFHiC/DFHiC_best.npz -b 16 -g
 
 >You should specify the required arguments of the model you'd like to use, such as **model name, checkpoints file path, batch size, GPU ID, downsampling ratio, input data path, and output data directory for saving enhanced data**. When you use SRHiC, the checkpoint file need .meta format.
 
-* `-m` : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - (example) `DFHiC`   
-* `-c` : File path of checkpoint - (example) `./checkpoints_DFHiC/DFHiC_best.npz`   
-* `-b` : Number of batch size - (example) `8`   
-* `-g` : Number of GPU ID  - (example) `0`   
-* `-r` : Numver of down sampling ratio  - (example) `16`   
-* `-i` : File path of input data - (example) `./data_DFHiC/test/test_ratio16.npz`   
-* `-o` : Directory path of output ehnhanced data - (example) `./output_DFHiC`
+
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) | `DFHiC` |
+| `-c` | File path of checkpoint | `./checkpoints_DFHiC/DFHiC_best.npz` |
+| `-b` | Number of batch size | `8` |
+| `-g` | Number of GPU ID  | `0` |
+| `-r` | Numver of down sampling ratio  | `16` |
+| `-i` | File path of input data | `./data_DFHiC/test/test_ratio16.npz` |
+| `-o` | Directory path of output ehnhanced data | `./output_DFHiC` |
 
 > *Without training, you can use pre-trained models in our platform. The pre-trained model weights can be downloaded via FTP.*
 
@@ -187,6 +192,9 @@ python data_make_whole.py -m DFHiC -i ./output_DFHiC/DFHiC_predict_chr20_16_0000
 
 >You should specify the required arguments of the model you'd like to use, such as **model name, input submatrix, output data directory**. The output of iEnhance doesn't need to create a chromosome matrix; it's already done within the output file of the model.
 
-* `-m` : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) - (example) `DFHiC` 
-* `-i` : File path of submatrix data (output of model prediction) - (example) `./output_DFHiC/DFHiC_predict_chr20_16_00005.npz`
-* `-o` : Directory path to save chromosome matrix - (example) `./output_whole_mat`
+
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) | `DFHiC` |
+| `-i` | File path of submatrix data (output of model prediction) | `./output_DFHiC/DFHiC_predict_chr20_16_00005.npz` |
+| `-o` | Directory path to save chromosome matrix | `./output_whole_mat` |
