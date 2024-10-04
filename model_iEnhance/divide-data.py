@@ -30,7 +30,7 @@ optional.add_argument('-v', '--valid_set', dest='valid_set', type=str, required=
 optional.add_argument('-p', '--test_set', dest='test_set', type=str, required=False, help='Prediction set chromosome: "18 19 20 21 22"')
 
 args = parser.parse_args()
-chrs_list = args.train_set.split() + args.valid_set.split() 
+chrs_list = args.train_set.split() + args.valid_set.split() + args.test_set.split() 
 input_data_dir = args.input_data_dir
 input_downsample_dir = args.input_downsample_dir
 ref_chrom = args.ref_chrom

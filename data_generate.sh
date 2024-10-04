@@ -36,7 +36,7 @@ if [ "${model}" = "hicplus" ]; then
     train_set=${train_set:-"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"}
     prediction_set=${prediction_set:-"18 19 20 21 22"}
     echo ""
-    echo "  ...For training set, chromosome ${train_set}"
+    echo "  ...For training set, chromosome ${train_set} ${valid_set}"
     echo "     For test set, chromosome ${prediction_set}"
 elif [[ "${model}" =~ ^(HiCNN2|SRHiC|deepHiC|HiCARN|DFHiC|iEnhance)$ ]]; then
     train_set=${train_set:-"1 2 3 4 5 6 7 8 9 10 11 12 13 14"}
@@ -66,5 +66,5 @@ if [ "${model}" = "iEnhance" ]; then
     python -u model_iEnhance/divide-data.py -i "${input_data_dir}" -d "${input_downsample_dir}" -m "${model}" -g "${ref_chrom}" -r "${down_ratio}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
     python -u model_iEnhance/construct_sets.py -i "${output_dir}/data_${model}/chrs_${normalization}_${max_value}/" -m "${model}" -r "${down_ratio}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
 else
-    python -u data_generate.py -i "${input_data_dir}" -d "${input_downsample_dir}" -m "${model}" -g "${ref_chrom}" -r "${down_ratio}" -o "${output_dir}/" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}" -s "${max_value}" -n "${KR}"
+    python -u data_generate.py -i "${input_data_dir}" -d "${input_downsample_dir}" -m "${model}" -g "${ref_chrom}" -r "${down_ratio}" -o "${output_dir}/" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
 fi

@@ -185,3 +185,4 @@ temp_*
 data_downsampling.sh
 train.ipynb
 out_put_*
+wget-log

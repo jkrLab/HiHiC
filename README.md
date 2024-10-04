@@ -128,19 +128,22 @@ cd /path/to/HiHiC/directory
 ```
 bash model_train.sh -m DFHiC -e 500 -b 128 -g 0 -o ./checkpoints_DFHiC -l ./log -t ./data_DFHiC/train -v ./data_DFHiC/valid
 ```
->You should specify the required arguments of the model you'd like to use, such as **model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory**, and **validation data directory**. When you use hicplus, the validation data directory is not required.
+>You should specify the required arguments of the model you'd like to use, such as **model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory**, and **validation data directory**. 
+>Note: In the case of hicplus, if validation data is provided, it will be automatically incorporated into the training set.
 
 > *All the deep learning model codes were downloaded from each author's GitHub and modified for performance comparison. For light memory storage, pre-trained weights and data have been removed*.
 
 
-* `-m` : Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, SRHiC, iEnhance) - (example) `DFHiC`   
-* `-e` : Number of train epoch - (example) `500`   
-* `-b` : Number of batch size - (example) `128`   
-* `-g` : Number of GPU ID  - (example) `0`  
-* `-o` : Directory path of output models  - (example) `./checkpoints_DFHiC`   
-* `-l` : Directory path of training log - (example) `./log`   
-* `-t` : Directory path of input training data - (example) `./data_DFHiC/train`   
-* `-v` : Directory path of input validation data - (example) `./data_DFHiC/valid`   
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, SRHiC, iEnhance) | `DFHiC` |   
+| `-e` | Number of train epoch | `500` |
+| `-b` | Number of batch size | `128` | 
+| `-g` | Number of GPU ID  | `0` |
+| `-o` | Directory path of output models  | `./checkpoints_DFHiC` |   
+| `-l` | Directory path of training log | `./log` |
+| `-t` | Directory path of input training data | `./data_DFHiC/train` | 
+| `-v` | Directory path of input validation data | `./data_DFHiC/valid` |   
 
 
 

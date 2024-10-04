@@ -122,4 +122,6 @@ for c in testlist:
 np.savez(test_dir + f"test_ratio{args.data_ratio}_target.npz", **whole_hrmat)
 np.savez(test_dir + f"test_ratio{args.data_ratio}.npz", **whole_lrmat)
 
+print(f"train set: {trainlist} \nvalid set: {validlist} \ntest set: {testlist}" , flush=True)
+
 ###################################################################################################
