@@ -9,17 +9,30 @@ max_ram_memory=0
 # GPU 및 RAM 메모리 사용량을 기록하는 함수
 monitor_resources() {
     while true; do
-        # 현재 GPU 메모리 사용량 추출
-        gpu_memory=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits)
+        # GPU가 설정된 경우 GPU 메모리 사용량 추출
+        if [[ -n "${gpu_id}" ]]; then
+            gpu_memory=$(nvidia-smi --id=${gpu_id} --query-gpu=memory.used --format=csv,noheader,nounits 2>/dev/null)
+            if [[ $? -ne 0 ]]; then
+                echo "Error: Failed to query GPU memory. Please check if GPU ID ${gpu_id} is valid." >&2
+                gpu_memory=0
+            else
+                gpu_memory=$(echo $gpu_memory | tr -d ' ')
+            fi
+        else
+            gpu_memory=0
+        fi
         
-        # 현재 RAM 사용량 추출
-        ram_memory=$(free -m | awk '/Mem:/ {print $3}')
+        # RAM 메모리 사용량 추출
+        ram_memory=$(free -m | awk '/Mem:/ {print $3}' | tr -d ' ')
+
+        # 현재 GPU 및 RAM 사용량 출력 (디버깅 용도)
+        echo "Current GPU Memory Usage: ${gpu_memory} MiB, Current RAM Memory Usage: ${ram_memory} MiB"
 
         # 최대 GPU 메모리 사용량 계산
         if (( gpu_memory > max_gpu_memory )); then
             max_gpu_memory=$gpu_memory
         fi
-
+        
         # 최대 RAM 사용량 계산
         if (( ram_memory > max_ram_memory )); then
             max_ram_memory=$ram_memory
@@ -28,9 +41,6 @@ monitor_resources() {
         sleep 5  # 5초마다 체크
     done
 }
-
-# 백그라운드에서 GPU 및 RAM 모니터링 시작
-monitor_resources &
 
 # 학습 스크립트 옵션 처리
 while getopts ":m:e:b:g:o:l:t:v:" flag; 
@@ -70,8 +80,13 @@ fi
 
 mkdir -p ${loss_log_dir}
 
+# 백그라운드에서 GPU 및 RAM 모니터링 시작
+monitor_resources &  # 백그라운드에서 실행
+monitor_pid=$!  # 백그라운드 프로세스의 PID 저장
+
 # 학습 시작 시간 기록
 start_time=$(date +%s)
+start_datetime=$(date "+%Y-%m-%d %H:%M:%S")
 
 # 모델에 따라 학습 실행
 case ${model} in
@@ -107,16 +122,20 @@ esac
 
 # 학습 종료 시간 기록
 end_time=$(date +%s)
+end_datetime=$(date "+%Y-%m-%d %H:%M:%S")
 
 # 총 학습 시간 계산
 total_time=$(($end_time - $start_time))
-hours=$(($total_time / 3600))
+
+days=$(($total_time / 86400))
+hours=$((($total_time % 86400) / 3600))
 minutes=$((($total_time % 3600) / 60))
 
 # GPU 및 RAM 모니터링 종료
-kill %1
+kill $monitor_pid  # 백그라운드에서 실행 중인 모니터링 종료
 
 # 최대 GPU 및 RAM 사용량을 로그 파일에 저장
 echo "" >> ${loss_log_dir}/max_memory_usage.log
-echo "${model} ${epoch} epochs, ${hours} hours ${minutes} minutes" >> ${loss_log_dir}/max_memory_usage.log
+echo "${model} ${epoch} epochs, ${days} days ${hours} hours ${minutes} minutes" >> ${loss_log_dir}/max_memory_usage.log
+echo "Start Time: ${start_datetime}, End Time: ${end_datetime}" >> ${loss_log_dir}/max_memory_usage.log
 echo "Max GPU Memory Usage: ${max_gpu_memory} MiB, Max RAM Usage: ${max_ram_memory} MiB" >> ${loss_log_dir}/max_memory_usage.log

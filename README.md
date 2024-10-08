@@ -62,7 +62,7 @@ bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM155
 bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.txt -r 16 -o ./ -n KR -s 300 -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
 ```
 >You should specify **required arguments** as above. This Python code needs a chromosome length of reference genome .txt file like **hg19.txt** in the HiHiC directory. 
-
+>Note: In the case of hicplus, if validation chromosome is provided, it will be automatically incorporated into the training set.
 
 | Argument | Description | Example |
 |----------|-------------|---------|
@@ -132,7 +132,6 @@ cd /path/to/HiHiC/directory
 bash model_train.sh -m DFHiC -e 500 -b 16 -g 0 -o ./checkpoints_DFHiC -l ./log -t ./data_DFHiC/train -v ./data_DFHiC/valid
 ```
 >You should specify the required arguments of the model you'd like to use, such as **model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory**, and **validation data directory**. 
->Note: In the case of hicplus, if validation data is provided, it will be automatically incorporated into the training set.
 
 > *All the deep learning model codes were downloaded from each author's GitHub and modified for performance comparison. For light memory storage, pre-trained weights and data have been removed*.
 

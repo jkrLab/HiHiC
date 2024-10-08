@@ -98,7 +98,8 @@ def model(train_input_dir,
 
         train_writer = tf.summary.FileWriter(saver_dir + "/train", sess.graph)
         
-        input_list = os.listdir(train_input_dir)
+        # input_list = os.listdir(train_input_dir)
+        input_list = [ input for input in os.listdir(train_input_dir) if input.endswith('.npy')] ############################################################# Added by HiHiC ##
         mean_valid_loss = 1e6 #Initialize to a very large value
         # try:
         for epoch in range(iterations_size+1):
@@ -134,7 +135,8 @@ def model(train_input_dir,
                 # valid_file = os.listdir(valid_input_dir)
                 # valid_file = valid_input_dir + valid_file[0]
                 # x = np.load(valid_file).astype(np.float32)
-                data_all = [np.load(os.path.join(valid_input_dir, fname), allow_pickle=True).astype(np.float32) for fname in os.listdir(valid_input_dir)] ### Added by HiHiC ##
+                valid_input = [ input for input in os.listdir(valid_input_dir) if input.endswith('.npy')] ################################################### Added by HiHiC ##
+                data_all = [np.load(os.path.join(valid_input_dir, fname), allow_pickle=True).astype(np.float32) for fname in valid_input] 
                 x = np.concatenate(data_all, axis=0) ##########################################################################################################################
                 x = np.reshape(x, [x.shape[0], 40, 68, 1])
                 size_input = int(x.shape[0] / epoch_size) + 1
