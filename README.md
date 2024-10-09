@@ -68,7 +68,7 @@ bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.t
 |----------|-------------|---------|
 | `-i` | Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) | `/HiHiC/data` |
 | `-d` | Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) | `/HiHiC/data_downsampled_16` |
-| `-m` | Model name that you want to use (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) | `DFHiC` |
+| `-m` | Model name that you want to use (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, hicplus, and iEnhance) | `DFHiC` |
 | `-g` | Reference genome length file, your data is based on | `./hg19.txt` |
 | `-r` | Downsampling ratio of your downsampled data | `16` |
 | `-o` | Parent directory path for saving output (Child directory named as the model name will be generated under this.) | `./` |
@@ -138,7 +138,7 @@ bash model_train.sh -m DFHiC -e 500 -b 16 -g 0 -o ./checkpoints_DFHiC -l ./log -
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, SRHiC, iEnhance) | `DFHiC` |   
+| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, hicplus, SRHiC, iEnhance) | `DFHiC` |   
 | `-e` | Number of train epoch | `500` |
 | `-b` | Number of batch size | `16` | 
 | `-g` | Number of GPU ID  | `0` |
@@ -172,7 +172,7 @@ bash model_prediction.sh -m DFHiC -c ./checkpoints_DFHiC/DFHiC_best.npz -b 16 -g
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) | `DFHiC` |
+| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, hicplus, and iEnhance) | `DFHiC` |
 | `-c` | File path of checkpoint | `./checkpoints_DFHiC/DFHiC_best.npz` |
 | `-b` | Number of batch size | `8` |
 | `-g` | Number of GPU ID  | `0` |
@@ -194,6 +194,6 @@ python data_make_whole.py -m DFHiC -i ./output_DFHiC/DFHiC_predict_chr20_16_0000
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN2, HiCSR, DFHiC, hicplus, and SRHiC) | `DFHiC` |
+| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, hicplus, and iEnhance) | `DFHiC` |
 | `-i` | File path of submatrix data (output of model prediction) | `./output_DFHiC/DFHiC_predict_chr20_16_00005.npz` |
 | `-o` | Directory path to save chromosome matrix | `./output_whole_mat` |

@@ -26,7 +26,7 @@ optional = parser.add_argument_group('optional arguments')
 
 required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
                       help='HiHiC directory')
-required.add_argument('--model', type=str, metavar='HiCNN2', required=True,
+required.add_argument('--model', type=str, metavar='HiCNN', required=True,
                       help='model name')
 required.add_argument('--epoch', type=int, default=128, metavar='[2]', required=True,
                       help='training epoch (default: 128)')
@@ -34,8 +34,8 @@ required.add_argument('--batch_size', type=int, default=64, metavar='[3]', requi
                       help='input batch size for training (default: 64)')
 required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
                       help='GPU ID for training (defalut: 0)')
-required.add_argument('--output_model_dir', type=str, default='./checkpoints_HiCNN2', metavar='[5]', required=True,
-                      help='directory path of training model (default: HiHiC/checkpoints_HiCNN2/)')
+required.add_argument('--output_model_dir', type=str, default='./checkpoints_HiCNN', metavar='[5]', required=True,
+                      help='directory path of training model (default: HiHiC/checkpoints_HiCNN/)')
 required.add_argument('--loss_log_dir', type=str, default='./log', metavar='[6]', required=True,
                       help='directory path of training log (default: HiHiC/log/)')
 required.add_argument('--train_data_dir', type=str, metavar='[7]', required=True,

@@ -38,7 +38,7 @@ if [ "${model}" = "hicplus" ]; then
     echo ""
     echo "  ...For training set, chromosome ${train_set} ${valid_set}"
     echo "     For test set, chromosome ${prediction_set}"
-elif [[ "${model}" =~ ^(HiCNN2|SRHiC|deepHiC|HiCARN|DFHiC|iEnhance)$ ]]; then
+elif [[ "${model}" =~ ^(HiCNN|SRHiC|DeepHiC|HiCARN|DFHiC|iEnhance)$ ]]; then
     train_set=${train_set:-"1 2 3 4 5 6 7 8 9 10 11 12 13 14"}
     valid_set=${valid_set:-"15 16 17"}
     prediction_set=${prediction_set:-"18 19 20 21 22"}
@@ -47,7 +47,7 @@ elif [[ "${model}" =~ ^(HiCNN2|SRHiC|deepHiC|HiCARN|DFHiC|iEnhance)$ ]]; then
     echo "     For validation set, chromosome ${valid_set}"
     echo "     For test set, chromosome ${prediction_set}"
 else
-    echo "Model name should be one of the hicplus, HiCNN2, SRHiC, deepHiC, HiCARN, DFHiC, and iEnhance."
+    echo "Model name should be one of the hicplus, HiCNN, SRHiC, DeepHiC, HiCARN, DFHiC, and iEnhance."
     exit 1
 fi
 

@@ -14,7 +14,7 @@ optional = parser.add_argument_group('optional arguments')
 
 required.add_argument('-i', '--input_data_dir', dest='input_data_dir', type=str, required=True, help='Input data directory: /HiHiC/data')
 required.add_argument('-d', '--input_downsample_dir', dest='input_downsample_dir',type=str, required=True, help='Downsampled input data directory: /HiHiC/data_downsampled_16')
-required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['HiCARN', 'DeepHiC', 'HiCNN', 'HiCSR', 'DFHiC', 'hicplus', 'SRHiC', 'iEnhance'])
+required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['hicplus', 'HiCNN', 'SRHiC', 'DeepHiC', 'HiCARN', 'DFHiC', 'iEnhance'])
 required.add_argument('-g', '--ref_chrom', dest='ref_chrom', type=str, required=True, help='Reference chromosome length: /HiHiC/hg19.txt')
 required.add_argument('-r', '--down_ratio', dest='down_ratio', type=str, required=True, help='Downsampling ratio: 16')
 required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Parent directory of output: /data/HiHiC/')
