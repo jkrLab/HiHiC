@@ -262,16 +262,16 @@ for epoch in range(1, num_epochs + 1):
         best_ckpt_file = f'{datestr}_bestg.pytorch'
         torch.save(netG.state_dict(), os.path.join(out_dir, best_ckpt_file))
 
-    # if epoch%10 == 0: ##################################### Added by HiHiC #####
-    if epoch: ##################################### Added by HiHiC #####
-        sec = time.time()-start ################################################
+    if epoch: #################################################################################################### Added by HiHiC #####
+        sec = time.time()-start #######################################################################################################
         times = str(datetime.timedelta(seconds=sec))
         short = times.split(".")[0].replace(':','.') 
         train_epoch.append(epoch) 
         train_time.append(short)       
         train_loss.append(f"{valid_gloss:.10f}") 
-        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{valid_gloss:.10f}" ##################
-        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) ###########
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{valid_gloss:.10f}"
+        np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss]) ####################
+        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) ################################################################
     
         
 # final_ckpt_g = f'{datestr}_finalg_{resos}_c{chunk}_s{stride}_b{bound}_{pool}_{name}.pytorch'        
@@ -294,5 +294,3 @@ final_ckpt_g = f'{datestr}_finalg.pytorch'
 # np.savetxt(f'valid_mae_scores_{name}', X=mae_scores, delimiter=',')
 
 torch.save(netG.state_dict(), os.path.join(out_dir, final_ckpt_g))
-
-np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss]) ### Added by HiHiC ##
