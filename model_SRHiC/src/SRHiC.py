@@ -77,7 +77,7 @@ def model(train_input_dir,
     tf.summary.scalar("pearson", pearson)
 
     # Saver = tf.train.Saver(tf.global_variables(), max_to_keep=50)
-    Saver = tf.train.Saver(tf.global_variables())
+    Saver = tf.train.Saver(tf.global_variables(), max_to_keep=iterations_size)
     if not os.path.exists(saver_dir):
         os.mkdir(saver_dir)
 
