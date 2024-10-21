@@ -54,11 +54,35 @@ def make_whole_28(predicted, save_filename):
     np.savez_compressed(save_filename, **mats)
 
         
-if np.squeeze(np.load(input_data, allow_pickle=True)['data']).shape[-1] == 40:
-    make_whole_40(input_data, output_dir+'/'+os.listdir(input_data).split('/')[-1]+'_wholeMats')
-    print(f'{output_dir+os.listdir(input_data).split('/')[-1]+'_wholeMats'} was done.')
-elif np.squeeze(np.load(input_data, allow_pickle=True)['data']).shape[-1] == 28:
-    make_whole_28(input_data, output_dir+'/'+os.listdir(input_data).split('/')[-1]+'_wholeMats')
-    print(f'{output_dir+os.listdir(input_data).split('/')[-1]+'_wholeMats'} was done.')
-else:
-    print("The output of iEnhance doesn't need to create a chromosome matrix; it's already done within the output of the model.")
+# if np.squeeze(np.load(input_data, allow_pickle=True)['data']).shape[-1] == 40:
+#     make_whole_40(input_data, output_dir+'/'+os.listdir(input_data).split('/')[-1]+'_wholeMats')
+#     print(f'{output_dir+os.listdir(input_data).split('/')[-1]+'_wholeMats'} was done.')
+# elif np.squeeze(np.load(input_data, allow_pickle=True)['data']).shape[-1] == 28:
+#     make_whole_28(input_data, output_dir+'/'+os.listdir(input_data).split('/')[-1]+'_wholeMats')
+#     print(f'{output_dir+os.listdir(input_data).split('/')[-1]+'_wholeMats'} was done.')
+# else:
+#     print("The output of iEnhance doesn't need to create a chromosome matrix; it's already done within the output of the model.")
+
+for data_file in input_data:
+    if os.path.isdir(data_file):  # 디렉토리인 경우
+        for filename in os.listdir(data_file):
+            input_file_path = os.path.join(data_file, filename)
+            if input_file_path.endswith('.npz'):  # 원하는 파일 형식 필터링
+                if np.squeeze(np.load(input_file_path, allow_pickle=True)['data']).shape[-1] == 40:
+                    make_whole_40(input_file_path, os.path.join(output_dir, f'{filename}_wholeMats.npz'))
+                    print(f'{os.path.join(output_dir, f"{filename}_wholeMats.npz")} was done.')
+                elif np.squeeze(np.load(input_file_path, allow_pickle=True)['data']).shape[-1] == 28:
+                    make_whole_28(input_file_path, os.path.join(output_dir, f'{filename}_wholeMats.npz'))
+                    print(f'{os.path.join(output_dir, f"{filename}_wholeMats.npz")} was done.')
+                else:
+                    print(f"The output of iEnhance in {input_file_path} doesn't need to create a chromosome matrix; it's already done within the output of the model.")
+    else:  # 파일인 경우
+        if data_file.endswith('.npz'):  # 원하는 파일 형식 필터링
+            if np.squeeze(np.load(data_file, allow_pickle=True)['data']).shape[-1] == 40:
+                make_whole_40(data_file, os.path.join(output_dir, f'{os.path.basename(data_file)}_wholeMats.npz'))
+                print(f'{os.path.join(output_dir, f"{os.path.basename(data_file)}_wholeMats.npz")} was done.')
+            elif np.squeeze(np.load(data_file, allow_pickle=True)['data']).shape[-1] == 28:
+                make_whole_28(data_file, os.path.join(output_dir, f'{os.path.basename(data_file)}_wholeMats.npz'))
+                print(f'{os.path.join(output_dir, f"{os.path.basename(data_file)}_wholeMats.npz")} was done.')
+            else:
+                print(f"The output of iEnhance in {data_file} doesn't need to create a chromosome matrix; it's already done within the output of the model.")

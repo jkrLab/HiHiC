@@ -94,7 +94,7 @@ cd /path/to/HiHiC/parent/directory
 
 2. Run Docker environment
 
-* hicplus, HiCNN, deepHiC, HiCARN, or iEnhance:
+* hicplus, HiCNN, DeepHiC, HiCARN, or iEnhance:
    + With GPU (CUDA 11.4)
    ```
    docker run --rm --gpus all -it --name hihic_torch -v ${PWD}:${PWD} jkrlab/hihic_torch
