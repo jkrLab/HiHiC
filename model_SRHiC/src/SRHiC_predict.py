@@ -38,6 +38,7 @@ if args.model == "HiCANR1":
 else:
     model = "HiCARN_2"
 
+os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
 os.makedirs(args.output_data_dir, exist_ok=True) #######################
 ########################################################################
 
