@@ -50,8 +50,11 @@ startTime = datetime.now()
 # use_gpu = True #opt.cuda
 #if use_gpu and not torch.cuda.is_available():
 #    raise Exception("No GPU found, please run without --cuda")
-use_gpu = torch.cuda.is_available() ##################################################### Added by HiHiC
-device = torch.device(f'cuda:{args.gpu_id}' if use_gpu else 'cpu') ###################### Added by HiHiC
+use_gpu = torch.cuda.is_available() ##############################################################
+if args.gpu_id == -1:
+    device  = torch.device('cpu')  # CPU 사용
+else:
+    device  = torch.device(f'cuda:{args.gpu_id}')  # GPU 사용 ###################### Added by HiHiC
 
 def predict(M,inmodel):
     # N = M['data'].shape[0]
@@ -76,7 +79,9 @@ def predict(M,inmodel):
 
         m = model.Net(40, 28)
         # m.load_state_dict(torch.load(inmodel, map_location=torch.device('cpu')))
-        m.load_state_dict(torch.load(inmodel, map_location=torch.device(f'cuda:{args.gpu_id}' if torch.cuda.is_available() else 'cpu')))
+        # m.load_state_dict(torch.load(inmodel, map_location=torch.device(f'cuda:{args.gpu_id}' if torch.cuda.is_available() else 'cpu')))
+        m.load_state_dict(torch.load(inmodel, map_location=device))
+
 
         # if torch.cuda.is_available():
         #     m = m.cuda()
