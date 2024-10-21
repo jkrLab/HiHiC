@@ -2,6 +2,7 @@
 
 seed=42
 root_dir=$(pwd)
+gpu_id=-1
 
 while getopts ":m:c:b:g:r:i:o:" flag; 
 do

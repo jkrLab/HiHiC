@@ -2,8 +2,10 @@
 
 seed=42
 root_dir=$(pwd)
+step_num=50
+gpu_id=-1
 
-while getopts ":m:c:b:g:r:i:o:" flag; 
+while getopts ":m:c:b:g:r:i:o:s:" flag; 
 do
     case $flag in
         m) model=$OPTARG;;
@@ -13,6 +15,7 @@ do
         r) down_ratio=$OPTARG;; 
         i) input_data=$OPTARG;;
         o) output_data_dir=$OPTARG;;
+        s) step_num=$OPTARG;;
         \?)
         echo "Invalid option: -$OPTARG" >&2
         exit 1;;
@@ -68,7 +71,7 @@ if [ "$model" = "HiCARN1" ]; then
         ckpt_num=${ckpt:0:5}
 
         if [[ $ckpt_num =~ ^[0-9]+$ ]]; then
-            remainder=$((10#$ckpt_num % 100))
+            remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
                 python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
@@ -82,7 +85,7 @@ elif [ "$model" = "HiCARN2" ]; then
         ckpt_num=${ckpt:0:5}
 
         if [[ $ckpt_num =~ ^[0-9]+$ ]]; then
-            remainder=$((10#$ckpt_num % 100))
+            remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
                 python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
@@ -96,7 +99,7 @@ elif [ "$model" = "DeepHiC" ]; then
         ckpt_num=${ckpt:0:5}
 
         if [[ $ckpt_num =~ ^[0-9]+$ ]]; then
-            remainder=$((10#$ckpt_num % 100))
+            remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
                 python model_DeepHiC/data_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
@@ -110,7 +113,7 @@ elif [ "$model" = "HiCNN2" ]; then
         ckpt_num=${ckpt:0:5}
 
         if [[ $ckpt_num =~ ^[0-9]+$ ]]; then
-            remainder=$((10#$ckpt_num % 100))
+            remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
                 python model_HiCNN2/HiCNN2_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
@@ -124,7 +127,7 @@ elif [ "$model" = "DFHiC" ]; then
         ckpt_num=${ckpt:0:5}
 
         if [[ $ckpt_num =~ ^[0-9]+$ ]]; then
-            remainder=$((10#$ckpt_num % 100))
+            remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
                 python model_DFHiC/run_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
@@ -138,7 +141,7 @@ elif [ "$model" = "SRHiC" ]; then
         ckpt_num=${ckpt:0:5}
 
         if [[ $ckpt_num =~ ^[0-9]+$ ]]; then
-            remainder=$((10#$ckpt_num % 100))
+            remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
                 python model_SRHiC/src/SRHiC_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
@@ -152,7 +155,7 @@ elif [ "$model" = "hicplus" ]; then
         ckpt_num=${ckpt:0:5}
 
         if [[ $ckpt_num =~ ^[0-9]+$ ]]; then
-            remainder=$((10#$ckpt_num % 100))
+            remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
                 python model_hicplus/hicplus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
@@ -166,7 +169,7 @@ elif [ "$model" = "iEnhance" ]; then
         ckpt_num=${ckpt:0:5}
 
         if [[ $ckpt_num =~ ^[0-9]+$ ]]; then
-            remainder=$((10#$ckpt_num % 100))
+            remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
                 python model_iEnhance/predict-hic.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
