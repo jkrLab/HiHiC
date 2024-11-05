@@ -1,4 +1,4 @@
-dat=$1 ##output from hicplus prediction
+dat=$1 ##output from HiCPlus prediction
 chrom=mm10.chrom.sizes ##chrom size file, change to your own species. 
 
 cat $dat | tr ':' '\t'|tr '-' '\t' > ${dat}_tmp

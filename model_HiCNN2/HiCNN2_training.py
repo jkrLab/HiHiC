@@ -16,8 +16,16 @@ from model import model2
 from model import model3
 
 ########################################################################## Added by HiHiC ######
-################################################################################################
-import time, datetime
+import time, datetime, random ##################################################################
+
+seed = 13  
+random.seed(seed)  # Python 기본 랜덤 시드
+np.random.seed(seed)  # NumPy 랜덤 시드
+torch.manual_seed(seed)  # CPU 랜덤 시드
+
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # 모든 GPU에 시드 적용
 
 parser = argparse.ArgumentParser(description='HiCNN training process')
 parser._action_groups.pop()
@@ -41,7 +49,7 @@ required.add_argument('--loss_log_dir', type=str, default='./log', metavar='[6]'
 required.add_argument('--train_data_dir', type=str, metavar='[7]', required=True,
                       help='directory path of training data')
 optional.add_argument('--valid_data_dir', type=str, metavar='[8]',
-                      help="directory path of validation data, but hicplus doesn't need")
+                      help="directory path of validation data, but HiCPlus doesn't need")
 args = parser.parse_args()
 
 # args.root_dir = './'
@@ -63,7 +71,25 @@ start = time.time()
 
 train_epoch = [] 
 train_loss = []
+valid_loss = []
 train_time = []
+
+def compute_initial_loss(model, device, train_data, train_target):
+    model.eval()  # 평가 모드로 전환
+    loss_sum = 0.0
+    criterion = nn.MSELoss()
+
+    with torch.no_grad():
+        # 전체 데이터를 미니배치 단위로 처리
+        for i in range(0, len(train_data), args.batch_size):
+            data_batch = train_data[i:i + args.batch_size].to(device)
+            target_batch = train_target[i:i + args.batch_size].to(device)
+            output = model(data_batch)
+            loss = criterion(output, target_batch)
+            loss_sum += loss.item()
+
+    # 전체 손실 계산
+    return loss_sum / (len(train_data) // args.batch_size)
 
 os.makedirs(args.output_model_dir, exist_ok=True) ##############################################
 ################################################################################################
@@ -207,6 +233,15 @@ def main():
 	else:
 		print("Using HiCNN2-3...")
 		model = model3.Net().to(device)
+
+	######################################################################################################## Added by HiHiC ######
+	initial_train_loss = compute_initial_loss(model, device, train_data, train_target) ###########################################
+	initial_valid_loss = compute_initial_loss(model, device, valid_data, valid_target)
+	train_epoch.append(int(0))
+	train_time.append("0.00.00")
+	train_loss.append(f"{initial_train_loss:.10f}")        
+	valid_loss.append(f"{initial_valid_loss:.10f}") ##############################################################################
+	np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss, valid_loss]) ######
 	
 	optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
 	# reducing learning rate when loss from validation has stopped improving
@@ -226,9 +261,10 @@ def main():
 			short = times.split(".")[0].replace(':','.')		
 			train_epoch.append(epoch)
 			train_time.append(short)        
-			train_loss.append(f"{loss_validate:.10f}")
+			train_loss.append(f"{loss_train:.10f}")
+			valid_loss.append(f"{loss_validate:.10f}")
 			ckpt_file = f"{str(epoch).zfill(5)}_{short}_{loss_validate:.10f}"
-			np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss]) ################
+			np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss, valid_loss]) ####
 			torch.save(model.state_dict(), os.path.join(args.output_model_dir, ckpt_file)) #############################################
 
 torch.autograd.set_detect_anomaly(True)

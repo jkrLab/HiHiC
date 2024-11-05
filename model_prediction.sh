@@ -73,13 +73,13 @@ elif [ ${model} = "DFHiC" ]; then
 elif [ ${model} = "SRHiC" ]; then 
     python model_SRHiC/src/SRHiC_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
-elif [ ${model} = "hicplus" ]; then
-    python model_hicplus/hicplus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+elif [ ${model} = "HiCPlus" ]; then
+    python model_HiCPlus/HiCPlus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 elif [ ${model} = "iEnhance" ]; then
     python model_iEnhance/predict-hic.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 else
-    echo "Model name should be one of the DeepHiC, HiCNN2, DFHiC, hicplus, HiCARN1, HiCARN2, SRHiC, iEnhance."
+    echo "Model name should be one of the DeepHiC, HiCNN2, DFHiC, HiCPlus, HiCARN1, HiCARN2, SRHiC, iEnhance."
 
 fi

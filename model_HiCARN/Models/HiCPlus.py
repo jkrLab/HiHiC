@@ -1,4 +1,4 @@
-# Code was taken from https://github.com/wangjuan001/hicplus
+# Code was taken from https://github.com/wangjuan001/HiCPlus
 import torch.nn as nn
 import torch.nn.functional as F
 

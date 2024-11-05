@@ -18,9 +18,16 @@ from all_parser import root_dir
 
 
 ######################################################## Added by HiHiC ######
-##############################################################################
+import datetime, argparse, random ############################################
 
-import datetime, argparse
+seed = 13  
+random.seed(seed)  # Python 기본 랜덤 시드
+np.random.seed(seed)  # NumPy 랜덤 시드
+torch.manual_seed(seed)  # CPU 랜덤 시드
+
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # 모든 GPU에 시드 적용
 
 parser = argparse.ArgumentParser(description= 'DeepHiC training process')
 parser._action_groups.pop()
@@ -44,18 +51,30 @@ required.add_argument('--loss_log_dir', type=str, default='./log', metavar='[6]'
 required.add_argument('--train_data_dir', type=str, metavar='[7]', required=True,
                       help='directory path of training data')
 optional.add_argument('--valid_data_dir', type=str, metavar='[8]',
-                      help="directory path of validation data, but hicplus doesn't need")
+                      help="directory path of validation data, but HiCPlus doesn't need")
 args = parser.parse_args()
 
 start = time.time()
 
 train_epoch = [] 
 train_loss = []
+valid_loss = []
 train_time = []
 
 os.makedirs(args.loss_log_dir, exist_ok=True)
 torch.autograd.set_detect_anomaly(True)
-##############################################################################
+
+def calculate_initial_loss(model, data_loader, device, criterion):
+    model.eval()  # 평가 모드 설정
+    total_loss = 0.0
+    with torch.no_grad():  # 그래디언트 비활성화
+        for data, target, _ in data_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            loss = criterion(output.mean(), output, target)
+            total_loss += loss.item() * data.size(0)  # 배치 손실 누적
+    avg_loss = total_loss / len(data_loader.dataset)  # 평균 손실 계산
+    return avg_loss
 ##############################################################################
 
 cs = np.column_stack
@@ -134,6 +153,15 @@ optimizerG = optim.Adam(netG.parameters(), lr=0.0001)
 optimizerD = optim.Adam(netD.parameters(), lr=0.0001)
 
 # vis = visdom.Visdom(env=f'{visdom_str}-deephic')
+
+##################################################################################################################### Added by HiHiC ####
+train_g_loss = calculate_initial_loss(netG, train_loader, device, criterionG) ###########################################################
+valid_g_loss = calculate_initial_loss(netG, valid_loader, device, criterionG) 
+train_epoch.append(int(0))
+train_time.append("0.00.00")
+train_loss.append(f"{train_g_loss:.10f}")        
+valid_loss.append(f"{valid_g_loss:.10f}") ###############################################################################################
+np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss, valid_loss]) #################
 
 best_ssim = 0
 for epoch in range(1, num_epochs+1):
@@ -241,16 +269,17 @@ for epoch in range(1, num_epochs+1):
         torch.save(netG.state_dict(), os.path.join(out_dir, best_ckpt_file))
         
 
-    if epoch: #################################################################################### Added by HiHiC ############
-        sec = time.time()-start ##############################################################################################
+    if epoch: ######################################################################################################## Added by HiHiC ####
+        sec = time.time()-start ##########################################################################################################
         times = str(datetime.timedelta(seconds=sec))
         short = times.split(".")[0].replace(':','.')
         train_epoch.append(epoch)
-        train_time.append(short)        
-        train_loss.append(f"{valid_result['g_loss']:.10f}")
-        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{valid_result['g_loss']:.10f}" 
-        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) #######################################################
-        np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss])############
+        train_time.append(short)
+        train_loss.append(f"{train_gloss:.10f}") 
+        valid_loss.append(f"{valid_gloss:.10f}") 
+        ckpt_file = f"{str(epoch).zfill(5)}_{short}_{valid_gloss:.10f}" 
+        torch.save(netG.state_dict(), os.path.join(out_dir, ckpt_file)) ###################################################################
+        np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss, valid_loss])############
     
 final_ckpt_g = f'{datestr}_finalg_deephic.pytorch'
 final_ckpt_d = f'{datestr}_finald_deephic.pytorch'

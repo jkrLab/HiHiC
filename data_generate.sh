@@ -32,7 +32,7 @@ if [ -z "${input_data_dir}" ] || [ -z "${input_downsample_dir}" ] || [ -z "${mod
 fi
 
 # 데이터셋 split 기본값 설정
-if [ "${model}" = "hicplus" ]; then
+if [ "${model}" = "HiCPlus" ]; then
     train_set=${train_set:-"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"}
     prediction_set=${prediction_set:-"18 19 20 21 22"}
     echo ""
@@ -47,7 +47,7 @@ elif [[ "${model}" =~ ^(HiCNN|SRHiC|DeepHiC|HiCARN|DFHiC|iEnhance)$ ]]; then
     echo "     For validation set, chromosome ${valid_set}"
     echo "     For test set, chromosome ${prediction_set}"
 else
-    echo "Model name should be one of the hicplus, HiCNN, SRHiC, DeepHiC, HiCARN, DFHiC, and iEnhance."
+    echo "Model name should be one of the HiCPlus, HiCNN, SRHiC, DeepHiC, HiCARN, DFHiC, and iEnhance."
     exit 1
 fi
 

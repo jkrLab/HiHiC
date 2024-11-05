@@ -6,8 +6,11 @@ import SRHiC
 import tensorflow as tf
 
 ################################################## Added by HiHiC ######
-########################################################################
-import argparse
+import argparse, random ################################################
+
+seed = 13
+random.seed(seed)
+tf.set_random_seed(seed)
 
 parser = argparse.ArgumentParser(description='SRHiC training process')
 parser._action_groups.pop()
@@ -31,7 +34,7 @@ required.add_argument('--loss_log_dir', type=str, default='./log', metavar='[6]'
 required.add_argument('--train_data_dir', type=str, metavar='[7]', required=True,
                       help='directory path of training data')
 optional.add_argument('--valid_data_dir', type=str, metavar='[8]',
-                      help="directory path of validation data, but hicplus doesn't need")
+                      help="directory path of validation data, but HiCPlus doesn't need")
 required.add_argument('--train', type=str, default='True', required=True,
                       help='train?')
 args = parser.parse_args()

@@ -11,12 +11,12 @@ required = parser.add_argument_group('required arguments')
 optional = parser.add_argument_group('optional arguments')
 
 required.add_argument('-i', '--input_data', dest='input_data', type=str, nargs='+', required=True, help='Output of model prediction')  # 여러 파일 및 디렉토리 받기
-required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['HiCARN', 'DeepHiC', 'HiCNN', 'HiCSR', 'DFHiC', 'hicplus', 'SRHiC', 'iEnhance'])
+required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['HiCARN', 'DeepHiC', 'HiCNN', 'HiCSR', 'DFHiC', 'HiCPlus', 'SRHiC', 'iEnhance'])
 required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Directory path to save chromosome matrix')
 
 args = parser.parse_args()
 model = args.model.split()
-input_data = args.input_data  # 이제 리스트 형태로 받음
+input_data = args.input_data  # 리스트 형태로 받음
 output_dir = args.output_dir
 os.makedirs(output_dir, exist_ok=True)
 

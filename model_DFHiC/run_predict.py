@@ -53,7 +53,6 @@ net = DFHiC(input_matrix, is_train=False, reuse=False)
 
 # test_data=np.loadtxt("GM12878/intra_LR/LR_10k_NONE.chr%s"%chrome)
 input_data = np.load(args.input_data, allow_pickle=True)
-test_data = input_data['data']
 print(test_data)
 print(test_data.shape)
 

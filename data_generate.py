@@ -14,7 +14,7 @@ optional = parser.add_argument_group('optional arguments')
 
 required.add_argument('-i', '--input_data_dir', dest='input_data_dir', type=str, required=True, help='Input data directory: /HiHiC/data')
 required.add_argument('-d', '--input_downsample_dir', dest='input_downsample_dir',type=str, required=True, help='Downsampled input data directory: /HiHiC/data_downsampled_16')
-required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['hicplus', 'HiCNN', 'SRHiC', 'DeepHiC', 'HiCARN', 'DFHiC', 'iEnhance'])
+required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['HiCPlus', 'HiCNN', 'SRHiC', 'DeepHiC', 'HiCARN', 'DFHiC', 'iEnhance'])
 required.add_argument('-g', '--ref_chrom', dest='ref_chrom', type=str, required=True, help='Reference chromosome length: /HiHiC/hg19.txt')
 required.add_argument('-r', '--down_ratio', dest='down_ratio', type=str, required=True, help='Downsampling ratio: 16')
 required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Parent directory of output: /data/HiHiC/')
@@ -104,7 +104,7 @@ def crop_hic_matrix_by_chrom(chrom, for_model, thred=200): # thred=2M/resolution
                     if for_model in ["HiCARN", "DeepHiC", "DFHiC"]:
                         hr_contact = hr_contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]
                         hr_coordinates.append([chr, row, idx1, idx2])
-                    elif for_model in ["HiCNN", "hicplus"]: # output mat:28*28
+                    elif for_model in ["HiCNN", "HiCPlus"]: # output mat:28*28
                         hr_contact = hr_contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]
                         hr_coordinates.append([chr, row, idx1+6, idx2+6])
                     else:
@@ -202,11 +202,11 @@ def SRHiC_data_split(chrom_list):
     lr_coords = sum(lr_coords, [])
     return hr_mats,lr_mats,hr_coords,lr_coords
 
-def hicplus_data_split(chrom_list):
+def HiCPlus_data_split(chrom_list):
     assert len(chrom_list)>0
     hr_mats,lr_mats,hr_coords,lr_coords=[],[],[],[]
     for chrom in chrom_list: 
-        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="hicplus",thred=200)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="HiCPlus",thred=200)
         hr_mats.append(hr_crop_mats)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
@@ -316,9 +316,9 @@ elif args.model == "SRHiC":
     print(f"train set: {train_set} \nvalid set: {valid_set} \ntest set: {test_set}" , flush=True)    
     
 else:
-    assert args.model == "hicplus", "    model name is not correct "
-    hr_mats_train,lr_mats_train,hr_coordinates_train,lr_coordinates_train = hicplus_data_split([f'chr{idx}' for idx in train_set+valid_set])
-    hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = hicplus_data_split([f'chr{idx}' for idx in test_set])
+    assert args.model == "HiCPlus", "    model name is not correct "
+    hr_mats_train,lr_mats_train,hr_coordinates_train,lr_coordinates_train = HiCPlus_data_split([f'chr{idx}' for idx in train_set+valid_set])
+    hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = HiCPlus_data_split([f'chr{idx}' for idx in test_set])
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} training...", flush=True)
 
     np.savez(train_dir+f"train_ratio{args.down_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))

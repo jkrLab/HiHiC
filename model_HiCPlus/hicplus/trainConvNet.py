@@ -7,7 +7,7 @@ import numpy as np
 import pickle
 import os
 import gzip
-# from hicplus 
+# from HiCPlus 
 import model
 from torch.utils import data
 import torch
@@ -17,8 +17,18 @@ from time import gmtime, strftime
 import sys
 import torch.nn as nn
 import argparse
-import os, time, datetime
 
+import time, datetime, random ################################# by HiHiC ####
+
+seed = 13  
+random.seed(seed)  # Python 기본 랜덤 시드
+np.random.seed(seed)  # NumPy 랜덤 시드
+torch.manual_seed(seed)  # CPU 랜덤 시드
+
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # 모든 GPU에 시드 적용
+#############################################################################
 
 # use_gpu = 1
 
@@ -57,9 +67,8 @@ conv2d3_filters_size = 5
 # def train(lowres,highres, outModel):
 def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
     
-    ########################################################## Added by HiHiC ##
-    ############################################################################
-    start = time.time()
+    ########################################################## Added by HiHiC #####
+    start = time.time() ###########################################################
 
     train_epoch = [] 
     train_loss = []
@@ -67,8 +76,8 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
 
     os.makedirs(outModel, exist_ok=True)
     device = torch.device(f'cuda:{GPU_ID}' if torch.cuda.is_available() else 'cpu')
-    ############################################################################
-    ############################################################################
+    ###############################################################################
+    ###############################################################################
     
     # low_resolution_samples = lowres.astype(np.float32) * down_sample_ratio
     # high_resolution_samples = highres.astype(np.float32)
@@ -106,6 +115,28 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
 
     optimizer = optim.SGD(Net.parameters(), lr = 0.00001)
     _loss = nn.MSELoss()
+    ########################################################## Added by HiHiC #####
+    Net.eval() ####################################################################
+    loss_sum = 0.0
+
+    with torch.no_grad():
+        # 전체 데이터를 미니배치 단위로 처리
+        for data_batch, _ in lowres_loader:
+            data_batch = data_batch.to(device)  # Move lowres data to device
+            # Assuming that hires_loader is already synced in terms of batch size
+            target_batch = next(iter(hires_loader))[0].to(device)  # Move target data to device
+            output = Net(data_batch)
+            loss = _loss(output, target_batch)
+            loss_sum += loss.item()
+
+    initial_train_loss = loss_sum / len(lowres_loader)
+
+    train_epoch.append(int(0))
+    train_time.append("0.00.00")
+    train_loss.append(f"{initial_train_loss:.10f}")
+    np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_HiCPlus'), [train_epoch, train_time, train_loss])
+    ###############################################################################
+    ###############################################################################
     Net.train()
 
     running_loss = 0.0
@@ -139,8 +170,8 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
     
             running_loss += loss.item()
 
-        if epoch: #################################################### Added by HiHiC ##  
-            sec = time.time()-start
+        if epoch: ##################################################### Added by HiHiC ###  
+            sec = time.time()-start ######################################################
             times = str(datetime.timedelta(seconds=sec))
             short = times.split(".")[0].replace(':','.')
                 
@@ -150,9 +181,9 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
             
             ckpt_file = f"{str(epoch).zfill(5)}_{short}_{loss:.10f}"
             torch.save(Net.state_dict(), os.path.join(outModel, ckpt_file))
-            np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_hicplus'), [train_epoch, train_time, train_loss])            
-        ##############################################################################
-        ##############################################################################
+            np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_HiCPlus'), [train_epoch, train_time, train_loss])            
+            ##############################################################################
+            ##############################################################################
 
     print('-------', i, epoch, running_loss/i, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
@@ -163,6 +194,4 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
         # if (epoch % 100 == 0):
         #     torch.save(Net.state_dict(), outModel + str(epoch) + str('.model'))
         # pass
-    
-     ### Added by HiHiC ##
     

@@ -1,5 +1,5 @@
 ## Introduction
-This is a package for HiCplus, which requires .hic file to train CNN model and with this model you can enhance the resolution of your hic data. High memory and GPU are not necessary when predicting to a high resolution matrix(e.g.10kb).
+This is a package for HiCPlus, which requires .hic file to train CNN model and with this model you can enhance the resolution of your hic data. High memory and GPU are not necessary when predicting to a high resolution matrix(e.g.10kb).
 
 ## Citation
 Yan Zhang, Lin An, Jie Xu, Bo Zhang, W. Jim Zheng, Ming Hu, Jijun Tang & Feng Yue. Enhancing Hi-C data resolution with deep convolutional neural network HiCPlus. https://doi.org/10.1038/s41467-018-03113-2.  
@@ -10,16 +10,16 @@ conda config --add channels pytorch
 conda create -n plus python=3.6 numpy pytorch torchvision scipy
 python3 -m pip install hic-straw  
 source activate plus  
-git clone https://github.com/wangjuan001/hicplus.git  
-cd hicplus
+git clone https://github.com/wangjuan001/HiCPlus.git  
+cd HiCPlus
 python setup.py install  
 ```
 
 ### Usage
 ```
-hicplus
+HiCPlus
 
-usage: hicplus [-h] {train,pred_chromosome} ...
+usage: HiCPlus [-h] {train,pred_chromosome} ...
 
 Train CNN model with Hi-C data and make predictions for low resolution HiC
 data with the model.
@@ -35,11 +35,11 @@ optional arguments:
 
 ```
 
-HiCplus training process requires GPU nodes.
+HiCPlus training process requires GPU nodes.
 ```
-hicplus train
+HiCPlus train
 
-usage: hicplus train [-h] [-i INPUTFILE] [-r SCALERATE] [-c CHROMOSOME]
+usage: HiCPlus train [-h] [-i INPUTFILE] [-r SCALERATE] [-c CHROMOSOME]
                      [-o OUTMODEL]
 
 optional arguments:
@@ -57,12 +57,12 @@ optional arguments:
 ```
 e.g.
 ```
-hicplus train -i https://hicfiles.s3.amazonaws.com/hiseq/gm12878/in-situ/combined.hic -r 40 -c 19
+HiCPlus train -i https://hicfiles.s3.amazonaws.com/hiseq/gm12878/in-situ/combined.hic -r 40 -c 19
 ```
 You can do prediction on CPUs now.
 ```
-hicplus pred_chromosome
-usage: hicplus pred_chromosome [-h] [-i INPUTFILE] [-m MODEL] [-b BINSIZE] -c
+HiCPlus pred_chromosome
+usage: HiCPlus pred_chromosome [-h] [-i INPUTFILE] [-m MODEL] [-b BINSIZE] -c
                                chrN1 chrN2
 
 optional arguments:
@@ -81,11 +81,11 @@ optional arguments:
 ```
 e.g.
 ```
-hicplus pred_chromosome -i test.hic -o test.out.txt -m ../HiCplus_straw/model/pytorch_HindIII_model_40000 -c 19 22 
+HiCPlus pred_chromosome -i test.hic -o test.out.txt -m ../HiCPlus_straw/model/pytorch_HindIII_model_40000 -c 19 22 
 ```
 
 ## Transform output matrix to .cool file
-To transform the output matrix to .cool file, you can refer to the bash script hicplus/mat2cool.sh. To run the script, you can take the following steps:
+To transform the output matrix to .cool file, you can refer to the bash script HiCPlus/mat2cool.sh. To run the script, you can take the following steps:
 1. Specify the chromosome size file for the species you work on. In the example, we used the mm10.chrom.sizes and the related file is provided as well.
 2. As the transform is based on cooler https://github.com/mirnylab/cooler, install cooler first if you haven't done so. 
 ```
@@ -99,4 +99,4 @@ sh mat2cool.sh test.out.txt
 ### Model
 It's important to use a suitable model when doing prediction. At this moment we only provide one model, which is suitable for 200~300M reads hic data (downsampling rate at 16).   
 
-For other sequencing depth data, the users need to train models at a different downsampling rate (e.g. 40). For more information about how to select downsampling rate, please refer to the original HiCplus paper.
+For other sequencing depth data, the users need to train models at a different downsampling rate (e.g. 40). For more information about how to select downsampling rate, please refer to the original HiCPlus paper.

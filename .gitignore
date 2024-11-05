@@ -168,6 +168,8 @@ data_downsampled_*/
 data_*/
 output_*/
 whole_mats/
+data_target.npz
+data_test.npz
 
 # others
 *model_EnHiC*/

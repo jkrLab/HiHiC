@@ -1,6 +1,6 @@
 import os,sys
 from torch.utils import data
-# from hicplus import model
+# from HiCPlus import model
 import model
 import torch
 import torch.nn as nn
@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from scipy.sparse import csr_matrix, coo_matrix, vstack, hstack
 from scipy import sparse
 import numpy as np
-# from hicplus import utils
+# from HiCPlus import utils
 from time import gmtime, strftime
 from datetime import datetime
 import argparse
@@ -19,13 +19,13 @@ import argparse
 ################################################## Added by HiHiC ######
 ########################################################################
 
-parser = argparse.ArgumentParser(description='hicplus prediction process')
+parser = argparse.ArgumentParser(description='HiCPlus prediction process')
 parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
 
 required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
                       help='HiHiC directory')
-required.add_argument('--model', type=str, default='hicplus', metavar='hicplus', required=True,
+required.add_argument('--model', type=str, default='HiCPlus', metavar='HiCPlus', required=True,
                       help='model name')
 required.add_argument('--ckpt_file', type=str, metavar='[2]', required=True,
                       help='pretrained model')
@@ -129,7 +129,7 @@ def predict(M,inmodel):
 # #         chr_Mat = chr_Mat[:Nrow, :Ncol]
 # #     print(dat.head())       
 #     return(chr_Mat)
-hicplus_data = np.load(args.input_data, allow_pickle=True)
+HiCPlus_data = np.load(args.input_data, allow_pickle=True)
 
 
 # def writeBed(Mat, outname,binsize, chrN1,chrN2):
@@ -159,13 +159,13 @@ def main():
     # outname = args.outputfile
     # Mat = chr_pred(hicfile,chrN1,chrN2,binsize,inmodel)
     # ckpt_file=args.ckpt_file
-    Mat = predict(hicplus_data,args.ckpt_file)
+    Mat = predict(HiCPlus_data,args.ckpt_file)
     print(Mat.shape)
     # writeBed(Mat, outname, binsize,chrN1, chrN2)
     # for key in sorted(list(np.unique(hicarn_data['indz'][:, 0]))):
     th_model = args.ckpt_file.split('/')[-1].split('_')[0]
-    file = os.path.join(args.output_data_dir, f'hicplus_predict_{args.down_ratio}_{th_model}.npz')
-    np.savez_compressed(file, data=Mat, inds=hicplus_data['inds_target'])
+    file = os.path.join(args.output_data_dir, f'HiCPlus_predict_{args.down_ratio}_{th_model}.npz')
+    np.savez_compressed(file, data=Mat, inds=HiCPlus_data['inds_target'])
     print('Saving file:', file)
 if __name__ == '__main__':
     main()

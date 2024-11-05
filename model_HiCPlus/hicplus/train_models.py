@@ -2,30 +2,39 @@ from __future__ import print_function
 import argparse as ap
 from math import log10
 
-#import torch
+import torch
 #import torch.nn as nn
 #import torch.optim as optim
 #from torch.autograd import Variable
 #from torch.utils.data import DataLoader
-# from hicplus import utils
+# from HiCPlus import utils
 #import model
 import argparse
-# from hicplus import trainConvNet
+# from HiCPlus import trainConvNet
 import trainConvNet
 import numpy as np
 
 
 ##################################################################### Added by HiHiC ##
-import os #############################################################################
+import os, random #####################################################################
 
-parser = argparse.ArgumentParser(description='hicplus training process')
+seed = 13  
+random.seed(seed)  # Python 기본 랜덤 시드
+np.random.seed(seed)  # NumPy 랜덤 시드
+torch.manual_seed(seed)  # CPU 랜덤 시드
+
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # 모든 GPU에 시드 적용
+
+parser = argparse.ArgumentParser(description='HiCPlus training process')
 parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
 optional = parser.add_argument_group('optional arguments')
 
 required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
                       help='HiHiC directory')
-required.add_argument('--model', type=str, metavar='hicplus', required=True,
+required.add_argument('--model', type=str, metavar='HiCPlus', required=True,
                       help='model name')
 required.add_argument('--epoch', type=int, default=128, metavar='[2]', required=True,
                       help='training epoch (default: 128)')
@@ -33,14 +42,14 @@ required.add_argument('--batch_size', type=int, default=64, metavar='[3]', requi
                       help='input batch size for training (default: 64)')
 required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
                       help='GPU ID for training (defalut: 0)')
-required.add_argument('--output_model_dir', type=str, default='./checkpoints_hicplus', metavar='[5]', required=True,
-                      help='directory path of training model (default: HiHiC/checkpoints_hicplus/)')
+required.add_argument('--output_model_dir', type=str, default='./checkpoints_HiCPlus', metavar='[5]', required=True,
+                      help='directory path of training model (default: HiHiC/checkpoints_HiCPlus/)')
 required.add_argument('--loss_log_dir', type=str, default='./log', metavar='[6]', required=True,
                       help='directory path of training log (default: HiHiC/log/)')
 required.add_argument('--train_data_dir', type=str, metavar='[7]', required=True,
                       help='directory path of training data')
 optional.add_argument('--valid_data_dir', type=str, metavar='[8]',
-                      help="directory path of validation data, but hicplus doesn't need")
+                      help="directory path of validation data, but HiCPlus doesn't need")
 args = parser.parse_args() ############################################################
 #######################################################################################
 

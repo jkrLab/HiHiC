@@ -62,13 +62,13 @@ bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM155
 bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.txt -r 16 -o ./ -n KR -s 300 -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
 ```
 >You should specify **required arguments** as above. This Python code needs a chromosome length of reference genome .txt file like **hg19.txt** in the HiHiC directory. 
->Note: In the case of hicplus, if validation chromosome is provided, it will be automatically incorporated into the training set.
+>Note: In the case of HiCPlus, if validation chromosome is provided, it will be automatically incorporated into the training set.
 
 | Argument | Description | Example |
 |----------|-------------|---------|
 | `-i` | Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) | `/HiHiC/data` |
 | `-d` | Hi-C downsampled data directory containing .txt files (Directory of downsampled Hi-C contact pare files) | `/HiHiC/data_downsampled_16` |
-| `-m` | Model name that you want to use (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, hicplus, and iEnhance) | `DFHiC` |
+| `-m` | Model name that you want to use (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, HiCPlus, and iEnhance) | `DFHiC` |
 | `-g` | Reference genome length file, your data is based on | `./hg19.txt` |
 | `-r` | Downsampling ratio of your downsampled data | `16` |
 | `-o` | Parent directory path for saving output (Child directory named as the model name will be generated under this.) | `./` |
@@ -94,7 +94,7 @@ cd /path/to/HiHiC/parent/directory
 
 2. Run Docker environment
 
-* hicplus, HiCNN, DeepHiC, HiCARN, or iEnhance:
+* HiCPlus, HiCNN, DeepHiC, HiCARN, or iEnhance:
    + With GPU (CUDA 11.4)
    ```
    docker run --rm --gpus all -it --name hihic_torch -v ${PWD}:${PWD} jkrlab/hihic_torch
@@ -138,7 +138,7 @@ bash model_train.sh -m DFHiC -e 500 -b 16 -g 0 -o ./checkpoints_DFHiC -l ./log -
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, hicplus, SRHiC, iEnhance) | `DFHiC` |   
+| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, HiCPlus, SRHiC, iEnhance) | `DFHiC` |   
 | `-e` | Number of train epoch | `500` |
 | `-b` | Number of batch size | `16` | 
 | `-g` | Number of GPU ID  | `0` |
@@ -172,7 +172,7 @@ bash model_prediction.sh -m DFHiC -c ./checkpoints_DFHiC/DFHiC_best.npz -b 16 -g
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, hicplus, and iEnhance) | `DFHiC` |
+| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, HiCPlus, and iEnhance) | `DFHiC` |
 | `-c` | File path of checkpoint | `./checkpoints_DFHiC/DFHiC_best.npz` |
 | `-b` | Number of batch size | `8` |
 | `-g` | Number of GPU ID  | `0` |
@@ -194,6 +194,6 @@ python data_make_whole.py -m DFHiC -i ./output_DFHiC/DFHiC_predict_chr20_16_0000
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, hicplus, and iEnhance) | `DFHiC` |
+| `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, HiCPlus, and iEnhance) | `DFHiC` |
 | `-i` | File path of submatrix data (output of model prediction) | `./output_DFHiC/DFHiC_predict_chr20_16_00005.npz` |
 | `-o` | Directory path to save chromosome matrix | `./output_whole_mat` |

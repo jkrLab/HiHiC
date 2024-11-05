@@ -76,8 +76,8 @@ echo "      Loss variations and memory usage will be saved in ${loss_log_dir}."
 echo "      If a GPU is available, it will be utilized - GPU:${gpu_id}."
 echo ""
 
-# validation set 유효성 검사 (hicplus 제외)
-if [ -z "${valid_data_dir}" ] && [ "${model}" != "hicplus" ]; then
+# validation set 유효성 검사 (HiCPlus 제외)
+if [ -z "${valid_data_dir}" ] && [ "${model}" != "HiCPlus" ]; then
     echo "Error: Validation data directory is required for ${model} model." >&2
     exit 1
 fi
@@ -94,8 +94,8 @@ start_datetime=$(date "+%Y-%m-%d %H:%M:%S")
 
 # 모델에 따라 학습 실행
 case ${model} in
-    hicplus)
-        python model_hicplus/hicplus/train_models.py --root_dir ${root_dir} --model ${model} --epoch ${epoch} --batch_size ${batch_size} --gpu_id ${gpu_id} --output_model_dir ${output_model_dir} --loss_log_dir ${loss_log_dir} --train_data_dir ${train_data_dir}
+    HiCPlus)
+        python model_HiCPlus/hicplus/train_models.py --root_dir ${root_dir} --model ${model} --epoch ${epoch} --batch_size ${batch_size} --gpu_id ${gpu_id} --output_model_dir ${output_model_dir} --loss_log_dir ${loss_log_dir} --train_data_dir ${train_data_dir}
         ;;
     HiCNN)
         python model_HiCNN2/HiCNN2_training.py --root_dir ${root_dir} --model ${model} --epoch ${epoch} --batch_size ${batch_size} --gpu_id ${gpu_id} --output_model_dir ${output_model_dir} --loss_log_dir ${loss_log_dir} --train_data_dir ${train_data_dir} --valid_data_dir ${valid_data_dir}
@@ -119,7 +119,7 @@ case ${model} in
         python model_iEnhance/train.py --train_option 0 --root_dir ${root_dir} --model ${model} --epoch ${epoch} --batch_size ${batch_size} --gpu_id ${gpu_id} --output_model_dir ${output_model_dir} --loss_log_dir ${loss_log_dir} --train_data_dir ${train_data_dir} --valid_data_dir ${valid_data_dir}
         ;;
     *)
-        echo "Model name should be one of: hicplus, HiCNN, SRHiC, DeepHiC, HiCARN1, HiCARN2, DFHiC, iEnhance." >&2
+        echo "Model name should be one of: HiCPlus, HiCNN, SRHiC, DeepHiC, HiCARN1, HiCARN2, DFHiC, iEnhance." >&2
         exit 1
         ;;
 esac

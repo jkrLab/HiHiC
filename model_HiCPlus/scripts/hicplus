@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse, sys
-from hicplus import pred_chromosome, train_models, pred_genome
+from HiCPlus import pred_chromosome, train_models, pred_genome
 def getargs():
     ## Construct an ArgumentParser object for command-line arguments
     parser = argparse.ArgumentParser(description='''Train CNN model with Hi-C data and make predictions for low resolution HiC data with the model.

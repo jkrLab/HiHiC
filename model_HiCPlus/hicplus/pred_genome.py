@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os,sys
 from torch.utils import data
-from hicplus import model
+from HiCPlus import model
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -10,11 +10,11 @@ from torch.autograd import Variable
 from scipy.sparse import csr_matrix, coo_matrix, vstack, hstack
 from scipy import sparse
 import numpy as np
-from hicplus import utils
+from HiCPlus import utils
 from time import gmtime, strftime
 from datetime import datetime
 import argparse
-from hicplus import pred_chromosome
+from HiCPlus import pred_chromosome
 
 startTime = datetime.now()
 

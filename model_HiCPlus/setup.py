@@ -1,10 +1,10 @@
 """
-Setup script for hicplus.
+Setup script for HiCPlus.
 This is a free software under GPLv3. Therefore, you can modify, redistribute
 or even mix it with other GPL-compatible codes. See the file LICENSE
 included with the distribution for more details.
 """
-import os, sys, hicplus, glob
+import os, sys, HiCPlus, glob
 import setuptools
 
 if (sys.version_info.major!=3) or (sys.version_info.minor<6):
@@ -17,8 +17,8 @@ for src in glob.glob('scripts/*'):
     open(src, 'w').write(text)
 
 setuptools.setup(
-    name = 'hicplus',
-    version = hicplus.__version__,
+    name = 'HiCPlus',
+    version = HiCPlus.__version__,
     packages = setuptools.find_packages(),
     scripts = glob.glob('scripts/*'),
     long_description = 'test description',

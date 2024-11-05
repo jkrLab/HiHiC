@@ -14,9 +14,12 @@ from skimage.measure import compare_ssim
 
 
 ######################################################## Added by HiHiC ######
-##############################################################################
+import argparse, random ######################################################
 
-import argparse
+seed = 13
+random.seed(seed)
+np.random.seed(seed)
+tf.set_random_seed(seed)
 
 parser = argparse.ArgumentParser(description='DFHiC training process')
 parser._action_groups.pop()
@@ -40,16 +43,32 @@ required.add_argument('--loss_log_dir', type=str, default='./log', metavar='[6]'
 required.add_argument('--train_data_dir', type=str, metavar='[7]', required=True,
                       help='directory path of training data')
 optional.add_argument('--valid_data_dir', type=str, metavar='[8]',
-                      help="directory path of validation data, but hicplus doesn't need")
+                      help="directory path of validation data, but HiCPlus doesn't need")
 args = parser.parse_args()
 
 start = time.time()
 
 train_epoch = [] 
 train_loss = []
+valid_loss = []
 train_time = []
 
 os.makedirs(args.loss_log_dir, exist_ok=True)
+
+def calculate_batch_loss(sess, data, target, batch_size):
+    t_matrix = tf.placeholder(dtype=tf.float32, shape=[None, *data.shape[1:]], name='input_hic_matrix')
+    t_target_matrix = tf.placeholder(dtype=tf.float32, shape=[None, *target.shape[1:]], name='target_hic_matrix')
+
+    l1_loss = tl.cost.absolute_difference_error(t_matrix, t_target_matrix, is_mean=True)
+
+    total_loss = 0
+    for idx in range(0, len(data), batch_size):
+        b_mats_input = data[idx:idx + batch_size]
+        b_mats_target = target[idx:idx + batch_size]
+        batch_loss = sess.run(l1_loss, {t_matrix: b_mats_input, t_target_matrix: b_mats_target})
+        total_loss += batch_loss * len(b_mats_input)  # 배치 크기 고려
+
+    return total_loss / len(data)  # 전체 평균 손실 계산
 ##############################################################################
 ##############################################################################
 
@@ -165,11 +184,35 @@ tl.layers.initialize_global_variables(sess)
 #record variables for TensorBoard visualization
 # summary_writer=tf.summary.FileWriter('%s'%graph_dir,graph=tf.get_default_graph())
 
+######################################################################################################## Added by HiHiC ######
+initial_train_loss = calculate_batch_loss(sess, lr_mats_train, hr_mats_train, batch_size) ####################################
+# 모델 예측값 계산
+hr_mats_pre = np.zeros(hr_mats_valid.shape)
+for i in range(hr_mats_pre.shape[0] // batch_size):
+    hr_mats_pre[batch_size * i:batch_size * (i + 1)] = sess.run(
+        net_test.outputs, {t_matrix: lr_mats_valid[batch_size * i:batch_size * (i + 1)]}
+    )
+# 남은 배치 처리
+hr_mats_pre[batch_size * (i + 1):] = sess.run(
+    net_test.outputs, {t_matrix: lr_mats_valid[batch_size * (i + 1):]}
+)
+
+# 검증 손실 계산
+mse_val = np.median(list(map(compare_mse, hr_mats_pre[:, :, :, 0], hr_mats_valid[:, :, :, 0])))
+initial_valid_loss = mse_val  # 여기서 mse_val을 사용
+
+train_epoch.append(int(0))
+train_time.append("0.00.00")
+train_loss.append(f"{initial_train_loss:.10f}")
+valid_loss.append(f"{initial_valid_loss:.10f}") ##############################################################################
+np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss, valid_loss]) ######
+
+
 wait=0
 patience=20
 best_mse_val = np.inf
 best_epoch=0
-for epoch in range(1, n_epoch +1):
+for epoch in range(0, n_epoch +1):
     ## update learning rate
     if epoch != 0 and (epoch % decay_every == 0):
         #new_lr_decay = lr_decay**(epoch // decay_every)
@@ -191,6 +234,7 @@ for epoch in range(1, n_epoch +1):
         errM, _ = sess.run([l1_loss, g_optim], {t_matrix: b_mats_input, t_target_matrix: b_mats_target})
     print("Epoch [%2d/%2d] time: %4.4fs, mse: %.6f" 
           %(epoch, n_epoch, time.time() - epoch_time, errM))
+    
     
     #validation
     hr_mats_pre = np.zeros(hr_mats_valid.shape)
@@ -218,17 +262,17 @@ for epoch in range(1, n_epoch +1):
     # summary=sess.run(merged_summary,{t_matrix: b_mats_input, t_target_matrix: b_mats_target})
     # summary_writer.add_summary(summary, epoch)
     
-    if epoch: ##################################################################################### Added by HiHiC #####
-        sec = time.time()-start ########################################################################################
+    if epoch: ################################################################################################## Added by HiHiC ####
+        sec = time.time()-start ####################################################################################################
         times = str(datetime.timedelta(seconds=sec))
         short = times.split(".")[0].replace(':','.')
         train_epoch.append(epoch)
         train_time.append(short)        
-        train_loss.append(f"{mse_val:.10f}")
+        train_loss.append(f"{errM:.10f}")
+        valid_loss.append(f"{mse_val:.10f}")
         ckpt_file = f"{str(epoch).zfill(5)}_{short}_{mse_val:.10f}.npz"
-        tl.files.save_npz_dict(net.all_params, name=os.path.join(checkpoint, ckpt_file), sess=sess) #####################
-        np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss]) #####                
+        tl.files.save_npz_dict(net.all_params, name=os.path.join(checkpoint, ckpt_file), sess=sess) #################################
+        np.save(os.path.join(args.loss_log_dir, f'train_loss_{args.model}'), [train_epoch, train_time, train_loss, valid_loss]) #####                
     
 print("epoch")
 print(best_epoch)
-

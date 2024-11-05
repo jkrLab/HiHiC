@@ -1,5 +1,6 @@
 #!/bin/bash
 
+## step size 50 epoch 마다 예측 수행 ###
 seed=42
 root_dir=$(pwd)
 step_num=50
@@ -149,7 +150,7 @@ elif [ "$model" = "SRHiC" ]; then
         fi
     done
 
-elif [ "$model" = "hicplus" ]; then
+elif [ "$model" = "HiCPlus" ]; then
     for file in "$ckpt_fold"/*; do
         ckpt=$(basename "$file")
         ckpt_num=${ckpt:0:5}
@@ -158,7 +159,7 @@ elif [ "$model" = "hicplus" ]; then
             remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
-                python model_hicplus/hicplus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+                python model_HiCPlus/HiCPlus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
             fi
         fi
     done
@@ -178,5 +179,99 @@ elif [ "$model" = "iEnhance" ]; then
     done
 
 else
-    echo "Model name should be one of the DeepHiC, HiCNN2, DFHiC, hicplus, HiCARN1, HiCARN2, SRHiC, iEnhance."
+    echo "Model name should be one of the DeepHiC, HiCNN2, DFHiC, HiCPlus, HiCARN1, HiCARN2, SRHiC, iEnhance."
 fi
+
+
+# ### 초반 학습 [1,10] epoch 예측 수행 ###
+
+# seed=42
+# root_dir=$(pwd)
+# step_num=1
+# gpu_id=-1
+
+# # 모델 리스트 정의
+# models=("HiCARN" "DeepHiC" "HiCNN" "HiCPlus" "iEnhance" "DFHiC" "SRHiC")
+
+# # 필수 인수 설정
+# batch_size=16  # 기본 배치 크기 설정
+# down_ratio=16   # 다운 비율 설정
+
+# # 디렉토리 및 파일 존재 여부 확인 함수
+# check_directory_exists() {
+#     if [ ! -d "$1" ]; then
+#         echo "Error: The directory '$1' does not exist."
+#         exit 1
+#     fi
+# }
+
+# check_file_exists() {
+#     if [ ! -f "$1" ]; then
+#         echo "Error: The file '$1' does not exist."
+#         exit 1
+#     fi
+# }
+
+# echo ""
+# echo "  ...Current working directory is ${root_dir}."
+# echo "      Models will sequentially enhance low resolution HiC data."
+# echo "      GPU:${gpu_id} will be used if available; otherwise, CPU will be used."
+# echo ""
+
+# # 모델 목록 순회
+# for model in "${models[@]}"; do
+#     ckpt_fold="checkpoints_${model}"
+#     output_data_dir="output_${model}"
+
+#     if [ "$model" == "SRHiC" ]; then
+#         input_data="data_${model}/test_KR_300/test_ratio16.npy"
+#     else
+#         input_data="data_${model}/test_KR_300/test_ratio16.npz"
+#     fi
+    
+#     # 경로 확인
+#     check_directory_exists "$ckpt_fold"
+#     check_file_exists "$input_data"
+    
+#     if [ ! -d "$output_data_dir" ]; then
+#         mkdir -p "$output_data_dir"
+#     fi
+
+#     echo "Running predictions for model: ${model}, saving outputs to ${output_data_dir}"
+    
+#     for file in "$ckpt_fold"/*; do
+#         ckpt=$(basename "$file")
+#         ckpt_num=${ckpt:0:5}
+
+#         # ckpt_num이 [00001, 00010] 범위인지 확인
+#         if [[ $ckpt_num =~ ^(0000[1-9]|00010)$ ]]; then
+#             case "$model" in
+#                 "HiCARN")
+#                     python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+#                     ;;
+#                 "DeepHiC")
+#                     python model_DeepHiC/data_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+#                     ;;
+#                 "HiCNN")
+#                     python model_HiCNN2/HiCNN2_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+#                     ;;
+#                 "DFHiC")
+#                     python model_DFHiC/run_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+#                     ;;
+#                 "SRHiC")
+#                     python model_SRHiC/src/SRHiC_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+#                     ;;
+#                 "HiCPlus")
+#                     python model_HiCPlus/HiCPlus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+#                     ;;
+#                 "iEnhance")
+#                     python model_iEnhance/predict-hic.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+#                     ;;
+#                 *)
+#                     echo "Unknown model: ${model}"
+#                     ;;
+#             esac
+#         fi
+#     done
+#     echo "Finished predictions for model: ${model}"
+# done
