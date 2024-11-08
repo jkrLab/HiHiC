@@ -26,22 +26,17 @@ while getopts ":i:d:m:g:r:o:s:n:t:v:p:" flag; do
 done
 
 # 필수 인자 체크
-if [ -z "${input_data_dir}" ] || [ -z "${input_downsample_dir}" ] || [ -z "${model}" ] || [ -z "${ref_chrom}" ] || [ -z "${down_ratio}" ] || [ -z "${output_dir}" ]; then
+if [ -z "${input_data_dir}" ] || [ -z "${input_downsample_dir}" ] || [ -z "${model}" ] || [ -z "${ref_chrom}" ] || [ -z "${down_ratio}" ] || [ -z "${output_dir}" ]|| [ -z "${train_set}" ] || [ -z "${prediction_set}" ]; then
     echo "Usage: $0 -i <input_data_path> -d <input_downsample_path> -m <model_name> -g <ref_chromosome_length> -r <downsample_ratio> -o <output_path> -s <max_value> -n normalization -t <train_set_chromosome> -v <valid_set_chromosome> -p <prediction_set_chromosome>" >&2
     exit 1
 fi
 
 # 데이터셋 split 기본값 설정
 if [ "${model}" = "HiCPlus" ]; then
-    train_set=${train_set:-"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"}
-    prediction_set=${prediction_set:-"18 19 20 21 22"}
     echo ""
     echo "  ...For training set, chromosome ${train_set} ${valid_set}"
     echo "     For test set, chromosome ${prediction_set}"
 elif [[ "${model}" =~ ^(HiCNN|SRHiC|DeepHiC|HiCARN|DFHiC|iEnhance)$ ]]; then
-    train_set=${train_set:-"1 2 3 4 5 6 7 8 9 10 11 12 13 14"}
-    valid_set=${valid_set:-"15 16 17"}
-    prediction_set=${prediction_set:-"18 19 20 21 22"}
     echo ""
     echo "  ...For training set, chromosome ${train_set}" 
     echo "     For validation set, chromosome ${valid_set}"
@@ -66,5 +61,5 @@ if [ "${model}" = "iEnhance" ]; then
     python -u model_iEnhance/divide-data.py -i "${input_data_dir}" -d "${input_downsample_dir}" -m "${model}" -g "${ref_chrom}" -r "${down_ratio}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
     python -u model_iEnhance/construct_sets.py -i "${output_dir}/data_${model}/chrs_${normalization}_${max_value}/" -m "${model}" -r "${down_ratio}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
 else
-    python -u data_generate.py -i "${input_data_dir}" -d "${input_downsample_dir}" -m "${model}" -g "${ref_chrom}" -r "${down_ratio}" -o "${output_dir}/" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
+    python -u data_generate_for_training.py -i "${input_data_dir}" -d "${input_downsample_dir}" -m "${model}" -g "${ref_chrom}" -r "${down_ratio}" -o "${output_dir}/" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
 fi

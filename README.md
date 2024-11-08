@@ -56,10 +56,12 @@ bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM155
 >If you put these arguments in the command line, these should be placed in the order as above: data download URL, saving file name, reference genome, downsampling ratio, path of juicer tools, normalization method, intra chromosome data folder name.
 
 
-3. Generate input data for each deep learning model
+3. Transform HiC data to input matrix
+
+* Input data for training model
 
 ```
-bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.txt -r 16 -o ./ -n KR -s 300 -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
+bash data_generate_for_training.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.txt -r 16 -o ./ -n KR -s 300 -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
 ```
 >You should specify **required arguments** as above. This Python code needs a chromosome length of reference genome .txt file like **hg19.txt** in the HiHiC directory. 
 >Note: In the case of HiCPlus, if validation chromosome is provided, it will be automatically incorporated into the training set.
@@ -77,6 +79,20 @@ bash data_generate.sh -i ./data -d ./data_downsampled_16 -m iEnhance -g ./hg19.t
 | `-t` | Chromosome numbers of training set | `"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"` |
 | `-v` | Chromosome numbers of validation set | `"15 16 17"` |
 | `-p` | Chromosome numbers of prediction set | `"18 19 20 21 22"` |
+
+* Input data for model prediction (HiC contact map enhancement with pretrained model)
+
+```
+bash data_generate_for_prediction.sh -i ./data -m iEnhance -g ./hg19.txt -o ./ -n KR -s 300
+```
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `-i` | Hi-C data directory containing .txt files (Directory of Hi-C contact pare files) | `/HiHiC/data` |
+| `-m` | Model name that you want to use (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, HiCPlus, and iEnhance) | `DFHiC` |
+| `-g` | Reference genome length file, your data is based on | `./hg19.txt` |
+| `-o` | Parent directory path for saving output (Child directory named as the model name will be generated under this.) | `./` |
+| `-s` | Max value of Hi-C matrix | `300` |
+| `-n` | Normalization of Hi-C matrix | `KR` |
 
 
 
@@ -103,6 +119,7 @@ cd /path/to/HiHiC/parent/directory
    ```
    docker run --rm -it --name hihic_torch -v ${PWD}:${PWD} jkrlab/hihic_torch
    ```
+
 * SRHiC or DFHiC:
    + With GPU (CUDA 11.4)
    ```

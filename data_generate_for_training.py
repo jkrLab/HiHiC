@@ -25,6 +25,7 @@ optional.add_argument('-v', '--valid_set', dest='valid_set', type=str, required=
 optional.add_argument('-p', '--test_set', dest='test_set', type=str, required=False, help='Prediction set chromosome: "18 19 20 21 22"')
 
 args = parser.parse_args()
+file_list = os.listdir(args.input_data_dir)
 train_set = args.train_set.split()
 valid_set = args.valid_set.split()
 test_set = args.test_set.split()
@@ -33,12 +34,14 @@ normalization = args.normalization
 max_value = int(args.max_value) # minmax scaling
 
 # 크로모좀 별로 matrix 만들기
-def hic_matrix_extraction(chrom_list, res=10000):
+def hic_matrix_extraction(file_list, res=10000):
+    chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{args.ref_chrom}').readlines()}
+
     hr_contacts_dict={}
-    for each in chrom_list:
-        hr_hic_file = f'{args.input_data_dir }/chr{each}_10kb.txt'
-        chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{args.ref_chrom}').readlines()} # GM12878 Hg19
-        mat_dim = int(math.ceil(chrom_len[f'chr{each}']*1.0/res))
+    for file in file_list:
+        chrom = file.split('_')[0] # 'chr1'
+        hr_hic_file = f'{args.input_data_dir}/{file}'
+        mat_dim = int(math.ceil(chrom_len[chrom]*1.0/res))
         hr_contact_matrix = np.zeros((mat_dim,mat_dim))
         for line in open(hr_hic_file).readlines():
             idx1, idx2, value = int(line.strip().split('\t')[0]),int(line.strip().split('\t')[1]),float(line.strip().split('\t')[2])
@@ -49,15 +52,15 @@ def hic_matrix_extraction(chrom_list, res=10000):
             else:
                 hr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
         hr_contact_matrix+= hr_contact_matrix.T - np.diag(hr_contact_matrix.diagonal())
-        if np.isnan(hr_contact_matrix).any(): ###############
-            print(f'hr_chr{each} has nan value!', flush=True) ###############
-        hr_contacts_dict[f'chr{each}'] = scaler.fit_transform(np.minimum(max_value, hr_contact_matrix)) # (0,300) >> (0,1)
+        if np.isnan(hr_contact_matrix).any():
+            print(f'hr_{chrom} has nan value!', flush=True)
+        hr_contacts_dict[chrom] = scaler.fit_transform(np.minimum(max_value, hr_contact_matrix)) # (0,300) >> (0,1)
 
     lr_contacts_dict={}
-    for each in chrom_list:
-        lr_hic_file = f'{args.input_downsample_dir}/chr{each}_10kb.txt'
-        chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{args.ref_chrom}').readlines()}
-        mat_dim = int(math.ceil(chrom_len[f'chr{each}']*1.0/res))
+    for file in file_list:
+        chrom = file.split('_')[0]
+        lr_hic_file = f'{args.input_downsample_dir}/{file}'
+        mat_dim = int(math.ceil(chrom_len[chrom]*1.0/res))
         lr_contact_matrix = np.zeros((mat_dim,mat_dim))
         for line in open(lr_hic_file).readlines():
             idx1, idx2, value = int(line.strip().split('\t')[0]),int(line.strip().split('\t')[1]),float(line.strip().split('\t')[2])
@@ -68,9 +71,9 @@ def hic_matrix_extraction(chrom_list, res=10000):
             else:
                 lr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
         lr_contact_matrix+= lr_contact_matrix.T - np.diag(lr_contact_matrix.diagonal())
-        if np.isnan(lr_contact_matrix).any(): ###############
-            print(f'lr_chr{each} has nan value!', flush=True) ###############
-        lr_contacts_dict[f'chr{each}'] = scaler.fit_transform(np.minimum(max_value, lr_contact_matrix)) # (0,300) >> (0,1)
+        if np.isnan(lr_contact_matrix).any():
+            print(f'lr_{chrom} has nan value!', flush=True) 
+        lr_contacts_dict[chrom] = scaler.fit_transform(np.minimum(max_value, lr_contact_matrix)) # (0,300) >> (0,1)
 
     ct_hr_contacts={item:sum(sum(hr_contacts_dict[item])) for item in hr_contacts_dict.keys()} # read 수
     ct_lr_contacts={item:sum(sum(lr_contacts_dict[item])) for item in lr_contacts_dict.keys()}    
@@ -94,6 +97,7 @@ def crop_hic_matrix_by_chrom(chrom, for_model, thred=200): # thred=2M/resolution
             return False
         else:
             return True
+        
     for idx1 in range(0,row-40,28):
         for idx2 in range(0,col-40,28):
             if abs(idx1-idx2)<thred:
@@ -221,7 +225,7 @@ def HiCPlus_data_split(chrom_list):
 
 
 # 함수 실행
-hr_contacts_dict,lr_contacts_dict,ct_hr_contacts,ct_lr_contacts = hic_matrix_extraction(chrom_list)
+hr_contacts_dict,lr_contacts_dict,ct_hr_contacts,ct_lr_contacts = hic_matrix_extraction(file_list)
 print(f"\n  ...Done making whole matrices...", flush=True)
 
 
