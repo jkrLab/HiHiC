@@ -1,14 +1,14 @@
 #!/bin/bash
 seed=42
 root_dir=$(pwd)
-# bash data_generate_for_prediction.sh -i ./data_KR -m iEnhance -g ./hg19.txt -r 16 -o ./ -s 300 -n KR -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
 
-while getopts ":i:m:g:r:o:n:s:" flag; do
+# bash data_generate_for_prediction.sh -i ./data_KR -m iEnhance -g ./hg19.txt -o ./ -s 300 -n KR
+
+while getopts ":i:m:g:o:n:s:" flag; do
     case $flag in
         i) input_data_dir=$(echo "${OPTARG}" | sed 's#/*$##');;
         m) model=$OPTARG;;
         g) ref_chrom=$OPTARG;;
-        r) down_ratio=$OPTARG;;
         o) output_dir=$(echo "${OPTARG}" | sed 's#/*$##');;
         n) normalization=$OPTARG;;
         s) max_value=$OPTARG;;
@@ -21,9 +21,14 @@ while getopts ":i:m:g:r:o:n:s:" flag; do
     esac
 done
 
+# normalization 기본값 설정
+if [ -z "${normalization}" ]; then
+    normalization="Unknown"
+fi
+
 # 필수 인자 체크
-if [ -z "${input_data_dir}" ] || [ -z "${model}" ] || [ -z "${ref_chrom}" ] || [ -z "${output_dir}" ]; then
-    echo "Usage: $0 -i <input_data_path> -m <model_name> -g <ref_chromosome_length> -o <output_path> -s <max_value> -n <normalization>" >&2
+if [ -z "${input_data_dir}" ] || [ -z "${model}" ] || [ -z "${ref_chrom}" ] || [ -z "${output_dir}" ] || [ -z "${max_value}" ]; then
+    echo "Usage: $0 -i <input_data_path> -m <model_name> -g <ref_chromosome_length> -o <output_path> -s <max_value> [-n <normalization>]" >&2
     exit 1
 fi
 
@@ -40,11 +45,19 @@ else
     exit 1
 fi
 
-
-# Python 스크립트 비버퍼링 모드로 실행
+# iEnhance 모델 전용 작업
 if [ "${model}" = "iEnhance" ]; then
-    python -u model_iEnhance/divide-data.py -i "${input_data_dir}" -d "${input_downsample_dir}" -m "${model}" -g "${ref_chrom}" -r "${down_ratio}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
-    python -u model_iEnhance/construct_sets.py -i "${output_dir}/data_${model}/chrs_${normalization}_${max_value}/" -m "${model}" -r "${down_ratio}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
+    prediction_set=()
+    for file in $(ls "${input_data_dir}"); do
+        prefix=$(basename "$file" | awk -F'_' '{print $1}')  # '_' 기준으로 앞부분 추출
+        prediction_set+=("$prefix")
+    done
+
+    # 배열을 쉼표로 구분된 문자열로 변환
+    prediction_set_str=$(IFS=' '; echo "${prediction_set[*]}")
+
+    python -u model_iEnhance/divide-data.py -a "Enhancement" -i "${input_data_dir}" -m "${model}" -g "${ref_chrom}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -p "${prediction_set_str}"
+    python -u model_iEnhance/construct_sets.py -a "Enhancement" -i "${output_dir}/data_${model}/chrs_${normalization}_${max_value}/" -m "${model}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -p "${prediction_set_str}"
 else
-    python -u data_generate_for_prediction.py -i "${input_data_dir}" -m "${model}" -g "${ref_chrom}"  -o "${output_dir}/" -n "${normalization}" -s "${max_value}" 
+    python -u data_generate_for_prediction.py -i "${input_data_dir}" -m "${model}" -g "${ref_chrom}" -o "${output_dir}/" -n "${normalization}" -s "${max_value}"
 fi

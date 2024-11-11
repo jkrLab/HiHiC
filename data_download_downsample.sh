@@ -91,7 +91,7 @@ elif [[ "$ref_genome" == mm* ]]; then
   start=1
   end=20
 else
-  echo "Unsupported reference genome: ${ref_genome}"
+  echo "Reference genome: ${ref_genome}: chr${start} - chr${end}"
 fi
 
 # 결과를 저장할 폴더 생성​​
