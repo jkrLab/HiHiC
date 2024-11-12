@@ -2,10 +2,11 @@
 seed=42
 root_dir=$(pwd)
 
-# bash data_generate_for_prediction.sh -i ./data_KR -m iEnhance -g ./hg19.txt -o ./ -s 300 -n KR
+# bash data_generate_for_prediction.sh -a 5000000 -i ./data_KR -m iEnhance -g ./hg19.txt -o ./ -s 300 -n KR
 
-while getopts ":i:m:g:o:n:s:" flag; do
+while getopts ":e:i:m:g:o:n:s:" flag; do
     case $flag in
+        e) explain=$OPTARG;;
         i) input_data_dir=$(echo "${OPTARG}" | sed 's#/*$##');;
         m) model=$OPTARG;;
         g) ref_chrom=$OPTARG;;
@@ -24,6 +25,11 @@ done
 # normalization 기본값 설정
 if [ -z "${normalization}" ]; then
     normalization="Unknown"
+fi
+
+# normalization 기본값 설정
+if [ -z "${explain}" ]; then
+    explain=""
 fi
 
 # 필수 인자 체크
@@ -56,8 +62,8 @@ if [ "${model}" = "iEnhance" ]; then
     # 배열을 쉼표로 구분된 문자열로 변환
     prediction_set_str=$(IFS=' '; echo "${prediction_set[*]}")
 
-    python -u model_iEnhance/divide-data.py -a "Enhancement" -i "${input_data_dir}" -m "${model}" -g "${ref_chrom}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -p "${prediction_set_str}"
-    python -u model_iEnhance/construct_sets.py -a "Enhancement" -i "${output_dir}/data_${model}/chrs_${normalization}_${max_value}/" -m "${model}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -p "${prediction_set_str}"
+    python -u model_iEnhance/divide-data.py -a "Enhancement" -i "${input_data_dir}" -m "${model}" -g "${ref_chrom}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -p "${prediction_set_str}" -e "${explain}"
+    python -u model_iEnhance/construct_sets.py -a "Enhancement" -i "${output_dir}/data_${model}/chrs_${normalization}_${max_value}/" -m "${model}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -p "${prediction_set_str}" -e "${explain}"
 else
-    python -u data_generate_for_prediction.py -i "${input_data_dir}" -m "${model}" -g "${ref_chrom}" -o "${output_dir}/" -n "${normalization}" -s "${max_value}"
+    python -u data_generate_for_prediction.py -i "${input_data_dir}" -m "${model}" -g "${ref_chrom}" -o "${output_dir}/" -n "${normalization}" -s "${max_value}" -e "${explain}"
 fi

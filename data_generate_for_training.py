@@ -97,7 +97,6 @@ def crop_hic_matrix_by_chrom(chrom, for_model, thred=200): # thred=2M/resolution
             return False
         else:
             return True
-        
     for idx1 in range(0,row-40,28):
         for idx2 in range(0,col-40,28):
             if abs(idx1-idx2)<thred:

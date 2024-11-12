@@ -17,18 +17,8 @@ from time import gmtime, strftime
 import sys
 import torch.nn as nn
 import argparse
+import os, time, datetime
 
-import time, datetime, random ################################# by HiHiC ####
-
-seed = 13  
-random.seed(seed)  # Python 기본 랜덤 시드
-np.random.seed(seed)  # NumPy 랜덤 시드
-torch.manual_seed(seed)  # CPU 랜덤 시드
-
-if torch.cuda.is_available():
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)  # 모든 GPU에 시드 적용
-#############################################################################
 
 # use_gpu = 1
 
@@ -67,8 +57,9 @@ conv2d3_filters_size = 5
 # def train(lowres,highres, outModel):
 def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
     
-    ########################################################## Added by HiHiC #####
-    start = time.time() ###########################################################
+    ########################################################## Added by HiHiC ##
+    ############################################################################
+    start = time.time()
 
     train_epoch = [] 
     train_loss = []
@@ -76,8 +67,8 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
 
     os.makedirs(outModel, exist_ok=True)
     device = torch.device(f'cuda:{GPU_ID}' if torch.cuda.is_available() else 'cpu')
-    ###############################################################################
-    ###############################################################################
+    ############################################################################
+    ############################################################################
     
     # low_resolution_samples = lowres.astype(np.float32) * down_sample_ratio
     # high_resolution_samples = highres.astype(np.float32)
@@ -121,10 +112,9 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
 
     with torch.no_grad():
         # 전체 데이터를 미니배치 단위로 처리
-        for data_batch, _ in lowres_loader:
+        for (data_batch, _), (target_batch, _) in zip(lowres_loader, hires_loader):  # lowres_loader와 hires_loader의 데이터를 동시에 가져옴
             data_batch = data_batch.to(device)  # Move lowres data to device
-            # Assuming that hires_loader is already synced in terms of batch size
-            target_batch = next(iter(hires_loader))[0].to(device)  # Move target data to device
+            target_batch = target_batch.unsqueeze(1).to(device)  # Move target data to device
             output = Net(data_batch)
             loss = _loss(output, target_batch)
             loss_sum += loss.item()
@@ -170,8 +160,8 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
     
             running_loss += loss.item()
 
-        if epoch: ##################################################### Added by HiHiC ###  
-            sec = time.time()-start ######################################################
+        if epoch: #################################################### Added by HiHiC ##  
+            sec = time.time()-start
             times = str(datetime.timedelta(seconds=sec))
             short = times.split(".")[0].replace(':','.')
                 
@@ -182,8 +172,8 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
             ckpt_file = f"{str(epoch).zfill(5)}_{short}_{loss:.10f}"
             torch.save(Net.state_dict(), os.path.join(outModel, ckpt_file))
             np.save(os.path.join(LOSS_LOG_DIR, f'train_loss_HiCPlus'), [train_epoch, train_time, train_loss])            
-            ##############################################################################
-            ##############################################################################
+        ##############################################################################
+        ##############################################################################
 
     print('-------', i, epoch, running_loss/i, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
@@ -194,4 +184,6 @@ def train(lowres, highres, outModel, EPOCH, BATCH_SIZE, GPU_ID, LOSS_LOG_DIR):
         # if (epoch % 100 == 0):
         #     torch.save(Net.state_dict(), outModel + str(epoch) + str('.model'))
         # pass
+    
+     ### Added by HiHiC ##
     

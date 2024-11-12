@@ -29,6 +29,7 @@ optional.add_argument('-r', '--down_ratio', dest='down_ratio', type=str, require
 optional.add_argument('-t', '--train_set', dest='train_set', type=str, required=False, help='Train set chromosome: "1 2 3 4 5 6 7 8 9 10 11 12 13 14"')
 optional.add_argument('-v', '--valid_set', dest='valid_set', type=str, required=False, help='Validation set chromosome: "15 16 17"')
 optional.add_argument('-p', '--test_set', dest='test_set', type=str, required=False, help='Prediction set chromosome: "18 19 20 21 22"')
+optional.add_argument('-e', '--explain', dest='explain', type=str, required=False, default='', help='Explaination about data')
 
 args = parser.parse_args()
 action = args.action
@@ -316,7 +317,7 @@ if __name__ == '__main__':
     if action == "Enhancement":
         for chr in args.test_set.split():
             mat = enhance_hic_matrix_extraction(chr)
-            np.savez(save_dir + f"{chr}_for_enhancement", data = mat)
+            np.savez(save_dir + f"{chr}_for_enhancement{args.explain}", data = mat)
     
     else:
         for chr in chrs_list:

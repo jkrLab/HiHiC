@@ -2,7 +2,7 @@ from __future__ import print_function
 import argparse as ap
 from math import log10
 
-import torch
+#import torch
 #import torch.nn as nn
 #import torch.optim as optim
 #from torch.autograd import Variable
@@ -16,16 +16,7 @@ import numpy as np
 
 
 ##################################################################### Added by HiHiC ##
-import os, random #####################################################################
-
-seed = 13  
-random.seed(seed)  # Python 기본 랜덤 시드
-np.random.seed(seed)  # NumPy 랜덤 시드
-torch.manual_seed(seed)  # CPU 랜덤 시드
-
-if torch.cuda.is_available():
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)  # 모든 GPU에 시드 적용
+import os #############################################################################
 
 parser = argparse.ArgumentParser(description='HiCPlus training process')
 parser._action_groups.pop()

@@ -22,6 +22,7 @@ optional.add_argument('-r', '--down_ratio', dest='down_ratio', type=str, require
 optional.add_argument('-t', '--train_set', dest='train_set', type=str, required=False, help='Train set chromosome: "1 2 3 4 5 6 7 8 9 10 11 12 13 14"')
 optional.add_argument('-v', '--valid_set', dest='valid_set', type=str, required=False, help='Validation set chromosome: "15 16 17"')
 optional.add_argument('-p', '--test_set', dest='test_set', type=str, required=False, help='Prediction set chromosome: "18 19 20 21 22"')
+optional.add_argument('-e', '--explain', dest='explain', type=str, required=False, default='', help='Explaination about data')
 
 args = parser.parse_args()
 
@@ -127,7 +128,6 @@ if  action == "Train" :
 else:
     testlist = args.test_set.split()
     deal_fd = args.input_data_dir
-    fn = save_dir
 
     whole_hrmat = {}
     whole_mat = {}
@@ -138,6 +138,6 @@ else:
         
         whole_mat[c] = dataslr
 
-    np.savez(fn + f"for_enhancement_{args.model}", **whole_mat)
+    np.savez(save_dir + f"for_enhancement_{args.model}{args.explain}", **whole_mat)
 
 ###################################################################################################
