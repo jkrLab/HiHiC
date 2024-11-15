@@ -50,9 +50,10 @@ os.makedirs(args.output_data_dir, exist_ok=True) #######################
 
 def dataloader(data, batch_size=64):
     inputs = torch.tensor(data['data'], dtype=torch.float)
-    target = torch.tensor(data['target'], dtype=torch.float)
+    # target = torch.tensor(data['target'], dtype=torch.float)
     inds = torch.tensor(data['inds'], dtype=torch.long)
-    dataset = TensorDataset(inputs, target, inds)
+    # dataset = TensorDataset(inputs, target, inds)
+    dataset = TensorDataset(inputs, inds)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     return loader
 
@@ -90,7 +91,8 @@ def hicarn_predictor(model, hicarn_loader, ckpt_file, device):
     deepmodel.eval()
     with torch.no_grad():
         for batch in tqdm(hicarn_loader, desc='HiCARN Predicting: '):
-            lr, hr, inds = batch
+            # lr, hr, inds = batch
+            lr, inds = batch
             lr = lr.to(device)
             out = deepmodel(lr)
 
@@ -162,7 +164,7 @@ if __name__ == '__main__':
     #     save_data(hicarn_hics[key], compacts[key], sizes[key], file)
     # for key in sorted(list(np.unique(indices[:, 0]))):
     th_model = args.ckpt_file.split('/')[-1].split('_')[0]
-    file = os.path.join(args.output_data_dir, f'HiCARN_predict_{args.down_ratio}_{th_model}.npz')
+    file = os.path.join(args.output_data_dir, f'{args.model}_predict_{args.down_ratio}_{th_model}.npz')
     np.savez_compressed(file, data=result_data, inds=result_inds)
     print('Saving file:', file)
 

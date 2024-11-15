@@ -134,7 +134,7 @@ else:
 
     for c in testlist:
 
-        dataslr = np.load(deal_fd + c + '_for_enhancement.npz')['data']
+        dataslr = np.load(deal_fd + c + f'_for_enhancement{args.explain}.npz')['data']
         
         whole_mat[c] = dataslr
 

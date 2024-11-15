@@ -52,13 +52,11 @@ input_matrix = tf.placeholder('float32', [None, None, None, 1], name='matrix_inp
 net = DFHiC(input_matrix, is_train=False, reuse=False)   
 
 # test_data=np.loadtxt("GM12878/intra_LR/LR_10k_NONE.chr%s"%chrome)
-input_data = np.load(args.input_data, allow_pickle=True)
-print(test_data)
-print(test_data.shape)
+test_data = np.load(args.input_data, allow_pickle=True)['data']
+input_data = np.load(args.input_data, allow_pickle=True)['inds']
 
 # lr_data=test_data.reshape((1,test_data.shape[0],test_data.shape[1],1))
 lr_data=test_data.reshape((test_data.shape[0],40,test_data.shape[1],1))
-print(lr_data.shape)
 
 # model_path="Pretrained_weights/DFHiC_model.npz"
 # model_path="check/DFHiC_best.npz"
@@ -75,4 +73,4 @@ print(result_data.shape)
 print("***************")
 # np.savetxt('DFHiC_predicted_SR_NONE_result_chr%s.txt'%chrome, result_data)
 th_model = args.ckpt_file.split('/')[-1].split('_')[0]
-np.savez(os.path.join(args.output_data_dir, f'DFHiC_predict_{args.down_ratio}_{th_model}'), data=result_data, inds=input_data['inds'])
+np.savez(os.path.join(args.output_data_dir, f'DFHiC_predict_{args.down_ratio}_{th_model}'), data=result_data, inds=input_data)

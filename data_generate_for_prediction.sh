@@ -2,7 +2,7 @@
 seed=42
 root_dir=$(pwd)
 
-# bash data_generate_for_prediction.sh -a 5000000 -i ./data_KR -m iEnhance -g ./hg19.txt -o ./ -s 300 -n KR
+# bash data_generate_for_prediction.sh -i /project/HiHiC/data_GM12878 -m iEnhance -g ./hg19.txt -o ./ -s 300 -n KR
 
 while getopts ":e:i:m:g:o:n:s:" flag; do
     case $flag in

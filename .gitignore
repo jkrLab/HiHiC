@@ -184,6 +184,8 @@ loss_trend.png
 *backup*
 TAD*
 temp_*
+predicted_*
+GM12878*
 data_downsampling.sh
 train.ipynb
 output

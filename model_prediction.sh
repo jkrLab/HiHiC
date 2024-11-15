@@ -2,7 +2,9 @@
 
 seed=42
 root_dir=$(pwd)
-gpu_id=-1
+gpu_id=0
+batch_size=16
+
 
 while getopts ":m:c:b:g:r:i:o:" flag; 
 do
@@ -32,8 +34,8 @@ check_file_exists() {
 }
 
 # 필수 인수인 --model 및 --ckpt_file이 제공되었는지 확인합니다.
-if [ -z "$model" ] || [ -z "$ckpt_file" ]; then
-    echo "Error: Both --model and --ckpt_file are required."
+if [ -z "$model" ] || [ -z "$ckpt_file" ] || [ -z "$input_data" ] || [ -z "$output_data_dir" ]; then
+    echo "Error: Missing required arguments. Ensure --model, --ckpt_file, --input_data, and --output_data_dir are provided."
     exit 1
 fi
 
@@ -74,7 +76,7 @@ elif [ ${model} = "SRHiC" ]; then
     python model_SRHiC/src/SRHiC_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 elif [ ${model} = "HiCPlus" ]; then
-    python model_HiCPlus/HiCPlus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+    python model_HiCPlus/hicplus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 elif [ ${model} = "iEnhance" ]; then
     python model_iEnhance/predict-hic.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
