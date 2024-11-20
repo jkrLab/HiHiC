@@ -14,9 +14,10 @@ optional = parser.add_argument_group('optional arguments')
 
 required.add_argument('-i', '--input_data_dir', dest='input_data_dir', type=str, required=True, help='Input data directory: /HiHiC/data')
 required.add_argument('-d', '--input_downsample_dir', dest='input_downsample_dir',type=str, required=True, help='Downsampled input data directory: /HiHiC/data_downsampled_16')
+required.add_argument('-b', '--bin_size', dest='bin_size', type=str, required=True, help='Bin size(10Kb): 10000')
 required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['HiCPlus', 'HiCNN', 'SRHiC', 'DeepHiC', 'HiCARN', 'DFHiC', 'iEnhance'])
 required.add_argument('-g', '--ref_chrom', dest='ref_chrom', type=str, required=True, help='Reference chromosome length: /HiHiC/hg19.txt')
-required.add_argument('-r', '--down_ratio', dest='down_ratio', type=str, required=True, help='Downsampling ratio: 16')
+required.add_argument('-r', '--downsampled_read', dest='downsampled_read', type=str, required=True, help='Downsampled read: 5000000')
 required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Parent directory of output: /data/HiHiC/')
 required.add_argument('-s', '--max_value', dest='max_value', type=str, required=True, default='300', help='Maximum value of chromosome matrix')
 required.add_argument('-n', '--normalization', dest='normalization', type=str, required=True, default='None', help='Normalization method')
@@ -32,9 +33,12 @@ test_set = args.test_set.split()
 chrom_list = args.train_set.split() + args.valid_set.split() + args.test_set.split()
 normalization = args.normalization
 max_value = int(args.max_value) # minmax scaling
+read = args.downsampled_read
+bin_size = args.bin_size
 
 # 크로모좀 별로 matrix 만들기
-def hic_matrix_extraction(file_list, res=10000):
+def hic_matrix_extraction(file_list, res):
+    res=int(res)
     chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{args.ref_chrom}').readlines()}
 
     hr_contacts_dict={}
@@ -81,8 +85,9 @@ def hic_matrix_extraction(file_list, res=10000):
     return hr_contacts_dict,lr_contacts_dict,ct_hr_contacts,ct_lr_contacts
 
 # 매트릭스 자르기
-def crop_hic_matrix_by_chrom(chrom, for_model, thred=200): # thred=2M/resolution
+def crop_hic_matrix_by_chrom(chrom, for_model, bin_size): 
     chr = int(chrom.split('chr')[1])
+    thred=2000000/int(bin_size) # thred=2M/resolution
     distance=[]
     hr_crop_mats=[]
     lr_crop_mats=[]
@@ -126,7 +131,7 @@ def DeepHiC_data_split(chrom_list):
     assert len(chrom_list)>0
     hr_mats,lr_mats,hr_coords=[],[],[]
     for chrom in chrom_list:
-        hr_crop_mats,lr_crop_mats,hr_coordinates,_,_ = crop_hic_matrix_by_chrom(chrom,for_model="DeepHiC",thred=200)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,_,_ = crop_hic_matrix_by_chrom(chrom,for_model="DeepHiC",bin_size=args.bin_size)
         hr_mats.append(hr_crop_mats)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
@@ -141,7 +146,7 @@ def HiCARN_data_split(chrom_list):
     assert len(chrom_list)>0
     hr_mats,lr_mats,hr_coords=[],[],[]
     for chrom in chrom_list:
-        hr_crop_mats,lr_crop_mats,hr_coordinates,_,_ = crop_hic_matrix_by_chrom(chrom,for_model="HiCARN",thred=200)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,_,_ = crop_hic_matrix_by_chrom(chrom,for_model="HiCARN",bin_size=args.bin_size)
         hr_mats.append(hr_crop_mats)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
@@ -157,7 +162,7 @@ def DFHiC_data_split(chrom_list):
     assert len(chrom_list)>0
     hr_mats,lr_mats,hr_coords=[],[],[]
     for chrom in chrom_list:
-        hr_crop_mats,lr_crop_mats,hr_coordinates,_,distance = crop_hic_matrix_by_chrom(chrom,for_model="DFHiC",thred=200)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,_,distance = crop_hic_matrix_by_chrom(chrom,for_model="DFHiC",bin_size=args.bin_size)
         distance_all+=distance
         hr_mats.append(hr_crop_mats)
         lr_mats.append(lr_crop_mats)
@@ -175,7 +180,7 @@ def HiCNN_data_split(chrom_list):
     assert len(chrom_list)>0
     hr_mats,lr_mats,hr_coords,lr_coords=[],[],[],[]
     for chrom in chrom_list:
-        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_= crop_hic_matrix_by_chrom(chrom,for_model="HiCNN",thred=200)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_= crop_hic_matrix_by_chrom(chrom,for_model="HiCNN",bin_size=args.bin_size)
         hr_mats.append(hr_crop_mats)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
@@ -192,7 +197,7 @@ def SRHiC_data_split(chrom_list):
     assert len(chrom_list)>0
     hr_mats,lr_mats,hr_coords,lr_coords=[],[],[],[]
     for chrom in chrom_list:
-        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="SRHiC",thred=200)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="SRHiC",bin_size=args.bin_size)
         hr_mats.append(hr_crop_mats)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
@@ -209,7 +214,7 @@ def HiCPlus_data_split(chrom_list):
     assert len(chrom_list)>0
     hr_mats,lr_mats,hr_coords,lr_coords=[],[],[],[]
     for chrom in chrom_list: 
-        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="HiCPlus",thred=200)
+        hr_crop_mats,lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="HiCPlus",bin_size=args.bin_size)
         hr_mats.append(hr_crop_mats)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
@@ -224,16 +229,16 @@ def HiCPlus_data_split(chrom_list):
 
 
 # 함수 실행
-hr_contacts_dict,lr_contacts_dict,ct_hr_contacts,ct_lr_contacts = hic_matrix_extraction(file_list)
+hr_contacts_dict,lr_contacts_dict,ct_hr_contacts,ct_lr_contacts = hic_matrix_extraction(file_list,args.bin_size)
 print(f"\n  ...Done making whole matrices...", flush=True)
 
 
 save_dir = f'{args.output_dir}data_{args.model}/'
 os.makedirs(save_dir, exist_ok=True)
 
-train_dir = save_dir + f"train_{normalization}_{max_value}/"
-valid_dir = save_dir + f"valid_{normalization}_{max_value}/"
-test_dir = save_dir + f"test_{normalization}_{max_value}/"
+train_dir = save_dir + f"train_{read}_{bin_size}/"
+valid_dir = save_dir + f"valid_{read}_{bin_size}/"
+test_dir = save_dir + f"test_{read}_{bin_size}/"
 os.makedirs(train_dir, exist_ok=True)
 os.makedirs(valid_dir, exist_ok=True)
 os.makedirs(test_dir, exist_ok=True)
@@ -246,9 +251,9 @@ if args.model == "DFHiC":
     hr_mats_test,lr_mats_test,coordinates_test,distance_test = DFHiC_data_split([f'chr{idx}' for idx in test_set])
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} training...", flush=True)
 
-    np.savez(train_dir+f"train_ratio{args.down_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),distance=distance_train)
-    np.savez(valid_dir+f"valid_ratio{args.down_ratio}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),distance=distance_valid)
-    np.savez(test_dir+f"test_ratio{args.down_ratio}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),distance=distance_test)
+    np.savez(train_dir+f"train_{normalization}_{max_value}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),distance=distance_train)
+    np.savez(valid_dir+f"valid_{normalization}_{max_value}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),distance=distance_valid)
+    np.savez(test_dir+f"test_{normalization}_{max_value}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),distance=distance_test)
     
     print(f"train set: {train_set} \nvalid set: {valid_set} \ntest set: {test_set}" , flush=True)
 
@@ -262,9 +267,9 @@ elif args.model == "DeepHiC":
     compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in hr_contacts_dict.items()}
     size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_chrom}').readlines()}
 
-    np.savez(train_dir+f"train_ratio{args.down_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,sizes=size)
-    np.savez(valid_dir+f"valid_ratio{args.down_ratio}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,sizes=size)
-    np.savez(test_dir+f"test_ratio{args.down_ratio}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(train_dir+f"train_{normalization}_{max_value}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(valid_dir+f"valid_{normalization}_{max_value}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(test_dir+f"test_{normalization}_{max_value}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,sizes=size)
     
     print(f"train set: {train_set} \nvalid set: {valid_set} \ntest set: {test_set}" , flush=True)
     
@@ -278,9 +283,9 @@ elif args.model == "HiCARN":
     compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in hr_contacts_dict.items()}
     size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_chrom}').readlines()}
 
-    np.savez(train_dir+f"train_ratio{args.down_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,sizes=size)
-    np.savez(valid_dir+f"valid_ratio{args.down_ratio}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,sizes=size)
-    np.savez(test_dir+f"test_ratio{args.down_ratio}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(train_dir+f"train_{normalization}_{max_value}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(coordinates_train, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(valid_dir+f"valid_{normalization}_{max_value}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(coordinates_valid, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(test_dir+f"test_{normalization}_{max_value}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(coordinates_test, dtype=np.int_),compacts=compacts,sizes=size)
 
     print(f"train set: {train_set} \nvalid set: {valid_set} \ntest set: {test_set}" , flush=True)
     
@@ -291,9 +296,9 @@ elif args.model == "HiCNN":
     hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = HiCNN_data_split([f'chr{idx}' for idx in test_set])
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} training...", flush=True)
 
-    np.savez(train_dir+f"train_ratio{args.down_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
-    np.savez(valid_dir+f"valid_ratio{args.down_ratio}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
-    np.savez(test_dir+f"test_ratio{args.down_ratio}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
+    np.savez(train_dir+f"train_{normalization}_{max_value}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
+    np.savez(valid_dir+f"valid_{normalization}_{max_value}.npz", data=lr_mats_valid,target=hr_mats_valid,inds=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
+    np.savez(test_dir+f"test_{normalization}_{max_value}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
 
     print(f"train set: {train_set} \nvalid set: {valid_set} \ntest set: {test_set}" , flush=True)    
     
@@ -308,13 +313,13 @@ elif args.model == "SRHiC":
     valid = np.concatenate((lr_mats_valid[:,0,:,:], np.concatenate((hr_mats_valid[:,0,:,:],np.zeros((hr_mats_valid.shape[0],12,28))), axis=1)), axis=2)
     test = np.concatenate((lr_mats_test[:,0,:,:], np.concatenate((hr_mats_test[:,0,:,:],np.zeros((hr_mats_test.shape[0],12,28))), axis=1)), axis=2)
 
-    np.savez(train_dir+f"index_train_ratio{args.down_ratio}.npz", inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
-    np.savez(valid_dir+f"index_valid_ratio{args.down_ratio}.npz", inds=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
-    np.savez(test_dir+f"index_test_ratio{args.down_ratio}.npz", inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
+    np.savez(train_dir+f"index_train_{normalization}_{max_value}.npz", inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
+    np.savez(valid_dir+f"index_valid_{normalization}_{max_value}.npz", inds=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
+    np.savez(test_dir+f"index_test_{normalization}_{max_value}.npz", inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
 
-    np.save(train_dir+f"train_ratio{args.down_ratio}", train)
-    np.save(valid_dir+f"valid_ratio{args.down_ratio}", valid)
-    np.save(test_dir+f"test_ratio{args.down_ratio}", test)   
+    np.save(train_dir+f"train_{normalization}_{max_value}", train)
+    np.save(valid_dir+f"valid_{normalization}_{max_value}", valid)
+    np.save(test_dir+f"test_{normalization}_{max_value}", test)   
 
     print(f"train set: {train_set} \nvalid set: {valid_set} \ntest set: {test_set}" , flush=True)    
     
@@ -324,8 +329,8 @@ else:
     hr_mats_test,lr_mats_test,hr_coordinates_test,lr_coordinates_test = HiCPlus_data_split([f'chr{idx}' for idx in test_set])
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} training...", flush=True)
 
-    np.savez(train_dir+f"train_ratio{args.down_ratio}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
-    np.savez(test_dir+f"test_ratio{args.down_ratio}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
+    np.savez(train_dir+f"train_{normalization}_{max_value}.npz", data=lr_mats_train,target=hr_mats_train,inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
+    np.savez(test_dir+f"test_{normalization}_{max_value}.npz", data=lr_mats_test,target=hr_mats_test,inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
     shutil.rmtree(valid_dir)
 
     print(f"train set: {train_set + valid_set} \ntest set: {test_set}" , flush=True)    

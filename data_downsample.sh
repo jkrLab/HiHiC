@@ -1,6 +1,15 @@
 #!/bin/bash
-set -e  # Error handling: stop script on any error
-set -u  # Treat unset variables as an error
+set -euo pipefail  # 안전한 에러 핸들링
+
+# 임시 파일 정리를 위한 함수 정의
+cleanup() {
+  if [[ -f "$temp_file" ]]; then
+    rm -f "$temp_file"
+    echo "  ...Temporary file deleted."
+  fi
+}
+trap cleanup EXIT  # 스크립트 종료 시 cleanup 호출
+
 seed=42
 
 # examples
@@ -31,7 +40,7 @@ echo "      refrence genome : ${ref_genome}"
 echo "      downsampling read : ${downsample_read}"
 echo "      juicertools : ${juicertools}" # path to juicer_tool.jar of docker image
 echo "      normalization method : ${normalization}"
-echo "      binning resolution : ${resolution}"
+echo "      binning size : ${resolution} bp"
 echo "      intra chromosome data : ${saved_in}/ and ${saved_in}_downsampled_${downsample_read}/"
 echo ""
 

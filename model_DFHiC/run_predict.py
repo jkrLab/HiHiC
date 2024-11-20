@@ -27,18 +27,13 @@ required.add_argument('--batch_size', type=int, default=64, metavar='[3]', requi
                       help='input batch size for training (default: 64)')
 required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
                       help='GPU ID for training (defalut: 0)')
-required.add_argument('--down_ratio', type=int, metavar='[5]', required=True, 
-                      help='down sampling ratio')
+required.add_argument('--read', type=int, metavar='[5]', required=True, 
+                      help='downsampled read')
 required.add_argument('--input_data', type=str, metavar='[6]', required=True,
                       help='directory path of training model')
 required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
                       help='directory path for saving enhanced output (default: HiHiC/output_enhanced/)')
 args = parser.parse_args()
-
-if args.model == "HiCANR1":
-    model = "HiCARN_1"
-else:
-    model = "HiCARN_2"
 
 os.makedirs(args.output_data_dir, exist_ok=True) #######################
 ########################################################################
@@ -73,4 +68,4 @@ print(result_data.shape)
 print("***************")
 # np.savetxt('DFHiC_predicted_SR_NONE_result_chr%s.txt'%chrome, result_data)
 th_model = args.ckpt_file.split('/')[-1].split('_')[0]
-np.savez(os.path.join(args.output_data_dir, f'DFHiC_predict_{args.down_ratio}_{th_model}'), data=result_data, inds=input_data)
+np.savez(os.path.join(args.output_data_dir, f'DFHiC_predict_{args.read}_{th_model}'), data=result_data, inds=input_data)

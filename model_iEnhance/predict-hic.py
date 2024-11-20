@@ -26,8 +26,8 @@ required.add_argument('--batch_size', type=int, default=64, metavar='[3]', requi
                       help='input batch size for training (default: 64)')
 required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
                       help='GPU ID for training (defalut: 0)')
-required.add_argument('--down_ratio', type=int, metavar='[5]', required=True, 
-                      help='down sampling ratio')
+required.add_argument('--read', type=int, metavar='[5]', required=True, 
+                      help='downsampled read')
 required.add_argument('--input_data', type=str, metavar='[6]', required=True,
                       help='directory path of training model')
 required.add_argument('--output_data_dir', type=str, default='./output_iEnhance', metavar='[7]', required=True,
@@ -172,7 +172,7 @@ def predict(c):
 
     # np.savez('./' + cell_line_name +'HiC-Predict-chr'+c+'.npz',fakeh = fakemat.numpy(),lhr = lrmat)
     th_model = args.ckpt_file.split('/')[-1].split('_')[0]
-    file = os.path.join(args.output_data_dir, f'iEnhance_predict_chr{str(c)}_{args.down_ratio}_{th_model}.npz')
+    file = os.path.join(args.output_data_dir, f'iEnhance_predict_chr{str(c)}_{args.read}_{th_model}.npz')
     # np.savez(file,fakeh = fakemat.numpy(),lhr = lrmat)
     np.savez(file,data = fakemat.numpy())
 

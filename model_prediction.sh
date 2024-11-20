@@ -2,7 +2,7 @@
 
 seed=42
 root_dir=$(pwd)
-gpu_id=0
+gpu_id=-1
 batch_size=16
 
 
@@ -13,7 +13,7 @@ do
         c) ckpt_file=$OPTARG;;
         b) batch_size=$OPTARG;;
         g) gpu_id=$OPTARG;;
-        r) down_ratio=$OPTARG;; 
+        r) read=$OPTARG;; 
         i) input_data=$OPTARG;;
         o) output_data_dir=$OPTARG;;
         \?)
@@ -58,28 +58,28 @@ echo "      If available, GPU:${gpu_id} will be used for prediction; otherwise, 
 echo ""
 
 if [ ${model} = "HiCARN1" ]; then 
-    python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}  
+    python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}  
 
 elif [ ${model} = "HiCARN2" ]; then 
-    python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+    python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 elif [ ${model} = "DeepHiC" ]; then 
-    python model_DeepHiC/data_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+    python model_DeepHiC/data_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 elif [ ${model} = "HiCNN2" ]; then 
-    python model_HiCNN2/HiCNN2_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+    python model_HiCNN2/HiCNN2_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 elif [ ${model} = "DFHiC" ]; then 
-    python model_DFHiC/run_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+    python model_DFHiC/run_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 elif [ ${model} = "SRHiC" ]; then 
-    python model_SRHiC/src/SRHiC_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+    python model_SRHiC/src/SRHiC_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 elif [ ${model} = "HiCPlus" ]; then
-    python model_HiCPlus/hicplus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+    python model_HiCPlus/hicplus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 elif [ ${model} = "iEnhance" ]; then
-    python model_iEnhance/predict-hic.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+    python model_iEnhance/predict-hic.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 else
     echo "Model name should be one of the DeepHiC, HiCNN2, DFHiC, HiCPlus, HiCARN1, HiCARN2, SRHiC, iEnhance."

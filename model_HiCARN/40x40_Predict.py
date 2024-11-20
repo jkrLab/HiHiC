@@ -31,8 +31,8 @@ required.add_argument('--batch_size', type=int, default=64, metavar='[3]', requi
                       help='input batch size for training (default: 64)')
 required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
                       help='GPU ID for training (defalut: 0)')
-required.add_argument('--down_ratio', type=int, metavar='[5]', required=True, 
-                      help='down sampling ratio')
+required.add_argument('--read', type=int, metavar='[5]', required=True, 
+                      help='downsampled read')
 required.add_argument('--input_data', type=str, metavar='[6]', required=True,
                       help='directory path of training model')
 required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
@@ -164,7 +164,7 @@ if __name__ == '__main__':
     #     save_data(hicarn_hics[key], compacts[key], sizes[key], file)
     # for key in sorted(list(np.unique(indices[:, 0]))):
     th_model = args.ckpt_file.split('/')[-1].split('_')[0]
-    file = os.path.join(args.output_data_dir, f'{args.model}_predict_{args.down_ratio}_{th_model}.npz')
+    file = os.path.join(args.output_data_dir, f'{args.model}_predict_{args.read}_{th_model}.npz')
     np.savez_compressed(file, data=result_data, inds=result_inds)
     print('Saving file:', file)
 

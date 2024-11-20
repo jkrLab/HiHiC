@@ -25,8 +25,8 @@ required.add_argument('--batch_size', type=int, default=64, metavar='[3]', requi
                       help='input batch size for training (default: 64)')
 required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
                       help='GPU ID for training (defalut: 0)')
-required.add_argument('--down_ratio', type=int, metavar='[5]', required=True, 
-                      help='down sampling ratio')
+required.add_argument('--read', type=int, metavar='[5]', required=True, 
+                      help='downsampled read')
 required.add_argument('--input_data', type=str, metavar='[6]', required=True,
                       help='directory path of training model')
 required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
@@ -92,7 +92,7 @@ def predict(test_file,
         # np.savez_compressed(os.path.join(predict_save_dir, f"SRHiC_predict_{low_res}.npz"), data=Out)      
         index_file = os.path.join(os.path.dirname(test_file), "index_" + os.path.split(test_file)[-1][:-4] + ".npz")
         target_inds = np.load(index_file, allow_pickle=True)['inds_target']
-        np.savez_compressed(os.path.join(predict_save_dir, f"SRHiC_predict_{args.down_ratio}_{meta_file.split('/')[-1].split('_')[0]}.npz"), data=Out, inds=target_inds)
+        np.savez_compressed(os.path.join(predict_save_dir, f"SRHiC_predict_{args.read}_{meta_file.split('/')[-1].split('_')[0]}.npz"), data=Out, inds=target_inds)
 
 
         # else:

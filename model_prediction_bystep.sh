@@ -13,7 +13,7 @@ do
         c) ckpt_fold=$OPTARG;;
         b) batch_size=$OPTARG;;
         g) gpu_id=$OPTARG;;
-        r) down_ratio=$OPTARG;; 
+        r) read=$OPTARG;; 
         i) input_data=$OPTARG;;
         o) output_data_dir=$OPTARG;;
         s) step_num=$OPTARG;;
@@ -75,7 +75,7 @@ if [ "$model" = "HiCARN1" ]; then
             remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
-                python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+                python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
             fi
         fi
     done
@@ -89,7 +89,7 @@ elif [ "$model" = "HiCARN2" ]; then
             remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
-                python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+                python model_HiCARN/40x40_Predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
             fi
         fi
     done
@@ -103,7 +103,7 @@ elif [ "$model" = "DeepHiC" ]; then
             remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
-                python model_DeepHiC/data_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+                python model_DeepHiC/data_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
             fi        
         fi
     done
@@ -117,7 +117,7 @@ elif [ "$model" = "HiCNN2" ]; then
             remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
-                python model_HiCNN2/HiCNN2_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+                python model_HiCNN2/HiCNN2_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
             fi
         fi
     done
@@ -131,7 +131,7 @@ elif [ "$model" = "DFHiC" ]; then
             remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
-                python model_DFHiC/run_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+                python model_DFHiC/run_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
             fi
         fi
     done
@@ -145,7 +145,7 @@ elif [ "$model" = "SRHiC" ]; then
             remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
-                python model_SRHiC/src/SRHiC_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+                python model_SRHiC/src/SRHiC_predict.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
             fi
         fi
     done
@@ -159,7 +159,7 @@ elif [ "$model" = "HiCPlus" ]; then
             remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
-                python model_HiCPlus/HiCPlus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+                python model_HiCPlus/HiCPlus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
             fi
         fi
     done
@@ -173,7 +173,7 @@ elif [ "$model" = "iEnhance" ]; then
             remainder=$((10#$ckpt_num % step_num))
 
             if [ "$remainder" -eq 0 ]; then
-                python model_iEnhance/predict-hic.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --down_ratio ${down_ratio} --input_data ${input_data} --output_data_dir ${output_data_dir}
+                python model_iEnhance/predict-hic.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_fold}/${ckpt}" --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
             fi
         fi
     done

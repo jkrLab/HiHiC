@@ -13,6 +13,7 @@ required = parser.add_argument_group('required arguments')
 optional = parser.add_argument_group('optional arguments')
 
 required.add_argument('-i', '--input_data_dir', dest='input_data_dir', type=str, required=True, help='Input data directory: /HiHiC/data')
+required.add_argument('-b', '--bin_size', dest='bin_size', type=str, required=True, help='Bin size(10Kb): 10000')
 required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['HiCPlus', 'HiCNN', 'SRHiC', 'DeepHiC', 'HiCARN', 'DFHiC', 'iEnhance'])
 required.add_argument('-g', '--ref_chrom', dest='ref_chrom', type=str, required=True, help='Reference chromosome length: /HiHiC/hg19.txt')
 required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Parent directory of output: /data/HiHiC/')
@@ -25,9 +26,11 @@ file_list = os.listdir(args.input_data_dir)
 chrom_list = [file.split('_')[0] for file in file_list]
 normalization = args.normalization
 max_value = int(args.max_value) # minmax scaling
+bin_size = args.bin_size
 
 # 크로모좀 별로 matrix 만들기
-def hic_matrix_extraction(file_list, res=10000):
+def hic_matrix_extraction(file_list, bin_size):
+    res=int(bin_size)
     chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{args.ref_chrom}').readlines()} # GM12878 Hg19
 
     contacts_dict={}
@@ -53,8 +56,9 @@ def hic_matrix_extraction(file_list, res=10000):
     print("\n  ...Done making whole contact map by each chromosomes...", flush=True)
     return contacts_dict,ct_contacts
 
-def crop_hic_matrix_by_chrom(chrom, for_model, thred=200): # thred=2M/resolution 
+def crop_hic_matrix_by_chrom(chrom, for_model, bin_size): 
     chr = int(chrom.split('chr')[1])
+    thred=2000000/int(bin_size) # thred=2M/resolution 
     distance=[] # DFHiC
     lr_crop_mats=[]
     hr_coordinates=[]    
@@ -63,31 +67,25 @@ def crop_hic_matrix_by_chrom(chrom, for_model, thred=200): # thred=2M/resolution
     if row<=thred or col<=thred: # bin 수가 200 보다 작으면 False
         print('HiC matrix size wrong!', flush=True)
         sys.exit()
-    def quality_control(mat,thred=0.05):
-        if len(mat.nonzero()[0])<thred*mat.shape[0]*mat.shape[1]: # 숫자 있는 셀의 수가 전체의 5% 미만이면 False (분석 가능한 수준 설정)
-            return False
-        else:
-            return True
-    all = 0
-    okay = 0    
+    # def quality_control(mat,thred=0.05):
+    #     if len(mat.nonzero()[0])<thred*mat.shape[0]*mat.shape[1]: # 숫자 있는 셀의 수가 전체의 5% 미만이면 False (분석 가능한 수준 설정)
+    #         return False
+    #     else:
+    #         return True 
     for idx1 in range(0,row-40,28):
         for idx2 in range(0,col-40,28):
-            all=all+1
-            if abs(idx1-idx2)<thred: # 대각선 근처 데이터만 사용
-                if quality_control(contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]):
-                    okay=okay+1
-                    distance.append([idx1-idx2,chrom]) # DFHiC
-                    lr_coordinates.append([chr, row, idx1, idx2]) # row:HiCARN                    
-                    lr_contact = contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]
-                    if for_model in ["HiCARN", "DeepHiC", "DFHiC"]:
-                        hr_coordinates.append([chr, row, idx1, idx2])
-                    elif for_model in ["HiCNN", "HiCPlus"]: # output mat:28*28
-                        hr_coordinates.append([chr, row, idx1+6, idx2+6])
-                    else:
-                        assert for_model in ["SRHiC"]
-                        hr_coordinates.append([chr, row, idx1+6, idx2+6]) 
-                    lr_crop_mats.append(lr_contact)
-    print(f"\n{chrom} all : {all}, 95% zero value: {all-okay}, ===> {okay}\n")
+             if abs(idx1-idx2)<thred:
+                distance.append([idx1-idx2,chrom]) # DFHiC
+                lr_coordinates.append([chr, row, idx1, idx2]) # row:HiCARN                    
+                lr_contact = contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]
+                if for_model in ["HiCARN", "DeepHiC", "DFHiC"]:
+                    hr_coordinates.append([chr, row, idx1, idx2])
+                elif for_model in ["HiCNN", "HiCPlus"]: # output mat:28*28
+                    hr_coordinates.append([chr, row, idx1+6, idx2+6])
+                else:
+                    assert for_model in ["SRHiC"]
+                    hr_coordinates.append([chr, row, idx1+6, idx2+6]) 
+                lr_crop_mats.append(lr_contact)
     lr_crop_mats = np.concatenate([item[np.newaxis,:] for item in lr_crop_mats],axis=0)
     return lr_crop_mats,hr_coordinates,lr_coordinates,distance     
 
@@ -97,7 +95,7 @@ def DeepHiC_data_split(chrom_list):
     assert len(chrom_list)>0
     lr_mats,hr_coords=[],[]
     for chrom in chrom_list:
-        lr_crop_mats,hr_coordinates,_,_ = crop_hic_matrix_by_chrom(chrom,for_model="DeepHiC",thred=200)
+        lr_crop_mats,hr_coordinates,_,_ = crop_hic_matrix_by_chrom(chrom,for_model="DeepHiC",bin_size=args.bin_size)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
     lr_mats = np.concatenate(lr_mats,axis=0)
@@ -107,9 +105,9 @@ def DeepHiC_data_split(chrom_list):
 
 def HiCARN_data_split(chrom_list):
     assert len(chrom_list)>0
-    lr_mats,hr_coords=[],[],[]
+    lr_mats,hr_coords=[],[]
     for chrom in chrom_list:
-        lr_crop_mats,hr_coordinates,_,_ = crop_hic_matrix_by_chrom(chrom,for_model="HiCARN",thred=200)
+        lr_crop_mats,hr_coordinates,_,_ = crop_hic_matrix_by_chrom(chrom,for_model="HiCARN",bin_size=args.bin_size)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
     lr_mats = np.concatenate(lr_mats,axis=0)
@@ -122,7 +120,7 @@ def DFHiC_data_split(chrom_list):
     assert len(chrom_list)>0
     lr_mats,hr_coords=[],[]
     for chrom in chrom_list:
-        lr_crop_mats,hr_coordinates,_,distance = crop_hic_matrix_by_chrom(chrom,for_model="DFHiC",thred=200)
+        lr_crop_mats,hr_coordinates,_,distance = crop_hic_matrix_by_chrom(chrom,for_model="DFHiC",bin_size=args.bin_size)
         distance_all+=distance
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
@@ -136,7 +134,7 @@ def HiCNN_data_split(chrom_list):
     assert len(chrom_list)>0
     lr_mats,hr_coords,lr_coords=[],[],[]
     for chrom in chrom_list:
-        lr_crop_mats,hr_coordinates,lr_coordinates,_= crop_hic_matrix_by_chrom(chrom,for_model="HiCNN",thred=200)
+        lr_crop_mats,hr_coordinates,lr_coordinates,_= crop_hic_matrix_by_chrom(chrom,for_model="HiCNN",bin_size=args.bin_size)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
         lr_coords.append(lr_coordinates)
@@ -150,7 +148,7 @@ def SRHiC_data_split(chrom_list):
     assert len(chrom_list)>0
     lr_mats,hr_coords,lr_coords=[],[],[]
     for chrom in chrom_list:
-        lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="SRHiC",thred=200)
+        lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="SRHiC",bin_size=args.bin_size)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
         lr_coords.append(lr_coordinates)
@@ -164,7 +162,7 @@ def HiCPlus_data_split(chrom_list):
     assert len(chrom_list)>0
     lr_mats,hr_coords,lr_coords=[],[],[]
     for chrom in chrom_list: 
-        lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="HiCPlus",thred=200)
+        lr_crop_mats,hr_coordinates,lr_coordinates,_ = crop_hic_matrix_by_chrom(chrom,for_model="HiCPlus",bin_size=args.bin_size)
         lr_mats.append(lr_crop_mats)
         hr_coords.append(hr_coordinates)
         lr_coords.append(lr_coordinates)
@@ -176,7 +174,7 @@ def HiCPlus_data_split(chrom_list):
 
 
 # 함수 실행
-contacts_dict,ct_contacts = hic_matrix_extraction(file_list)
+contacts_dict,ct_contacts = hic_matrix_extraction(file_list, bin_size)
 print(f"\n  ...Done making whole matrices...", flush=True)
 
 
@@ -187,45 +185,45 @@ os.makedirs(save_dir, exist_ok=True)
 # 모델이 원하는 포멧으로 저장
 if args.model == "DFHiC":
     mats,coordinates,distance = DFHiC_data_split(chrom_list)
-    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} training...", flush=True)
-    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}.npz", data=mats, inds=np.array(coordinates, dtype=np.int_),distance=distance)
+    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
+    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}.npz", data=mats, inds=np.array(coordinates, dtype=np.int_),distance=distance)
 
 
 elif args.model == "DeepHiC":      
     mats,coordinates = DeepHiC_data_split(chrom_list)
-    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} training...", flush=True)
+    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
     compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in contacts_dict.items()}
     size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_chrom}').readlines()}
-    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}.npz", data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}.npz", data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
     
     
 elif args.model == "HiCARN":          
     mats,coordinates = HiCARN_data_split(chrom_list)
-    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} training...", flush=True)
+    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
     compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in contacts_dict.items()}
     size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_chrom}').readlines()}
-    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}.npz", data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
+    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}.npz", data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
    
 
 elif args.model == "HiCNN":     
     mats,hr_coords,coords = HiCNN_data_split(chrom_list)
-    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} training...", flush=True)
-    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}.npz", data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
+    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
+    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}.npz", data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
 
 
 elif args.model == "SRHiC":  
     mats,hr_coords,coords = SRHiC_data_split(chrom_list)
-    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} training...", flush=True)
+    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
     mats = mats[:,0,:,:]
-    np.savez(save_dir+f"index_for_enhancement_{args.model}{args.explain}.npz", inds=np.array(coords, dtype=np.int_), inds_target=np.array(hr_coords, dtype=np.int_))
-    np.save(save_dir+f"for_enhancement_{args.model}{args.explain}", mats)
+    np.savez(save_dir+f"index_for_enhancement_{args.model}{args.explain}_{bin_size}.npz", inds=np.array(coords, dtype=np.int_), inds_target=np.array(hr_coords, dtype=np.int_))
+    np.save(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}", mats)
     
 
 else:
     assert args.model == "HiCPlus", "    model name is not correct "
     mats,hr_coords,coords = HiCPlus_data_split(chrom_list)
-    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} training...", flush=True)
-    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}.npz", data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
+    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
+    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}.npz", data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
 
     
 print(f"\n  ...Generated data is saved in {save_dir}...\n", flush=True)
