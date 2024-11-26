@@ -1,6 +1,8 @@
 #!/bin/bash
 seed=42
 root_dir=$(pwd)
+
+# example)
 # bash data_generate.sh -i ./data_KR -d ./data_KR_downsampled_16 -b 10000 -m iEnhance -g ./hg19.txt -r 5000000 -o ./ -s 300 -n KR -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
 
 while getopts ":i:d:b:m:g:r:o:s:n:t:v:p:" flag; do

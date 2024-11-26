@@ -35,6 +35,9 @@ required.add_argument('--output_data_dir', type=str, default='./output_enhanced'
                       help='directory path for saving enhanced output (default: HiHiC/output_enhanced/)')
 args = parser.parse_args()
 
+batch_size=args.batch_size
+test_data = np.load(args.input_data, allow_pickle=True)['data']
+num_samples = test_data.shape[0]
 os.makedirs(args.output_data_dir, exist_ok=True) #######################
 ########################################################################
 
@@ -47,7 +50,6 @@ input_matrix = tf.placeholder('float32', [None, None, None, 1], name='matrix_inp
 net = DFHiC(input_matrix, is_train=False, reuse=False)   
 
 # test_data=np.loadtxt("GM12878/intra_LR/LR_10k_NONE.chr%s"%chrome)
-test_data = np.load(args.input_data, allow_pickle=True)['data']
 input_data = np.load(args.input_data, allow_pickle=True)['inds']
 
 # lr_data=test_data.reshape((1,test_data.shape[0],test_data.shape[1],1))
@@ -60,7 +62,17 @@ sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True, log_device_pl
 tl.layers.initialize_global_variables(sess)
 # tl.files.load_and_assign_npz(sess=sess, name=model_path, network=net)
 tl.files.load_and_assign_npz_dict(name=args.ckpt_file, sess=sess)
-sr_matrix = sess.run(net.outputs, {input_matrix: lr_data})
+
+# sr_matrix = sess.run(net.outputs, {input_matrix: lr_data})
+##############################################################
+output_batches = [] ############################# by HiHiC ###
+for start in range(0, num_samples, batch_size):
+    end = min(start + batch_size, num_samples)
+    batch = lr_data[start:end]
+    sr_batch = sess.run(net.outputs, {input_matrix: batch})
+    output_batches.append(sr_batch)
+sr_matrix =  np.concatenate(output_batches, axis=0)###########
+##############################################################
 print(sr_matrix.shape)
 # result_data=sr_matrix.reshape((sr_matrix.shape[1],sr_matrix.shape[2]))
 result_data = sr_matrix

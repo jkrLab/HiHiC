@@ -182,9 +182,11 @@ loss_trend.png
 *.ipynb
 *_copy.py
 *_loss_trend.png
+*.html
 *backup*
 TAD*
-temp_*
+temp/
+
 predicted_*
 GM12878*
 data_downsampling.sh

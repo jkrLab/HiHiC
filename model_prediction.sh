@@ -2,11 +2,11 @@
 
 seed=42
 root_dir=$(pwd)
-gpu_id=-1
+gpu_id=0		
 batch_size=16
 
 
-while getopts ":m:c:b:g:r:i:o:" flag; 
+while getopts ":m:c:b:g:r:i:o:e:" flag; 
 do
     case $flag in
         m) model=$OPTARG;;
@@ -16,6 +16,7 @@ do
         r) read=$OPTARG;; 
         i) input_data=$OPTARG;;
         o) output_data_dir=$OPTARG;;
+	    e) explain=$OPTARG;;
         \?)
         echo "Invalid option: -$OPTARG" >&2
         exit 1;;
@@ -35,7 +36,7 @@ check_file_exists() {
 
 # 필수 인수인 --model 및 --ckpt_file이 제공되었는지 확인합니다.
 if [ -z "$model" ] || [ -z "$ckpt_file" ] || [ -z "$input_data" ] || [ -z "$output_data_dir" ]; then
-    echo "Error: Missing required arguments. Ensure --model, --ckpt_file, --input_data, and --output_data_dir are provided."
+    echo "Error: Missing required arguments. Ensure -m $model, -c $ckpt_file, -i $input_data, and -o $output_data_dir are provided."
     exit 1
 fi
 
@@ -79,7 +80,7 @@ elif [ ${model} = "HiCPlus" ]; then
     python model_HiCPlus/hicplus/pred_chromosome.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
 
 elif [ ${model} = "iEnhance" ]; then
-    python model_iEnhance/predict-hic.py --root_dir ${root_dir} --model ${model} --ckpt_file ${ckpt_file} --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir}
+    python model_iEnhance/predict-hic.py --root_dir ${root_dir} --model ${model} --ckpt_file "${ckpt_file}" --batch_size ${batch_size} --gpu_id ${gpu_id} --read ${read} --input_data ${input_data} --output_data_dir ${output_data_dir} --explain ${explain}
 
 else
     echo "Model name should be one of the DeepHiC, HiCNN2, DFHiC, HiCPlus, HiCARN1, HiCARN2, SRHiC, iEnhance."

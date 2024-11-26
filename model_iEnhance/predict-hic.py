@@ -15,6 +15,7 @@ import os, argparse
 parser = argparse.ArgumentParser(description='iEnhance prediction process')
 parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
+optional = parser.add_argument_group('optional arguments')
 
 required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
                       help='HiHiC directory')
@@ -32,12 +33,15 @@ required.add_argument('--input_data', type=str, metavar='[6]', required=True,
                       help='directory path of training model')
 required.add_argument('--output_data_dir', type=str, default='./output_iEnhance', metavar='[7]', required=True,
                       help='directory path for saving enhanced output (default: HiHiC/output_iEnhance/)')
+optional.add_argument('--explain', type=str, required=False, default='', help='explaination about data')
 args = parser.parse_args()
-
 
 model = Construct() 
 state_dict = t.load(args.ckpt_file, map_location = t.device('cpu'))
-model.load_state_dict(state_dict) 
+model.load_state_dict(state_dict)
+
+device = t.device(f'cuda:{args.gpu_id}' if t.cuda.is_available() else 'cpu')
+model.to(device)
 
 input_data = dict(np.load(args.input_data, allow_pickle=True))
 chrs_list = input_data.keys()
@@ -53,6 +57,8 @@ chrs_list = input_data.keys()
 model.eval()
 
 def Combine(d_size,jump,lens,hic_m):
+
+    hic_m = hic_m.to(device) #### by HiHiC
 
     Hrmat = t.zeros_like(hic_m,dtype=t.float32)
     last_col_start = -1
@@ -171,10 +177,7 @@ def predict(c):
     fakemat = Combine(150,50,lrmat.shape[0],hic_m)
 
     # np.savez('./' + cell_line_name +'HiC-Predict-chr'+c+'.npz',fakeh = fakemat.numpy(),lhr = lrmat)
-    th_model = args.ckpt_file.split('/')[-1].split('_')[0]
-    file = os.path.join(args.output_data_dir, f'iEnhance_predict_chr{str(c)}_{args.read}_{th_model}.npz')
-    # np.savez(file,fakeh = fakemat.numpy(),lhr = lrmat)
-    np.savez(file,data = fakemat.numpy())
+    return fakemat
 
 if __name__ == '__main__':
     # pool_num = len(chrs_list) if multiprocessing.cpu_count() > len(chrs_list) else multiprocessing.cpu_count()
@@ -182,9 +185,18 @@ if __name__ == '__main__':
     start = time.time()
     # print(f'Start a multiprocess pool with process_num = {pool_num}')
     # pool = multiprocessing.Pool(pool_num)
+    # pool.apply_async(func = predict,args=(chr,))
+    
+    ######################### by HiHiC ####
+    th_model = args.ckpt_file.split('/')[-1].split('_')[0]
+    file = os.path.join(args.output_data_dir, f"{args.explain}iEnhance_predict_{args.read}_{th_model}_wholeMats.npz")
+    chr_dict = {}
     for chr in chrs_list:
-        # pool.apply_async(func = predict,args=(chr,))
-        predict(chr) ###### by HiHiC
+        chr_mat = predict(chr)
+        chr_dict[chr] = chr_mat.cpu().numpy()
+ 
+    np.savez(file, **chr_dict)
+    #######################################
     # pool.close()
     # pool.join()
-    print(f'All predicting processes done. Running cost is {(time.time()-start)/60:.1f} min.')
+    print(f'All predicting processes done. Running cost is {(time.time()-start)/62:.1f} min.')
