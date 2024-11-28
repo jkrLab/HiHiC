@@ -65,23 +65,44 @@ cd /path/to/HiHiC/directory
 2. prepare HiC-sequencing data and make Hi-C contact map
 
 
+* Download data from https
+
+
 ```
-bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz GSM1551550_HIC001 hg19 2000000 ./juicer_tools.jar KR data
+bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz GSM1551550_HIC001 ./hg19.txt 2000000 ./juicer_tools.jar KR 10000 ./data_GM12878
 ```
 >We download and process GM12879 cell line, which is aligned based on hg19.
->You can modify the arguments, such as the data download URL, the file name to save, the prefix of the reference genome file, 
->the read count to sample, the path to the Juicer tools, the normalization method to apply (NONE, KR, VC, etc.), resolution,
->and the output directory name, as needed, in the bash script.
+>You can modify the arguments, such as **data download URL, file name to save, path of reference genome file,** 
+>**read number to sample, path to Juicer tools, normalization method to apply (NONE, KR, VC, etc.), resolution,**
+>and **output directory name**, as needed, in the bash script.
 >If you put these arguments in the command line, these should be placed in the order as above: 
-><data_download_url>, <file_name>, <ref_genome>, <downsampled_read>, <juicertools>, <normalization>, <resolution>, <saved_in>.
+>data download URL, file name to save, reference genome file, read number to sample, path to Juicer tools, normalization method, resolution, output directory name
 
 
->If the total number of reads in the downloaded file is less than or equal to the requested downsampled read count, 
+>If the total number of reads in the downloaded file is less than or equal to the downsampling read number, 
+>the downsampling step and its subsequent processes will be skipped.
+>If you don't want to perform downsampling, use a larger number for the read count parameter.
+>Output: 
+> * Original data: ./{output_directory_name}/
+> * Downsampled data (if applicable): ./{output_data_directory}_downsampled_{read_number}/
+
+
+* Own data to downsampling
+
+
+```
+bash data_downsample.sh GSM1551550_HIC001 ./hg19.txt 2000000 ./juicer_tools.jar KR 10000 ./data_GM12878
+```
+>If You have your own mapped read data(.txt.gz), modify the arguments, such as **prefix of reads.txt.gz, path of reference genome file, read number to sample, path to Juicer tools, normalization method to apply, resolution,**
+>and **output directory name**, as needed, in the bash script.
+>If you put these arguments in the command line, these should be placed in the order as above: 
+>prefix of reads.txt.gz, reference genome file, read number to sample, path to Juicer tools, normalization method, resolution, output directory name
+
+
+>If the total number of reads in the downloaded file is less than or equal to the downsampling read number, 
 >the downsampling step and its subsequent processes will be skipped.
 >Output: 
-> * Original data: ./<saved_in>/
-> * Downsampled data (if applicable): ./<saved_in>_downsampled_<downsampled_read>/
-
+> * Downsampled data (if applicable): ./{output_data_directory}_downsampled_{read_number}/
 
 
 
@@ -92,7 +113,7 @@ bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM155
 
 
 ```
-bash data_generate_for_training.sh -i ./data -d ./data_downsampled_16 -b 10000 -m DFHiC -g ./hg19.txt -r 2000000 -o ./ -n KR -s 300 -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
+bash data_generate_for_training.sh -i ./data_GM12878 -d ./data_GM12878_downsampled_2000000 -b 10000 -m DFHiC -g ./hg19.txt -r 2000000 -o ./ -n KR -s 300 -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
 ```
 >You should specify **required arguments** as above. This Python code needs a chromosome length of reference genome **.txt** file like **hg19.txt and mm9.chrom.sizes** in the HiHiC directory. 
 >Note: In the case of HiCPlus, if validation chromosome is provided, it will be automatically incorporated into the training set.
@@ -105,7 +126,7 @@ bash data_generate_for_training.sh -i ./data -d ./data_downsampled_16 -b 10000 -
 | `-m` | Model name that you want to use (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, HiCPlus, and iEnhance) | `DFHiC` |
 | `-g` | Reference genome length file, your data is based on | `./hg19.txt` |
 | `-r` | Number of the read count | `2000000` |
-| `-o` | Parent directory path for saving output (Child directory named as the model name will be generated under this.) | `./` |
+| `-o` | Parent directory path for saving output | `./` |
 | `-s` | Max value of Hi-C matrix | `300` |
 | `-n` | Normalization of Hi-C matrix | `KR` |
 | `-t` | Chromosome numbers of training set | `"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"` |
@@ -113,11 +134,17 @@ bash data_generate_for_training.sh -i ./data -d ./data_downsampled_16 -b 10000 -
 | `-p` | Chromosome numbers of prediction set | `"18 19 20 21 22"` |
 
 
+>Output: 
+> * {output_data_directory}/data_{model}/train_{read_number}_{resolution}/
+> * {output_data_directory}/data_{model}/valid_{read_number}_{resolution}/
+> * {output_data_directory}/data_{model}/test_{read_number}_{resolution}/
+
+
 * Input matrix for model prediction (Enhancement with pretrained model)
 
 
 ```
-bash data_generate_for_prediction.sh -i ./data -b 10000 -m DFHiC -g ./hg19.txt -o ./ -n KR -s 300
+bash data_generate_for_prediction.sh -i ./data_GM12878_2000000 -b 10000 -m DFHiC -g ./hg19.txt -o ./ -n KR -s 300
 ```
 | Argument | Description | Example |
 |----------|-------------|---------|
@@ -128,6 +155,10 @@ bash data_generate_for_prediction.sh -i ./data -b 10000 -m DFHiC -g ./hg19.txt -
 | `-o` | Parent directory path for saving output (Child directory named as the model name will be generated under this.) | `./` |
 | `-s` | Max value of Hi-C matrix | `300` |
 | `-n` | Normalization of Hi-C matrix | `KR` |
+
+
+>Output: 
+> * ./data_{model}/for_enhancement_{model}_{resolution}
 
 
 
@@ -195,7 +226,7 @@ cd /path/to/HiHiC/directory
 
 
 ```
-bash model_train.sh -m DFHiC -e 500 -b 16 -g 0 -o ./checkpoints_DFHiC -l ./log -t ./data_DFHiC/train -v ./data_DFHiC/valid
+bash model_train.sh -m DFHiC -e 500 -b 16 -g 0 -o ./checkpoints_DFHiC -l ./log -t ./data_DFHiC/train_2000000_10000 -v ./data_DFHiC/valid_2000000_10000
 ```
 >You should specify the required arguments of the model you'd like to use, such as **model name, training epoch, batch size, GPU ID, output model directory, loss log directory, training data directory**, and **validation data directory**. 
 
@@ -210,10 +241,13 @@ bash model_train.sh -m DFHiC -e 500 -b 16 -g 0 -o ./checkpoints_DFHiC -l ./log -
 | `-g` | Number of GPU ID  | `0` |
 | `-o` | Directory path of output models  | `./checkpoints_DFHiC` |   
 | `-l` | Directory path of training log | `./log` |
-| `-t` | Directory path of input training data | `./data_DFHiC/train_KR_300` | 
-| `-v` | Directory path of input validation data | `./data_DFHiC/valid_KR_300` |   
+| `-t` | Directory path of input training data | `./data_DFHiC/train_2000000_10000` | 
+| `-v` | Directory path of input validation data | `./data_DFHiC/valid_2000000_10000` |   
 
 
+>Output: 
+> * Model checkpoints: ./{output_model_directory}/{number_of_epoch}_{elapsed_time}_{loss_value}
+> * Log about memory usage: ./log/max_memory_usage.log
 
 
 
@@ -250,9 +284,13 @@ bash model_prediction.sh -m DFHiC -c ./checkpoints_DFHiC/00005_0.02.38_0.0006605
 | `-g` | Number of GPU ID  | `0` |
 | `-r` | Number of the read count | `2000000` |
 | `-i` | File path of input data | `./data_DFHiC/test/test_ratio16.npz` |
-| `-o` | Directory path of output ehnhanced data | `./output_DFHiC` |
+| `-o` | Directory path of output enhanced data | `./output_DFHiC` |
 
 > *Without training, you can use pre-trained models in our platform. The pre-trained model weights can be downloaded via FTP.*
+
+
+>Output: 
+> * ./output_data_directory/
 
 
 
@@ -272,3 +310,7 @@ python data_make_whole.py -m DFHiC -i ./output_DFHiC/DFHiC_predict_2000000_00005
 | `-m` | Name of the model (One of HiCARN, DeepHiC, HiCNN, HiCSR, DFHiC, HiCPlus, and iEnhance) | `DFHiC` |
 | `-i` | File path of submatrix data (output of model prediction) | `./output_DFHiC/DFHiC_predict_2000000_00005.npz` |
 | `-o` | Directory path to save chromosome matrix | `./predicted_byDFHiC/` |
+
+
+>Output: 
+> * ./output_data_directory/

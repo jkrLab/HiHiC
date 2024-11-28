@@ -8,12 +8,11 @@ ckpt_HiCARN1="/project/HiHiC/checkpoints_HiCARN1/00008_0.09.13_0.0009015936"
 ckpt_HiCARN2="/project/HiHiC/checkpoints_HiCARN2/00010_0.19.04_0.0009090670"
 ckpt_HiCNN2="/project/HiHiC/checkpoints_HiCNN/00021_0.51.09_0.0009432364"
 ckpt_SRHiC="/project/HiHiC/checkpoints_SRHiC/00238_0.54.40_0.0007267343-496881.meta"
-# ckpt_iEnhance="/project/HiHiC/checkpoints_iEnhance/00024_13.47.29_0.0000284136"
 ckpt_iEnhance="/project/HiHiC/checkpoints_iEnhance/00282_6 days, 8.56.43_0.0000446402"
 ckpt_HiCPlus="/project/HiHiC/checkpoints_HiCPlus/01000_0.39.06_0.0041882079"
 
-models=("iEnhance")  # tensorflow: "SRHiC" "DFHiC" / torch: "HiCARN1" "HiCARN2" "HiCNN2" "DeepHiC" "iEnhance" "HiCPlus"
-reads=("5000000" "4000000" "3000000" "2000000")
+models=("SRHiC" "DFHiC" "HiCARN1" "HiCARN2" "HiCNN2" "DeepHiC" "iEnhance" "HiCPlus")  # tensorflow: "SRHiC" "DFHiC" / torch: "HiCARN1" "HiCARN2" "HiCNN2" "DeepHiC" "iEnhance" "HiCPlus"
+reads=("5000000" "4000000" "3000000" "2000000") # "5000000" "4000000" "3000000" "2000000"
 
 for model in "${models[@]}"; do
     ckpt_var="ckpt_${model}"

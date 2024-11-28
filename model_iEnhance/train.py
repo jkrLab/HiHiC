@@ -238,7 +238,7 @@ jdata = MyData_valid(os.listdir(args.valid_data_dir))
 train_loader = DataLoader(idata,shuffle=True,batch_size=cfg.batch_size,drop_last = True)
 val_loader = DataLoader(jdata,shuffle=True,batch_size=cfg.batch_size)
 
-##############################################################################################################################
+############################################################################################################## by HiHiC ######
 initial_train_loss = compute_initial_loss(mdl, train_loader, device) #########################################################
 initial_valid_loss = compute_initial_loss(mdl, val_loader, device)
 train_epoch.append(int(0))

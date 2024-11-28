@@ -76,7 +76,7 @@ def hic_matrix_extraction(file_list, res):
                 lr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
         lr_contact_matrix+= lr_contact_matrix.T - np.diag(lr_contact_matrix.diagonal())
         if np.isnan(lr_contact_matrix).any():
-            print(f'lr_{chrom} has nan value!', flush=True) 
+            print(f'lr_{chrom} has nan value!', flush=True)
         lr_contacts_dict[chrom] = scaler.fit_transform(np.minimum(max_value, lr_contact_matrix)) # (0,300) >> (0,1)
 
     ct_hr_contacts={item:sum(sum(hr_contacts_dict[item])) for item in hr_contacts_dict.keys()} # read 수
@@ -235,7 +235,6 @@ print(f"\n  ...Done making whole matrices...", flush=True)
 
 save_dir = f'{args.output_dir}data_{args.model}/'
 os.makedirs(save_dir, exist_ok=True)
-
 train_dir = save_dir + f"train_{read}_{bin_size}/"
 valid_dir = save_dir + f"valid_{read}_{bin_size}/"
 test_dir = save_dir + f"test_{read}_{bin_size}/"

@@ -1,7 +1,15 @@
 #!/bin/bash
-set -e  # Error handling: stop script on any error
-set -u  # Treat unset variables as an error
+set -euo pipefail
 seed=42
+
+# 임시 파일 정리를 위한 함수 정의
+cleanup() {
+  if [[ -f "$temp_file" ]]; then
+    rm -f "$temp_file"
+    echo "  ...Temporary file deleted."
+  fi
+}
+trap cleanup EXIT  # 스크립트 종료 시 cleanup 호출
 
 # examples
 # bash data_download_downsample.sh https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz GSM1551550_HIC001 hg19 5000000 ./juicer_tools.jar KR 10000 data_GM12878
@@ -88,11 +96,14 @@ fi
 if [[ "$ref_genome" == hg* ]]; then
   start=1
   end=23
+  echo "Reference genome: ${ref_genome}: chr${start} - chr${end}"
 elif [[ "$ref_genome" == mm* ]]; then
   start=1
   end=20
-else
   echo "Reference genome: ${ref_genome}: chr${start} - chr${end}"
+else
+  echo "Unknown reference genome"
+  exit 1
 fi
 
 # 결과를 저장할 폴더 생성​​

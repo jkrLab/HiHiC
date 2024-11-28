@@ -48,8 +48,8 @@ def hic_matrix_extraction(file_list, bin_size):
             else:
                 lr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
         lr_contact_matrix+= lr_contact_matrix.T - np.diag(lr_contact_matrix.diagonal())
-        if np.isnan(lr_contact_matrix).any(): ###############
-            print(f'lr_{chr} has nan value!', flush=True) ###############
+        if np.isnan(lr_contact_matrix).any(): 
+            print(f'lr_{chr} has nan value!', flush=True) 
         contacts_dict[chr] = scaler.fit_transform(np.minimum(max_value, lr_contact_matrix)) # (0,300) >> (0,1)
         print(chr,":",contacts_dict[chr].shape)
     ct_contacts={item:sum(sum(contacts_dict[item])) for item in contacts_dict.keys()} # read 수

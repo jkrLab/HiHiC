@@ -41,7 +41,7 @@ for dir in "${dirs}"/; do
         fi
     done
 done
-# 파일 이름 변경
+파일 이름 변경
 target_dir="/project/HiHiC/data_target"
 for file in "${target_dir}"/*.npz; do
     base=$(basename "$file")
@@ -82,7 +82,6 @@ target_dir="./targeted_data_downsample"
 for file in "${target_dir}"/*.npz; do
     base=$(basename "$file")
     new_name=$(echo "$base" | sed 's/for_enhancement_[^_]*_//')
-
     if [[ "$base" != "$new_name" ]]; then
         mv "$file" "${target_dir}/${new_name}"
     fi

@@ -67,7 +67,7 @@ echo ""
 # Python 스크립트 비버퍼링 모드로 실행
 if [ "${model}" = "iEnhance" ]; then
     python -u model_iEnhance/divide-data.py -a "Train" -i "${input_data_dir}" -d "${input_downsample_dir}" -b "${bin_size}" -m "${model}" -g "${ref_chrom}" -r "${read}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
-    python -u model_iEnhance/construct_sets.py -a "Train" -i "${output_dir}/data_${model}/chrs_${normalization}_${max_value}/" -b "${bin_size}" -m "${model}" -r "${read}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
+    python -u model_iEnhance/construct_sets.py -a "Train" -i "${output_dir}/data_${model}/chrs_${read}_${bin_size}/" -b "${bin_size}" -m "${model}" -r "${read}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
 else
     python -u data_generate_for_training.py -i "${input_data_dir}" -d "${input_downsample_dir}" -b "${bin_size}" -m "${model}" -g "${ref_chrom}" -r "${read}" -o "${output_dir}/" -n "${normalization}" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
 fi

@@ -5,8 +5,8 @@ import time
 import multiprocessing
 
 
-#########################################################
-import os, random, math, argparse
+######################################################################## by HiHiC #########
+import os, random, math, argparse #########################################################
 from sklearn.preprocessing import MinMaxScaler
 random.seed(100)
 scaler = MinMaxScaler(feature_range=(0,1))
@@ -49,11 +49,10 @@ input_data_dir = args.input_data_dir
 ref_chrom = args.ref_chrom
 output_dir = args.output_dir
 normalization = args.normalization
-max_value = args.max_value # minmax scaling
-
+max_value = int(args.max_value) # minmax scaling
 
 def hic_matrix_extraction(chr, bin_size):
-    res = 2000000/int(bin_size)
+    res = int(bin_size)
     chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{ref_chrom}').readlines()} # GM12878 Hg19
     mat_dim = int(math.ceil(chrom_len[f"chr{chr}"]*1.0/res))
 
@@ -70,7 +69,7 @@ def hic_matrix_extraction(chr, bin_size):
             hr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
     hr_contact_matrix+= hr_contact_matrix.T - np.diag(hr_contact_matrix.diagonal())
     if np.isnan(hr_contact_matrix).any(): 
-        print(f'hr_chr{chr} has nan value!', flush=True) 
+        print(f'hr_chr{chr} has nan value!', flush=True)
     hr_contact = scaler.fit_transform(np.minimum(int(max_value), hr_contact_matrix)) # (0,300) >> (0,1)
             
     file = [file for file in os.listdir(input_downsample_dir) if file.split("_")[0] == f"chr{chr}"]
@@ -88,8 +87,6 @@ def hic_matrix_extraction(chr, bin_size):
     if np.isnan(lr_contact_matrix).any():
         print(f'lr_chr{chr} has nan value!', flush=True)
     lr_contact = scaler.fit_transform(np.minimum(int(max_value), lr_contact_matrix)) # (0,300) >> (0,1)
-    
-    print(f"  ...contact map of chr{chr}...\n", flush=True)
     return hr_contact,lr_contact
 
 def enhance_hic_matrix_extraction(chr, bin_size):
@@ -110,42 +107,10 @@ def enhance_hic_matrix_extraction(chr, bin_size):
             contact_matrix[int(idx1/res)][int(idx2/res)] = value
     contact_matrix+= contact_matrix.T - np.diag(contact_matrix.diagonal())
     if np.isnan(contact_matrix).any(): 
-        print(f'chr{chr} has nan value!', flush=True) 
+        print(f'chr{chr} has nan value!', flush=True)
     contact = scaler.fit_transform(np.minimum(int(max_value), contact_matrix)) # (0,300) >> (0,1)
-
-    print(f"  ...contact map of chr{chr}...\n", flush=True)
-    return contact
-
-# def divide_hicm_with_indices(hic_m,d_size,jump,chr):
-
-#     lens = hic_m.shape[0]
-#     out = [] 
-#     indices = []
-
-#     # 슬라이딩 윈도우 방식으로 행렬을 나누기
-#     for l in range(0,lens,jump):
-#         lifb = False
-#         if(l + d_size >= lens):
-#             l = lens - d_size
-#             lifb = True
-
-#         for c in range(l,lens,jump):
-#             cifb = False
-#             if(c + d_size >= lens):
-#                 temp_m = hic_m[l:l+d_size,lens - d_size:lens]
-#                 indices.append([chr, l, l+d_size, lens-d_size, lens])
-#                 cifb = True
-#             else:
-#                 temp_m = hic_m[l:l+d_size,c:c+d_size]
-#                 indices.append([chr, l, l+d_size, c, c+d_size])
-#             result = np.triu(temp_m,k=1).T + np.triu(temp_m)
-            
-#             out.append(result)
-#             if(cifb):
-#                 break
-#         if(lifb): break
-#     return np.array(out),indices
-#########################################################
+    return contact ########################################################################
+###########################################################################################
 
 
 
@@ -164,33 +129,33 @@ def remove_zeros(matrix):
     idxy = np.asarray(idxy)
     return M, idxy
 
-# def DownSampling(rmat,ratio = 2):
-#     sampling_ratio = ratio
-#     m = np.matrix(rmat)
+def DownSampling(rmat,ratio = 2):
+    sampling_ratio = ratio
+    m = np.matrix(rmat)
 
-#     all_sum = m.sum(dtype='float') # 합계 scalar 값 (전체 reads 수)
-#     ratio = all_sum/args.downsampled_read
-#     m = m.astype(np.float64)
-#     idx_prob = np.divide(m, all_sum,out=np.zeros_like(m), where=all_sum != 0) # 전체 합으로 나누기 (차원 동일) 
-#     idx_prob = np.asarray(idx_prob.reshape(
-#         (idx_prob.shape[0]*idx_prob.shape[1],))) # (m, n) >>> (m*n,) 으로 flatten
-#     idx_prob = np.squeeze(idx_prob) # (m*n)
+    all_sum = m.sum(dtype='float') # 합계 scalar 값 (전체 reads 수)
+    ratio = all_sum/args.downsampled_read
+    m = m.astype(np.float64)
+    idx_prob = np.divide(m, all_sum,out=np.zeros_like(m), where=all_sum != 0) # 전체 합으로 나누기 (차원 동일) 
+    idx_prob = np.asarray(idx_prob.reshape(
+        (idx_prob.shape[0]*idx_prob.shape[1],))) # (m, n) >>> (m*n,) 으로 flatten
+    idx_prob = np.squeeze(idx_prob) # (m*n)
 
-#     sample_number_counts = int(all_sum/(2*sampling_ratio)) # 전체 reads 수 / sampling ratio*2
-#     # 0 1 2 ... 8
-#     id_range = np.arange(m.shape[0]*m.shape[1]) # (m*n)
-#     id_x = np.random.choice(
-#         id_range, size=sample_number_counts, replace=True, p=idx_prob) # m*n개의 idx 중에 size 만큼 랜덤 중복 선택, 각 요소가 선택될 확률은 idx_prob : sample_number_counts 만큼의 index
+    sample_number_counts = int(all_sum/(2*sampling_ratio)) # 전체 reads 수 / sampling ratio*2
+    # 0 1 2 ... 8
+    id_range = np.arange(m.shape[0]*m.shape[1]) # (m*n)
+    id_x = np.random.choice(
+        id_range, size=sample_number_counts, replace=True, p=idx_prob) # m*n개의 idx 중에 size 만큼 랜덤 중복 선택, 각 요소가 선택될 확률은 idx_prob : sample_number_counts 만큼의 index
 
-#     sample_m = np.zeros_like(m)
-#     for i in np.arange(sample_number_counts): # 정한 reads 만큼 for loop
-#         x = int(id_x[i]/m.shape[0]) # index를 m으로 나눈 몫 : x 좌표
-#         y = int(id_x[i] % m.shape[0]) # index를 m으로 나눈 나머지 : y 좌표
-#         sample_m[x, y] += 1.0
-#     sample_m = np.transpose(sample_m) + sample_m # symmetric 하게 만들어 주기 위한 과정 (그래서 앞에서 sampling ratio 의 2배로 나누었던 것 같다)
-#     print("after sample :",sample_m.sum(), flush=True) # 선택된 read (== sample_number_counts)
+    sample_m = np.zeros_like(m)
+    for i in np.arange(sample_number_counts): # 정한 reads 만큼 for loop
+        x = int(id_x[i]/m.shape[0]) # index를 m으로 나눈 몫 : x 좌표
+        y = int(id_x[i] % m.shape[0]) # index를 m으로 나눈 나머지 : y 좌표
+        sample_m[x, y] += 1.0
+    sample_m = np.transpose(sample_m) + sample_m # symmetric 하게 만들어 주기 위한 과정 (그래서 앞에서 sampling ratio 의 2배로 나누었던 것 같다)
+    print("after sample :",sample_m.sum(), flush=True) # 선택된 read (== sample_number_counts)
 
-#     return np.array(sample_m) # (m, m)
+    return np.array(sample_m) # (m, m)
 
 
 def divide_hicm(hic_m,d_size,jump):    
@@ -295,7 +260,7 @@ def divide(c, rmat, lrmat, save_dir):
     piece_lr = np.concatenate(lrout,axis=0)
     # np.savez(out_path + "chr-" + c + ".npz",hr_sample = piece_hr,lr_sample = piece_lr)
 
-    np.savez(save_dir + c , target = piece_hr, data = piece_lr)
+    np.savez(save_dir + f"chr{c}" , target = piece_hr, data = piece_lr)
     ## logw = 'chr ' + c + " hr sample sum :" + str(piece_hr.shape)
     ## logw = logw + "\n" + 'chr ' + c + " lr sample sum:" + str(piece_lr.shape) + "\n"
     ## wlog(log_name,logw)
