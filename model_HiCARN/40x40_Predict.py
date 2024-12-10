@@ -31,11 +31,9 @@ required.add_argument('--batch_size', type=int, default=64, metavar='[3]', requi
                       help='input batch size for training (default: 64)')
 required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
                       help='GPU ID for training (defalut: 0)')
-required.add_argument('--read', type=int, metavar='[5]', required=True, 
-                      help='downsampled read')
-required.add_argument('--input_data', type=str, metavar='[6]', required=True,
+required.add_argument('--input_data', type=str, metavar='[5]', required=True,
                       help='directory path of training model')
-required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
+required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[6]', required=True,
                       help='directory path for saving enhanced output (default: HiHiC/output_enhanced/)')
 args = parser.parse_args()
 
@@ -44,6 +42,7 @@ if args.model == "HiCANR1":
 else:
     model = "HiCARN_2"
 
+prefix = os.path.splitext(os.path.basename(args.input_data))[0]
 os.makedirs(args.output_data_dir, exist_ok=True) #######################
 ########################################################################
 
@@ -164,7 +163,7 @@ if __name__ == '__main__':
     #     save_data(hicarn_hics[key], compacts[key], sizes[key], file)
     # for key in sorted(list(np.unique(indices[:, 0]))):
     th_model = args.ckpt_file.split('/')[-1].split('_')[0]
-    file = os.path.join(args.output_data_dir, f'{args.model}_predict_{args.read}_{th_model}.npz')
+    file = os.path.join(args.output_data_dir, f'{prefix}_{args.model}_{th_model}ep.npz')
     np.savez_compressed(file, data=result_data, inds=result_inds)
     print('Saving file:', file)
 

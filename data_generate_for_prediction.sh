@@ -1,18 +1,16 @@
 #!/bin/bash
-seed=42
+seed=13
 root_dir=$(pwd)
 
-# bash data_generate_for_prediction.sh -i /project/HiHiC/data_GM12878 -b 10000 -m iEnhance -g ./hg19.txt -o ./ -s 300 -n KR
+# bash data_generate_for_prediction.sh -i ./data/GM12848/MAT/GM12878_2M_10Kb_KR -b 10000 -m iEnhance -g ./hg19.txt -o ./data_model -s 300 -n KR
 
-while getopts ":e:i:b:m:g:o:n:s:" flag; do
+while getopts ":i:b:m:g:o:s:" flag; do
     case $flag in
-        e) explain=$OPTARG;;
-        i) input_data_dir=$OPTARG;;
+        i) input_data_dir=$(echo "${OPTARG}" | sed 's#/*$##');;
         b) bin_size=$OPTARG;;
         m) model=$OPTARG;;
-        g) ref_chrom=$OPTARG;;
-        o) output_dir=$(echo "${OPTARG}" | sed 's#/*$##');;
-        n) normalization=$OPTARG;;
+        g) ref_genome=$OPTARG;;
+        o) saved_in=$(echo "${OPTARG}" | sed 's#/*$##');;
         s) max_value=$OPTARG;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -23,25 +21,15 @@ while getopts ":e:i:b:m:g:o:n:s:" flag; do
     esac
 done
 
-# normalization 기본값 설정
-if [ -z "${normalization}" ]; then
-    normalization="Unknown"
-fi
-
-# normalization 기본값 설정
-if [ -z "${explain}" ]; then
-    explain=""
-fi
-
 # 필수 인자 체크
-if [ -z "${input_data_dir}" ] || [ -z "${bin_size}" ] || [ -z "${model}" ] || [ -z "${ref_chrom}" ] || [ -z "${output_dir}" ] || [ -z "${max_value}" ]; then
-    echo "Usage: $0 -i <input_data_path> -b <bin_size> -m <model_name> -g <ref_chromosome_length> -o <output_path> -s <max_value> [-n <normalization>]" >&2
+if [ -z "${input_data_dir}" ] || [ -z "${bin_size}" ] || [ -z "${model}" ] || [ -z "${ref_genome}" ] || [ -z "${saved_in}" ] || [ -z "${max_value}" ]; then
+    echo "Usage: $0 -i <input_data_path> -b <resolution> -m <model_name> -g <ref_genome> -o <saved_in> -s <max_value> " >&2
     exit 1
 fi
 
 if [[ "${model}" =~ ^(HiCPlus|HiCNN|SRHiC|DeepHiC|HiCARN|DFHiC|iEnhance)$ ]]; then
-    if [ ! -d "${output_dir}" ]; then
-        mkdir -p "${output_dir}"
+    if [ ! -d "${saved_in}/data_${model}" ]; then
+        mkdir -p "${saved_in}/data_${model}"
     fi
     echo ""
     echo "  ...Start generating input data for ${model} prediction..."
@@ -54,7 +42,7 @@ fi
 
 # iEnhance 모델 전용 작업
 if [ "${model}" = "iEnhance" ]; then
-    python -u model_iEnhance/divide-data.py -a "Enhancement" -i "${input_data_dir}" -m "${model}" -b "${bin_size}" -g "${ref_chrom}" -o "${output_dir}" -n "${normalization}" -s "${max_value}" -e "${explain}"
+    python3 -u model_iEnhance/divide-data.py -a "Enhancement" -i "${input_data_dir}" -m "${model}" -b "${bin_size}" -g "${ref_genome}" -o "${saved_in}/data_${model}/" -s "${max_value}"
 else
-    python -u data_generate_for_prediction.py -i "${input_data_dir}" -b "${bin_size}" -m "${model}" -g "${ref_chrom}" -o "${output_dir}/" -n "${normalization}" -s "${max_value}" -e "${explain}"
+    python3 -u data_generate_for_prediction.py -i "${input_data_dir}" -b "${bin_size}" -m "${model}" -g "${ref_genome}" -o "${saved_in}/data_${model}/" -s "${max_value}"
 fi

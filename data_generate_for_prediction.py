@@ -7,35 +7,31 @@ random.seed(100)
 scaler = MinMaxScaler(feature_range=(0,1))
 
 # 인자 받기
-parser = argparse.ArgumentParser(description='Read Hi-C contact map and Divide submatrix for train and predict', add_help=True)
+parser = argparse.ArgumentParser(description='Read Hi-C contact map and Divide submatrix for training and prediction', add_help=True)
 parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
 optional = parser.add_argument_group('optional arguments')
-
-required.add_argument('-i', '--input_data_dir', dest='input_data_dir', type=str, required=True, help='Input data directory: /HiHiC/data')
-required.add_argument('-b', '--bin_size', dest='bin_size', type=str, required=True, help='Bin size(10Kb): 10000')
+required.add_argument('-i', '--input_data_dir', dest='input_data_dir', type=str, required=True, help='Input data directory: /HiHiC/data/MAT/GM12878_10.2M_10Kb_KR')
+required.add_argument('-b', '--bin_size', dest='bin_size', type=str, required=True, help='Bin size(resolution): 10000')
 required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['HiCPlus', 'HiCNN', 'SRHiC', 'DeepHiC', 'HiCARN', 'DFHiC', 'iEnhance'])
-required.add_argument('-g', '--ref_chrom', dest='ref_chrom', type=str, required=True, help='Reference chromosome length: /HiHiC/hg19.txt')
-required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Parent directory of output: /data/HiHiC/')
-required.add_argument('-s', '--max_value', dest='max_value', type=str, required=True, default='300', help='Maximum value of chromosome matrix')
-required.add_argument('-n', '--normalization', dest='normalization', type=str, required=True, default='None', help='Normalization method')
-optional.add_argument('-e', '--explain', dest='explain', type=str, required=False, default='', help='Explaination about data')
+required.add_argument('-g', '--ref_genome', dest='ref_genome', type=str, required=True, help='Reference chromosome length: /HiHiC/hg19.txt')
+required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Parent directory of output: /HiHiC/data_model/data_DFHiC/')
+required.add_argument('-s', '--max_value', dest='max_value', type=str, required=True, default='300', help='Maximum value across all matrices')
 
 args = parser.parse_args()
 file_list = os.listdir(args.input_data_dir)
-chrom_list = [file.split('_')[0] for file in file_list]
-normalization = args.normalization
+chrom_list = [file.split('.')[0] for file in file_list]
 max_value = int(args.max_value) # minmax scaling
 bin_size = args.bin_size
 
 # 크로모좀 별로 matrix 만들기
 def hic_matrix_extraction(file_list, bin_size):
     res=int(bin_size)
-    chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{args.ref_chrom}').readlines()} # GM12878 Hg19
+    chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{args.ref_genome}').readlines()} # GM12878 Hg19
 
     contacts_dict={}
     for file in file_list:
-        chr = file.split('_')[0] # 'chr1'
+        chr = file.split('.')[0] # 'chr1'
         lr_hic_file = f'{args.input_data_dir}/{file}'
         mat_dim = int(math.ceil(chrom_len[chr]*1.0/res))
         lr_contact_matrix = np.zeros((mat_dim,mat_dim))
@@ -57,7 +53,8 @@ def hic_matrix_extraction(file_list, bin_size):
     return contacts_dict,ct_contacts
 
 def crop_hic_matrix_by_chrom(chrom, for_model, bin_size): 
-    chr = int(chrom.split('chr')[1])
+    chr = int(chrom.split('chr')[1].split(".")[0])
+    chrom = chrom.split(".")[0]
     thred=2000000/int(bin_size) # thred=2M/resolution 
     distance=[] # DFHiC
     lr_crop_mats=[]
@@ -177,53 +174,53 @@ def HiCPlus_data_split(chrom_list):
 contacts_dict,ct_contacts = hic_matrix_extraction(file_list, bin_size)
 print(f"\n  ...Done making whole matrices...", flush=True)
 
-
-save_dir = f'{args.output_dir}data_{args.model}/'
-os.makedirs(save_dir, exist_ok=True)
-
+saved_in = os.path.join(args.output_dir,"ENHANCEMENT")
+os.makedirs(saved_in, exist_ok=True)
+prefix = os.path.basename(args.input_data_dir)
+out_file = os.path.join(saved_in, f"{prefix}")
 
 # 모델이 원하는 포멧으로 저장
 if args.model == "DFHiC":
     mats,coordinates,distance = DFHiC_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
-    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}.npz", data=mats, inds=np.array(coordinates, dtype=np.int_),distance=distance)
+    np.savez(out_file, data=mats, inds=np.array(coordinates, dtype=np.int_),distance=distance)
 
 
 elif args.model == "DeepHiC":      
     mats,coordinates = DeepHiC_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
     compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in contacts_dict.items()}
-    size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_chrom}').readlines()}
-    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}.npz", data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
+    size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_genome}').readlines()}
+    np.savez(out_file, data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
     
     
 elif args.model == "HiCARN":          
     mats,coordinates = HiCARN_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
     compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in contacts_dict.items()}
-    size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_chrom}').readlines()}
-    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}.npz", data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
+    size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_genome}').readlines()}
+    np.savez(out_file, data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
    
 
 elif args.model == "HiCNN":     
     mats,hr_coords,coords = HiCNN_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
-    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}.npz", data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
+    np.savez(out_file, data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
 
 
 elif args.model == "SRHiC":  
     mats,hr_coords,coords = SRHiC_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
     mats = mats[:,0,:,:]
-    np.savez(save_dir+f"index_for_enhancement_{args.model}{args.explain}_{bin_size}.npz", inds=np.array(coords, dtype=np.int_), inds_target=np.array(hr_coords, dtype=np.int_))
-    np.save(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}", mats)
+    # np.savez(os.path.join(saved_in, f"index_{prefix}.npz"), inds=np.array(coords, dtype=np.int_), inds_target=np.array(hr_coords, dtype=np.int_))
+    np.save(out_file, mats)
     
 
 else:
     assert args.model == "HiCPlus", "    model name is not correct "
     mats,hr_coords,coords = HiCPlus_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
-    np.savez(save_dir+f"for_enhancement_{args.model}{args.explain}_{bin_size}.npz", data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
+    np.savez(out_file, data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
 
     
-print(f"\n  ...Generated data is saved in {save_dir}...\n", flush=True)
+print(f"\n  ...Generated data is saved in {args.output_dir}...\n", flush=True)

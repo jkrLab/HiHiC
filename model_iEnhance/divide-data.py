@@ -17,20 +17,18 @@ parser = argparse.ArgumentParser(description='Read Hi-C contact map and Divide s
 parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
 optional = parser.add_argument_group('optional arguments')
-required.add_argument('-a', '--action', dest='action', type=str, required=True, default='Train', help='For Train vs. Enhancement')
-required.add_argument('-i', '--input_data_dir', dest='input_data_dir', type=str, required=True, help='Input data directory: /HiHiC/data')
-required.add_argument('-b', '--bin_size', dest='bin_size', type=str, required=True, help='Bin size(10Kb): 10000')
-required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['HiCARN', 'DeepHiC', 'HiCNN2', 'DFHiC', 'HiCPlus', 'SRHiC', 'iEnhance'])
-required.add_argument('-g', '--ref_chrom', dest='ref_chrom', type=str, required=True, help='Reference chromosome length: /HiHiC/hg19.txt')
-required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Parent directory of output: /data/HiHiC/')
-required.add_argument('-s', '--max_value', dest='max_value', type=str, required=True, default='300', help='Maximum value of chromosome matrix')
-required.add_argument('-n', '--normalization', dest='normalization', type=str, required=True, default='None', help='Normalization method')
-optional.add_argument('-d', '--input_downsample_dir', dest='input_downsample_dir',type=str, required=False, help='Downsampled input data directory: /HiHiC/data_downsampled_16')
-optional.add_argument('-r', '--read', dest='read', type=str, required=False, help='Downsampled read: 5000000')
+required.add_argument('-a', '--action', dest='action', type=str, required=True, default='Train', help='For Train, or Enhancement')
+required.add_argument('-i', '--input_data_dir', dest='input_data_dir', type=str, required=True, help='Input data directory: /HiHiC/data/MAT/GM12878_163.0M_10Kb_KR/')
+required.add_argument('-b', '--bin_size', dest='bin_size', type=str, required=True, help='Bin size(resolution): 10000')
+required.add_argument('-m', '--model', dest='model', type=str, required=True, choices=['HiCARN1', 'HiCARN2', 'DeepHiC', 'HiCNN2', 'DFHiC', 'HiCPlus', 'SRHiC', 'iEnhance'])
+required.add_argument('-g', '--ref_genome', dest='ref_genome', type=str, required=True, help='Reference genome(chromosome length): /HiHiC/hg19.txt')
+required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Parent directory of output: /HiHiC/data_model/data_iEnhance/')
+required.add_argument('-s', '--max_value', dest='max_value', type=str, required=True, default='300', help='Maximum value across all matrices')
+optional.add_argument('-r', '--reads', dest='reads', type=str, required=False, help="A number of downsampled reads")
+optional.add_argument('-d', '--input_downsample_dir', dest='input_downsample_dir',type=str, required=False, help='Downsampled input data directory: /HiHiC/data/MAT/GM12878_10.2M_10Kb_KR/')
 optional.add_argument('-t', '--train_set', dest='train_set', type=str, required=False, help='Train set chromosome: "1 2 3 4 5 6 7 8 9 10 11 12 13 14"')
 optional.add_argument('-v', '--valid_set', dest='valid_set', type=str, required=False, help='Validation set chromosome: "15 16 17"')
 optional.add_argument('-p', '--test_set', dest='test_set', type=str, required=False, help='Prediction set chromosome: "18 19 20 21 22"')
-optional.add_argument('-e', '--explain', dest='explain', type=str, required=False, default='', help='Explaination about data')
 
 args = parser.parse_args()
 action = args.action
@@ -38,25 +36,21 @@ if  action == "Train" :
     chrs_list = args.train_set.split() + args.valid_set.split() + args.test_set.split()
     test_list = args.test_set.split()
     input_downsample_dir = args.input_downsample_dir
-    save_dir = f'{args.output_dir}/data_{args.model}/chrs_{args.read}_{args.bin_size}/'
-    os.makedirs(save_dir, exist_ok=True)
+    output_dir = os.path.join(args.output_dir, "chrs")
 else:
-    save_dir = f'{args.output_dir}/data_{args.model}/'
-    os.makedirs(save_dir, exist_ok=True)
-    pass
+    output_dir = os.path.join(args.output_dir, "ENHANCEMENT")
 
+os.makedirs(output_dir, exist_ok=True)
 input_data_dir = args.input_data_dir
-ref_chrom = args.ref_chrom
-output_dir = args.output_dir
-normalization = args.normalization
+ref_genome = args.ref_genome
 max_value = int(args.max_value) # minmax scaling
 
 def hic_matrix_extraction(chr, bin_size):
     res = int(bin_size)
-    chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{ref_chrom}').readlines()} # GM12878 Hg19
+    chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{ref_genome}').readlines()} # GM12878 Hg19
     mat_dim = int(math.ceil(chrom_len[f"chr{chr}"]*1.0/res))
 
-    file = [file for file in os.listdir(input_data_dir) if file.split("_")[0] == f"chr{chr}"]
+    file = [file for file in os.listdir(input_data_dir) if file.split(".")[0] == f"chr{chr}"]
     hr_hic_file = os.path.join(input_data_dir, *file)
     hr_contact_matrix = np.zeros((mat_dim,mat_dim))
     for line in open(hr_hic_file).readlines():
@@ -72,7 +66,7 @@ def hic_matrix_extraction(chr, bin_size):
         print(f'hr_chr{chr} has nan value!', flush=True)
     hr_contact = scaler.fit_transform(np.minimum(int(max_value), hr_contact_matrix)) # (0,300) >> (0,1)
             
-    file = [file for file in os.listdir(input_downsample_dir) if file.split("_")[0] == f"chr{chr}"]
+    file = [file for file in os.listdir(input_downsample_dir) if file.split(".")[0] == f"chr{chr}"]
     lr_hic_file = os.path.join(input_downsample_dir, *file)
     lr_contact_matrix = np.zeros((mat_dim,mat_dim))
     for line in open(lr_hic_file).readlines():
@@ -91,10 +85,10 @@ def hic_matrix_extraction(chr, bin_size):
 
 def enhance_hic_matrix_extraction(chr, bin_size):
     res =  int(bin_size)
-    chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{ref_chrom}').readlines()} # GM12878 Hg19
+    chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{ref_genome}').readlines()} # GM12878 Hg19
     mat_dim = int(math.ceil(chrom_len[f"chr{chr}"]*1.0/res))
 
-    file = [file for file in os.listdir(input_data_dir) if file.split("_")[0] == f"chr{chr}"]
+    file = [file for file in os.listdir(input_data_dir) if file.split(".")[0] == f"chr{chr}"]
     hic_file = os.path.join(input_data_dir, *file)
     contact_matrix = np.zeros((mat_dim,mat_dim))
     for line in open(hic_file).readlines():
@@ -134,7 +128,7 @@ def DownSampling(rmat,ratio = 2):
     m = np.matrix(rmat)
 
     all_sum = m.sum(dtype='float') # 합계 scalar 값 (전체 reads 수)
-    ratio = all_sum/args.downsampled_read
+    ratio = all_sum/int(args.reads)
     m = m.astype(np.float64)
     idx_prob = np.divide(m, all_sum,out=np.zeros_like(m), where=all_sum != 0) # 전체 합으로 나누기 (차원 동일) 
     idx_prob = np.asarray(idx_prob.reshape(
@@ -197,7 +191,7 @@ def divide_hicm(hic_m,d_size,jump):
 
 
 # def divide(c):
-def divide(c, rmat, lrmat, save_dir):
+def divide(c, rmat, lrmat, out_path):
     print(f"Processing chromosome {c}...", flush=True)
     # start = time.time()
     # # Step1 ReadMat
@@ -260,7 +254,7 @@ def divide(c, rmat, lrmat, save_dir):
     piece_lr = np.concatenate(lrout,axis=0)
     # np.savez(out_path + "chr-" + c + ".npz",hr_sample = piece_hr,lr_sample = piece_lr)
 
-    np.savez(save_dir + f"chr{c}" , target = piece_hr, data = piece_lr)
+    np.savez(os.path.join(out_path, f"chr{c}") , target = piece_hr, data = piece_lr)
     ## logw = 'chr ' + c + " hr sample sum :" + str(piece_hr.shape)
     ## logw = logw + "\n" + 'chr ' + c + " lr sample sum:" + str(piece_lr.shape) + "\n"
     ## wlog(log_name,logw)
@@ -282,22 +276,24 @@ if __name__ == '__main__':
     ################################## by HiHiC #####
     action = args.action
     dict_mat = {}
+    prefix = os.path.basename(args.input_data_dir)
+
     if action == "Enhancement":
         input_dir = os.listdir(input_data_dir)
-        chrs_list = [file.split("_")[0].split("chr")[-1] for file in input_dir]
+        chrs_list = [file.split(".")[0].split("chr")[-1] for file in input_dir]
         for chr in chrs_list:
             mat = enhance_hic_matrix_extraction(chr, args.bin_size)
             dict_mat[chr] = mat
-        np.savez(save_dir + f"for_enhancement{args.explain}_{args.bin_size}.npz", **dict_mat)
+        np.savez(os.path.join(output_dir, f"{prefix}"), **dict_mat)
     
     else:
         for chr in chrs_list:
             rmat,lmat = hic_matrix_extraction(chr, args.bin_size)
-            divide(chr,rmat,lmat,save_dir) 
+            divide(chr,rmat,lmat,output_dir) 
         
         for chr in test_list:
             rmat,lmat = hic_matrix_extraction(chr, args.bin_size)
-            np.savez(save_dir + f"chr{chr}_whole_mat.npz", target = rmat, data = lmat)
+            np.savez(os.path.join(output_dir, f"{prefix}_{max_value}_chr{chr}"), target = rmat, data = lmat)
     #################################################
     
     # pool.close()

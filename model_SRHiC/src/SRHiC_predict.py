@@ -25,11 +25,9 @@ required.add_argument('--batch_size', type=int, default=64, metavar='[3]', requi
                       help='input batch size for training (default: 64)')
 required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
                       help='GPU ID for training (defalut: 0)')
-required.add_argument('--read', type=int, metavar='[5]', required=True, 
-                      help='downsampled read')
-required.add_argument('--input_data', type=str, metavar='[6]', required=True,
+required.add_argument('--input_data', type=str, metavar='[5]', required=True,
                       help='directory path of training model')
-required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[7]', required=True,
+required.add_argument('--output_data_dir', type=str, default='./output_enhanced', metavar='[6]', required=True,
                       help='directory path for saving enhanced output (default: HiHiC/output_enhanced/)')
 args = parser.parse_args()
 
@@ -89,10 +87,11 @@ def predict(test_file,
         # name ="enhanced_{0}".format(test_file)
         Out = Out[1:]
         # np.save(predict_save_dir + '/predict/' + name, Out)
-        # np.savez_compressed(os.path.join(predict_save_dir, f"SRHiC_predict_{low_res}.npz"), data=Out)      
-        index_file = os.path.join(os.path.dirname(test_file), "index_" + os.path.split(test_file)[-1][:-4] + ".npz")
-        target_inds = np.load(index_file, allow_pickle=True)['inds_target']
-        np.savez_compressed(os.path.join(predict_save_dir, f"SRHiC_predict_{args.read}_{meta_file.split('/')[-1].split('_')[0]}.npz"), data=Out, inds=target_inds)
+        # np.savez_compressed(os.path.join(predict_save_dir, f"SRHiC_predict_{low_res}.npz"), data=Out)
+        prefix = os.path.splitext(os.path.basename(test_file))[0]      
+        th_model = meta_file.split('/')[-1].split('_')[0]
+        file = os.path.join(predict_save_dir, f'{prefix}_{args.model}_{th_model}ep.npz')
+        np.savez_compressed(file, data=Out)
 
 
         # else:

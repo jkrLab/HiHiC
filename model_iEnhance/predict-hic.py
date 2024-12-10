@@ -15,7 +15,6 @@ import os, argparse
 parser = argparse.ArgumentParser(description='iEnhance prediction process')
 parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
-optional = parser.add_argument_group('optional arguments')
 
 required.add_argument('--root_dir', type=str, metavar='/HiHiC', required=True,
                       help='HiHiC directory')
@@ -27,13 +26,10 @@ required.add_argument('--batch_size', type=int, default=64, metavar='[3]', requi
                       help='input batch size for training (default: 64)')
 required.add_argument('--gpu_id', type=int, default=0, metavar='[4]', required=True, 
                       help='GPU ID for training (defalut: 0)')
-required.add_argument('--read', type=int, metavar='[5]', required=True, 
-                      help='downsampled read')
-required.add_argument('--input_data', type=str, metavar='[6]', required=True,
+required.add_argument('--input_data', type=str, metavar='[5]', required=True,
                       help='directory path of training model')
-required.add_argument('--output_data_dir', type=str, default='./output_iEnhance', metavar='[7]', required=True,
+required.add_argument('--output_data_dir', type=str, default='./output_iEnhance', metavar='[6]', required=True,
                       help='directory path for saving enhanced output (default: HiHiC/output_iEnhance/)')
-optional.add_argument('--explain', type=str, required=False, default='', help='explaination about data')
 args = parser.parse_args()
 
 model = Construct() 
@@ -43,6 +39,7 @@ model.load_state_dict(state_dict)
 device = t.device(f'cuda:{args.gpu_id}' if t.cuda.is_available() else 'cpu')
 model.to(device)
 
+prefix = os.path.splitext(os.path.basename(args.input_data))[0]
 input_data = dict(np.load(args.input_data, allow_pickle=True))
 chrs_list = input_data.keys()
 
@@ -189,7 +186,7 @@ if __name__ == '__main__':
     
     ######################### by HiHiC ####
     th_model = args.ckpt_file.split('/')[-1].split('_')[0]
-    file = os.path.join(args.output_data_dir, f"{args.explain}iEnhance_predict_{args.read}_{th_model}_wholeMats.npz")
+    file = os.path.join(args.output_data_dir, f'{prefix}_{args.model}_{th_model}ep.npz')
     chr_dict = {}
     for chr in chrs_list:
         chr_mat = predict(chr)
