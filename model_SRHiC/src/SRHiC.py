@@ -112,11 +112,12 @@ def model(train_input_dir,
         # input_list = os.listdir(train_input_dir)
         mean_valid_loss = 1e6 #Initialize to a very large value
 
-        input_list = [input for input in os.listdir(train_input_dir) if input.endswith('.npy')] ############################### by HiHiC ###
+        input_list = [input for input in os.listdir(train_input_dir) if input.endswith('.npz')] ############################### by HiHiC ###
         total_initial_loss, total_initial_pearson, batch_count = 0, 0, 0 ###################################################################
 
-        for file in input_list:
-            x = np.load(os.path.join(train_input_dir, file)).astype(np.float32)
+        for file in input_list: ############################################################################################################
+            x = np.load(os.path.join(train_input_dir, file))['data'].astype(np.float32) ####################################################
+
             x = np.reshape(x, [x.shape[0], 40, 68, 1])
             size_input = int(x.shape[0] / epoch_size) + 1
             np.random.shuffle(x)

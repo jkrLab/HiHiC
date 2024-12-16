@@ -213,7 +213,7 @@ elif args.model == "SRHiC":
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
     mats = mats[:,0,:,:]
     # np.savez(os.path.join(saved_in, f"index_{prefix}.npz"), inds=np.array(coords, dtype=np.int_), inds_target=np.array(hr_coords, dtype=np.int_))
-    np.save(out_file, mats)
+    np.savez(out_file, data=mats, inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
     
 
 else:

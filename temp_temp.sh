@@ -12,7 +12,7 @@ ckpt_iEnhance="./checkpoints_iEnhance/00282_6 days, 8.56.43_0.0000446402"
 ckpt_HiCPlus="./checkpoints_HiCPlus/10000_6.30.59_0.0021362852"
 
 dir_output="./data_model_out"
-models=("iEnhance")  # tensorflow: "SRHiC" "DFHiC" / torch: "HiCARN1" "HiCARN2" "HiCNN2" "DeepHiC" "iEnhance" "HiCPlus"
+models=("SRHiC")  # tensorflow: "SRHiC" "DFHiC" / torch: "HiCARN1" "HiCARN2" "HiCNN2" "DeepHiC" "iEnhance" "HiCPlus"
 flags=("trial1" "trial2" "trial3" "trial4" "trial5")
 
 for model in "${models[@]}"; do
@@ -25,12 +25,12 @@ for model in "${models[@]}"; do
             bash model_prediction.sh -m ${model} -c "${checkpoint}" -b 16 -g "-1" -i "${input}" -o "${dir_output}"
         done
     elif [ "${model}" == "HiCARN1" ] || [ "${model}" == "HiCARN2" ]; then # 모델 1&2
-        dir_input=($(find "./data_model/data_HiCARN/ENHANCEMENT" -type f -name "*.npz"))
+        dir_input=($(find "./data_model/data_HiCARN/enhance" -type f -name "*.npz"))
         for input in "${dir_input[@]}"; do
             bash model_prediction.sh -m ${model} -c "${checkpoint}" -b 16 -g "-1" -i "${input}" -o "${dir_output}"
         done
     elif [ ${model} == "HiCNN2" ]; then # 모델명과 데이터 폴더명 차이
-        dir_input=($(find "./data_model/data_HiCNN/ENHANCEMENT" -type f -name "*.npz"))
+        dir_input=($(find "./data_model/data_HiCNN/enhance" -type f -name "*.npz"))
         for input in "${dir_input[@]}"; do
             bash model_prediction.sh -m ${model} -c "${checkpoint}" -b 16 -g "-1" -i "${input}" -o "${dir_output}"
         done

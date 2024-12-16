@@ -308,9 +308,9 @@ elif args.model == "SRHiC":
     # np.savez(train_dir+f"index_{prefix}_{max_value}.npz", inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
     # np.savez(valid_dir+f"index_{prefix}_{max_value}.npz", inds=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
     # np.savez(test_dir+f"index_{prefix}_{max_value}.npz", inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))
-    np.save(train_dir+f"{prefix}_{max_value}", train)
-    np.save(valid_dir+f"{prefix}_{max_value}", valid)
-    np.save(test_dir+f"{prefix}_{max_value}", test)   
+    np.savez(train_dir+f"{prefix}_{max_value}", data=train, inds=np.array(lr_coordinates_train, dtype=np.int_),inds_target=np.array(hr_coordinates_train, dtype=np.int_))
+    np.savez(valid_dir+f"{prefix}_{max_value}", data=valid, inds=np.array(lr_coordinates_valid, dtype=np.int_),inds_target=np.array(hr_coordinates_valid, dtype=np.int_))
+    np.savez(test_dir+f"{prefix}_{max_value}", data=test, inds=np.array(lr_coordinates_test, dtype=np.int_),inds_target=np.array(hr_coordinates_test, dtype=np.int_))   
 
     print(f"train set: {train_set} \nvalid set: {valid_set} \ntest set: {test_set}" , flush=True)    
     
@@ -326,4 +326,4 @@ else:
 
     print(f"train set: {train_set + valid_set} \ntest set: {test_set}" , flush=True)    
     
-print(f"\n  ...Generated data is saved in {output_dir}...\n", flush=True)
+print(f"\n  ...Generated data is saved in {args.output_dir}...\n", flush=True)

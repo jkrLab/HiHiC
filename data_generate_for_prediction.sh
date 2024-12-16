@@ -2,7 +2,7 @@
 seed=13
 root_dir=$(pwd)
 
-# bash data_generate_for_prediction.sh -i ./data/GM12848/MAT/GM12878_2M_10Kb_KR -b 10000 -m iEnhance -g ./hg19.txt -o ./data_model -s 300 -n KR
+# bash data_generate_for_prediction.sh -i "./data/MAT/GM12878__10.2M_10Kb_KR/" -b "10000" -m "DFHiC" -g "./hg19.txt" -o "./data_model" -s "300"
 
 while getopts ":i:b:m:g:o:s:" flag; do
     case $flag in

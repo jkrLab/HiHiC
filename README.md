@@ -92,6 +92,8 @@ bash data_download_downsample.sh -i "https://ftp.ncbi.nlm.nih.gov/geo/samples/GS
 > Output: 
 > * {OutputDirectory}/HIC/{Prefix}__{ReadsNumber}.hic
 > * {OutputDirectory}/READ/{Prefix}__{ReadsNumber}.txt.gz
+> * {OutputDirectory}/MAT/{Prefix}__{ReadsNumber}_{Resolution}_{Normalization}/
+
 
 
 * Own data to downsample and transform into Hi-C contact map
@@ -119,6 +121,7 @@ bash data_downsample.sh -i "./data/GM12878/READ/GSM1551550_HIC001.txt.gz" -p "GM
 >
 >
 > Output: 
+> * {OutputDirectory}/READ/{Prefix}__{ReadsNumber}.txt.gz
 > * {OutputDirectory}/MAT/{Prefix}__{ReadsNumber}_{Resolution}_{Normalization}/
 
 

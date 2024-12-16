@@ -62,11 +62,11 @@ for data_file in args.input_data: # 리스트 형태로 받음
                 else:
                     print(f"{input_file_path} isn't 40*40 or 28*28 sub matrix.")
     else:  # 파일인 경우
-        prefix= os.path.splitext(os.path.basename(args.input_data))[0].split("__")[0]
+        prefix= os.path.splitext(os.path.basename(data_file))[0].split("__")[0]
         output_dir = os.path.join(args.output_dir, prefix)
         os.makedirs(output_dir, exist_ok=True)
         if data_file.endswith('.npz'):
-            save_filename = os.path.join(output_dir, data_file)
+            save_filename = os.path.join(output_dir, os.path.basename(data_file))
             data_shape = np.squeeze(np.load(data_file, allow_pickle=True)['data']).shape[-1]
             if data_shape == 40:
                 make_whole_40(data_file, save_filename)

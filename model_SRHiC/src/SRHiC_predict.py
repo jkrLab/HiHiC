@@ -72,7 +72,8 @@ def predict(test_file,
         # for test_file in test_files:
             # test=os.path.join(test_input_dir,test_file)
             # x = np.load(test).astype(np.float32)[:,:,:40]
-        x = np.load(test_file).astype(np.float32)[:,:,:40]
+        test = np.load(test_file)
+        x = test['data'].astype(np.float32)[:,:,:40]
         x = np.reshape(x, [x.shape[0], 40, 40, 1])
         size = int(x.shape[0] / epoch_size) + 1
         Out = np.zeros([1, 28, 28, 1])
@@ -91,7 +92,7 @@ def predict(test_file,
         prefix = os.path.splitext(os.path.basename(test_file))[0]      
         th_model = meta_file.split('/')[-1].split('_')[0]
         file = os.path.join(predict_save_dir, f'{prefix}_{args.model}_{th_model}ep.npz')
-        np.savez_compressed(file, data=Out)
+        np.savez_compressed(file, data=Out, inds=test['inds'])
 
 
         # else:
