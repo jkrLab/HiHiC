@@ -87,6 +87,8 @@ bash data_download_downsample.sh -i "https://ftp.ncbi.nlm.nih.gov/geo/samples/GS
 
 >If the total number of reads in the downloaded file is less than or equal to the downsampling read number, 
 >the downsampling step and its subsequent processes will be skipped.
+>
+>
 > Output: 
 > * {OutputDirectory}/HIC/{Prefix}__{ReadsNumber}.hic
 > * {OutputDirectory}/READ/{Prefix}__{ReadsNumber}.txt.gz
@@ -114,6 +116,8 @@ bash data_downsample.sh -i "./data/GM12878/READ/GSM1551550_HIC001.txt.gz" -p "GM
 
 >If the total number of reads in the downloaded file is less than or equal to the downsampling read number, 
 >the downsampling step and its subsequent processes will be skipped.
+>
+>
 > Output: 
 > * {OutputDirectory}/MAT/{Prefix}__{ReadsNumber}_{Resolution}_{Normalization}/
 
@@ -145,6 +149,8 @@ bash data_generate_for_training.sh -i "./data/MAT/GM12878__16.3M_10Kb_KR/" -d ".
 
 
 > *In the case of HiCPlus, if validation chromosome is provided, it will be automatically incorporated into the training set.*
+>
+>
 >Output: 
 > * {OutputDirectory}/data_{Model}/TRAIN/{InputName}_{MaxValue}.npz
 > * {OutputDirectory}/data_{Model}/VALID/{InputName}_{MaxValue}.npz
@@ -255,6 +261,8 @@ bash model_train.sh -m "DFHiC" -e "500" -b "16" -g "0" -o "./checkpoints" -l "./
 
 
 > *All the deep learning model codes were downloaded from each author's GitHub and modified for performance comparison. For light memory storage, pre-trained weights and data have been removed.*
+>
+>
 > Output: 
 > * {OutputDirectory}/checkpoints_{Model}/{Epoch}_{Time}_{Loss}
 > * {LossDirectory}/max_memory_usage.log
@@ -295,6 +303,8 @@ bash model_prediction.sh -m "DFHiC" -c "./checkpoints/checkpoints_DFHiC/00005_0.
 
 
 > *When you use SRHiC, the checkpoint file need .meta format.*
+>
+>
 > Output: 
 > * {OutputDirectory}/OUTPUT/{InputName}_{Model}_{Epoch}.npz
 
@@ -316,5 +326,7 @@ python data_make_whole.py -i ./data_model_out/OUTPUT/GM12878__2.0M_10Kb_KR_DFHiC
 
 
 > *The output of iEnhance doesn't need to create a chromosome matrix; it's already done within the output file of the model prediction.*
+>
+>
 > Output: 
-> * {OutputDirectory}/{Prefix}/{InputName}.npz
+> * {OutputDirectory}/{Prefix}/{InputName}
