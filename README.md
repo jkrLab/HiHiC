@@ -250,8 +250,8 @@ bash model_train.sh -m "DFHiC" -e "500" -b "16" -g "0" -o "./checkpoints" -l "./
 | `-g` | Number of GPU ID  | `0` |
 | `-o` | Directory path of output models  | `./checkpoints` |   
 | `-l` | Directory path of log | `./log` |
-| `-t` | Directory path of training data | `./data_model/data_DFHiC/TRAIN` | 
-| `-v` | Directory path of validation data | `./data_model/data_DFHiC/VALID` |   
+| `-t` | Directory path of training data directory | `./data_model/data_DFHiC/TRAIN` | 
+| `-v` | Directory path of validation data directory | `./data_model/data_DFHiC/VALID` |   
 
 
 > *All the deep learning model codes were downloaded from each author's GitHub and modified for performance comparison. For light memory storage, pre-trained weights and data have been removed.*
@@ -311,7 +311,7 @@ python data_make_whole.py -i ./data_model_out/OUTPUT/GM12878__2.0M_10Kb_KR_DFHiC
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-i` | File path of submatrix data (Prediction output) | `./data_model_out/OUTPUT/GM12878__2.0M_10Kb_KR_DFHiC_00005ep.npz` |
+| `-i` | File path of submatrix data or prediction output directory | `./data_model_out/OUTPUT/GM12878__2.0M_10Kb_KR_DFHiC_00005ep.npz` or `./data_model_out/OUTPUT` |
 | `-o` | Directory path of output data | `./data_model_out` |
 
 
