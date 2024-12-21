@@ -228,13 +228,13 @@ def HiCPlus_data_split(chrom_list):
 hr_contacts_dict,lr_contacts_dict,ct_hr_contacts,ct_lr_contacts = hic_matrix_extraction(file_list,args.bin_size)
 print(f"\n  ...Done making whole matrices...", flush=True)
 
-train_dir = f"{output_dir}/TRAIN/"
-valid_dir = f"{output_dir}/VALID/"
-test_dir = f"{output_dir}/TEST/"
+train_dir = f"{args.output_dir}/TRAIN/"
+valid_dir = f"{args.output_dir}/VALID/"
+test_dir = f"{args.output_dir}/TEST/"
 os.makedirs(train_dir, exist_ok=True)
 os.makedirs(valid_dir, exist_ok=True)
 os.makedirs(test_dir, exist_ok=True)
-prefix = os.path.basename(args.input_data_dir)
+prefix = os.path.basename(args.input_downsample_dir)
 
 # 모델이 원하는 포멧으로 저장
 if args.model == "DFHiC":

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 seed=13
 root_dir=$(pwd)
 
@@ -65,8 +66,9 @@ echo ""
 
 # Python 스크립트 비버퍼링 모드로 실행
 if [ "${model}" = "iEnhance" ]; then
+    prefix=$(basename ${input_downsample_dir})
     python3 -u model_iEnhance/divide-data.py -a "Train" -i "${input_data_dir}" -d "${input_downsample_dir}" -r "${reads}" -b "${bin_size}" -m "${model}" -g "${ref_genome}" -o "${saved_in}/data_${model}/" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
-    python3 -u model_iEnhance/construct_sets.py -a "Train" -i "${saved_in}/data_${model}/chrs" -b "${bin_size}" -m "${model}" -o "${saved_in}/data_${model}/" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
+    python3 -u model_iEnhance/construct_sets.py -a "Train" -i "${saved_in}/data_${model}/chrs" -m "${model}" -n "${prefix}" -o "${saved_in}/data_${model}/" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
 else
     python3 -u data_generate_for_training.py -i "${input_data_dir}" -d "${input_downsample_dir}" -b "${bin_size}" -m "${model}" -g "${ref_genome}" -o "${saved_in}/data_${model}/" -s "${max_value}" -t "${train_set}" -v "${valid_set}" -p "${prediction_set}"
 fi

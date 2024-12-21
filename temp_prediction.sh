@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # <valid loss 낮은 epoch의 weight으로 prediction>
 
 ckpt_DFHiC="./checkpoints_DFHiC/00024_0.10.39_0.0006255576.npz"

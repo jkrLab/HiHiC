@@ -1,4 +1,5 @@
 # #!/bin/bash
+set -euo pipefail
 
 # root_dir=$(pwd)
 # output_dir="${root_dir}/whole_mats_output"  # 최종 결과 저장 디렉토리 설정

@@ -114,20 +114,20 @@ if [ -n "$downsample_name" ]; then
 
 
   # 크로모좀 범위 확인
-  case "$ref_genome" in
-    hg*) start=1; end=23 ;;
-    mm*) start=1; end=20 ;;
-    *)
-      echo "Unknown reference genome: $ref_genome"
-      echo "Please specify the chromosome range."
-      read -p "Start chromosome: " start
-      read -p "End chromosome: " end
-      if ! [[ "$start" =~ ^[0-9]+$ && "$end" =~ ^[0-9]+$ && "$start" -ge 1 && "$end" -ge "$start" ]]; then
-        echo "Invalid chromosome range. Start and End must be positive integers, and Start <= End."
-        exit 1
-      fi
-      ;;
-  esac
+case "$ref_genome" in
+  hg*) start=1; end=22 ;;
+  mm*) start=1; end=19 ;;
+  *)
+    echo "Unknown reference genome: $ref_genome"
+    echo "Please specify the chromosome range."
+    read -p "Start chromosome: " start
+    read -p "End chromosome: " end
+  if ! [[ "$start" =~ ^[0-9]+$ && "$end" =~ ^[0-9]+$ && "$start" -ge 1 && "$end" -ge "$start" ]]; then
+    echo "Invalid chromosome range. Start and End must be positive integers, and Start <= End."
+      exit 1
+    fi
+    ;;
+esac
 
   ### intra-chromosome contact matrix 생성 ###
   mkdir -p "${path}/MAT/${prefix}__${reads_abbr}_${resolution_abbr}_${normalization}"

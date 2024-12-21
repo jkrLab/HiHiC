@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 seed=13
 root_dir=$(pwd)
 

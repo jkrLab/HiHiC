@@ -67,6 +67,10 @@ echo "      Output data: ${saved_in}/${prefix}/MAT."
 echo ""
 
 path=${saved_in}/${prefix}
+if [ ! -w "./data/GM12878" ]; then
+    echo "You do not have write permission for ./data/GM12878"
+    exit 1
+fi
 
 ### 다운로드 ###
 echo "  ...Downloading data..."
@@ -86,12 +90,11 @@ elif (( lines >= 1000 )); then
 else
     reads_abbr=$lines
 fi
-
 save_name="${path}/READ/${prefix}__${reads_abbr}.txt.gz"
 mv "${path}/READ/${prefix}.txt.gz" ${save_name}
 
 echo ""
-echo "  ...Total reads in the file: ${reads_abbr}."
+echo "  ...Total reads in the file: ${reads_abbr}"
 
 if [[ "$reads" -eq -1 ]]; then
   echo "  All reads (${lines}) will be sampled and made into contact map."
@@ -124,8 +127,8 @@ fi
 
 ### 레퍼런스 지놈 크로모좀 범위 지정 ###
 case "$ref_genome" in
-  hg*) start=1; end=23 ;;
-  mm*) start=1; end=20 ;;
+  hg*) start=1; end=22 ;;
+  mm*) start=1; end=19 ;;
   *)
     echo "Unknown reference genome: $ref_genome"
     echo "Please specify the chromosome range."
@@ -139,18 +142,18 @@ case "$ref_genome" in
 esac
 
 ### intra-chromosome contact matrix 생성 ###
-mkdir -p "${path}/MAT/${prefix}__${reads_abbr}_${resolution_abbr}_${normalization}"
+if [ ! -d "${path}/MAT/${prefix}__${reads_abbr}_${resolution_abbr}_${normalization}/" ]; then
+    mkdir -p "${path}/MAT/${prefix}__${reads_abbr}_${resolution_abbr}_${normalization}/" || echo "Fail to make directory: ${path}/MAT/${prefix}__${reads_abbr}_${resolution_abbr}_${normalization}/"
+fi
 for ((chrom=start; chrom<=end; chrom++)); do
-  java -jar "${juicertools}" dump observed "${normalization}" "${path}/HIC/${prefix}__${reads_abbr}.hic" "${chrom}" "${chrom}" BP "${resolution}" \
-    "${path}/MAT/${prefix}__${reads_abbr}_${resolution_abbr}_${normalization}/chr${chrom}.txt"
+  java -jar "${juicertools}" dump observed "${normalization}" "${path}/HIC/${prefix}__${reads_abbr}.hic" "${chrom}" "${chrom}" BP "${resolution}" "${path}/MAT/${prefix}__${reads_abbr}_${resolution_abbr}_${normalization}/chr${chrom}.txt"
 done
 echo "  ...Contact matrices saved in: ${path}/MAT/${prefix}__${reads_abbr}_${resolution_abbr}_${normalization}/"
 
 if [ -n "$downsample_name" ]; then
   mkdir -p "${path}/MAT/${prefix}__${sample_abbr}_${resolution_abbr}_${normalization}"
   for ((chrom=start; chrom<=end; chrom++)); do
-    java -jar "${juicertools}" dump observed "${normalization}" "${path}/HIC/${prefix}__${sample_abbr}.hic" "${chrom}" "${chrom}" BP "${resolution}" \
-      "${path}/MAT/${prefix}__${sample_abbr}_${resolution_abbr}_${normalization}/chr${chrom}.txt"
+    java -jar "${juicertools}" dump observed "${normalization}" "${path}/HIC/${prefix}__${sample_abbr}.hic" "${chrom}" "${chrom}" BP "${resolution}" "${path}/MAT/${prefix}__${sample_abbr}_${resolution_abbr}_${normalization}/chr${chrom}.txt"
   done
   echo "  ...Downsampled contact matrices saved in: ${path}/MAT/${prefix}__${sample_abbr}_${resolution_abbr}_${normalization}/"
 fi

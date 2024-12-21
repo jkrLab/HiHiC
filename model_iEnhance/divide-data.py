@@ -275,10 +275,10 @@ if __name__ == '__main__':
         
     ################################## by HiHiC #####
     action = args.action
-    dict_mat = {}
-    prefix = os.path.basename(args.input_data_dir)
-
+    
     if action == "Enhancement":
+        dict_mat = {}
+        prefix = os.path.basename(args.input_data_dir)
         input_dir = os.listdir(input_data_dir)
         chrs_list = [file.split(".")[0].split("chr")[-1] for file in input_dir]
         for chr in chrs_list:
@@ -287,6 +287,7 @@ if __name__ == '__main__':
         np.savez(os.path.join(output_dir, f"{prefix}"), **dict_mat)
     
     else:
+        prefix = os.path.basename(args.input_downsample_dir)
         for chr in chrs_list:
             rmat,lmat = hic_matrix_extraction(chr, args.bin_size)
             divide(chr,rmat,lmat,output_dir) 

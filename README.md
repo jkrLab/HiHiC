@@ -25,11 +25,11 @@ git clone https://github.com/jkrLab/HiHiC.git
 
 + With GPU (CUDA 11.4)
 ```
-docker run --rm --gpus all -it --name hihic_preprocess -v ${PWD}:${PWD} jkrlab/hihic_preprocess
+docker run --rm --gpus all -it --name hihic_preprocess -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_preprocess
 ```
 + Without GPU
 ```
-docker run --rm -it --name hihic_preprocess -v ${PWD}:${PWD} jkrlab/hihic_preprocess
+docker run --rm -it --name hihic_preprocess -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_preprocess
 ```
 >Every docker image should be run in the parent directory of HiHiC.
 
@@ -109,7 +109,7 @@ bash data_downsample.sh -i "./data/GM12878/READ/GSM1551550_HIC001.txt.gz" -p "GM
 | `-i` | Hi-C data contact reads file | `./data/GM12878/READ/GSM1551550_HIC001.txt.gz` |
 | `-g` | Reference genome length file, your Hi-C data is based on | `./hg19.txt` |
 | `-p` | Prefix | `GM12878` |
-| `-r` | Number of Downsample reads<br>If set to -1, all reads will be sampled and made into a contact map. | `10187283` |
+| `-r` | Number of downsample reads<br>If set to -1, all reads will be sampled and made into a contact map. | `10187283` |
 | `-j` | Path of Juicer tools | `./juicer_tools.jar` |
 | `-n` | Normalization | `KR` |
 | `-b` | Resolution (binning size) | `10000` | 
@@ -133,14 +133,15 @@ bash data_downsample.sh -i "./data/GM12878/READ/GSM1551550_HIC001.txt.gz" -p "GM
 
 
 ```
-bash data_generate_for_training.sh -i "./data/MAT/GM12878__16.3M_10Kb_KR/" -d "./data/MAT/GM12878__10.2M_10Kb_KR/" -b "10000" -m "DFHiC" -g "./hg19.txt" -o "./data_model" -s "300" -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
+bash data_generate_for_training.sh -i "./data/MAT/GM12878__160.3M_10Kb_KR/" -d "./data/MAT/GM12878__10.2M_10Kb_KR/" -r "10187283" -b "10000" -m "DFHiC" -g "./hg19.txt" -o "./data_model" -s "300" -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
 ```
 
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-i` | Directory containing chr{N}.txt files (Intra chromosome interaction in COO format) | `./data/MAT/GM12878__16.3M_10Kb_KR/` |
+| `-i` | Directory containing chr{N}.txt files (Intra chromosome interaction in COO format) | `./data/MAT/GM12878__160.3M_10Kb_KR/` |
 | `-d` | Directory containing chr{N}.txt files (Intra chromosome interaction in COO format) | `./data/MAT/GM12878__10.2M_10Kb_KR/` |
+| `-r` | Number of downsample reads | `10187283` |
 | `-g` | Reference genome length file, your input data are based on | `./hg19.txt` |
 | `-o` | Directory path of output data | `./data_model` |
 | `-b` | Resolution (Binning size) | `10000` | 

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 ## step size 50 epoch 마다 예측 수행 ###
 seed=42
