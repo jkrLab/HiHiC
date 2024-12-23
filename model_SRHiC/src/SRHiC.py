@@ -136,8 +136,8 @@ def model(train_input_dir,
 
 
         # Validation data 초기 손실 계산
-        valid_input_list = [input for input in os.listdir(valid_input_dir) if input.endswith('.npy')]
-        valid_data_all = [np.load(os.path.join(valid_input_dir, fname), allow_pickle=True).astype(np.float32) for fname in valid_input_list]
+        valid_input_list = [input for input in os.listdir(valid_input_dir) if input.endswith('.npz')]
+        valid_data_all = [(np.load(os.path.join(valid_input_dir, fname), allow_pickle=True)['data']).astype(np.float32) for fname in valid_input_list]
         x = np.concatenate(valid_data_all, axis=0)
         x = np.reshape(x, [x.shape[0], 40, 68, 1])
         size_input = int(x.shape[0] / epoch_size) + 1
@@ -165,7 +165,7 @@ def model(train_input_dir,
         for epoch in range(iterations_size+1):
             for file in input_list:
                 # x = np.load(train_input_dir + file).astype(np.float32)
-                x = np.load(os.path.join(train_input_dir, file)).astype(np.float32) ############### Added by HiHiC ###
+                x = np.load(os.path.join(train_input_dir, file))['data'].astype(np.float32) ################## Added by HiHiC ###
                 x = np.reshape(x, [x.shape[0], 40, 68, 1])
                 size_input = int(x.shape[0] / epoch_size) + 1
                 np.random.shuffle(x)
