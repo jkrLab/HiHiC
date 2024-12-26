@@ -126,7 +126,8 @@ def wlog(fname,w):
         f.close()
 
 cfg = Config()
-device = t.device('cuda' if t.cuda.is_available() else 'cpu')
+# device = t.device('cuda' if t.cuda.is_available() else 'cpu')
+device = t.device(f'cuda:{args.gpu_id}' if t.cuda.is_available() else 'cpu')
 # cTrain = sys.argv[1]
 cTrain = args.train_option
 # t.autograd.set_detect_anomaly(True)
