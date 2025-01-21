@@ -19,3 +19,7 @@ for model in "${models[@]}"; do
     bash model_train.sh -m "${model}" -e "${epoch}" -b "${batch}" -g "0" -o "${dir_output}" -l "${dir_log}" -t "./data_model/data_${model}/TRAIN" -v "./data_model/data_${model}/VALID"
 done
 
+models=("HiCPlus")  # tensorflow: "SRHiC" "DFHiC" / torch: "HiCARN1" "HiCARN2" "HiCNN2" "DeepHiC" "iEnhance" "HiCPlus"
+for model in "${models[@]}"; do
+    bash model_train.sh -m "${model}" -e "10000" -b "${batch}" -g "0" -o "${dir_output}" -l "${dir_log}" -t "./data_model/data_${model}/TRAIN" -v "./data_model/data_${model}/VALID"
+done

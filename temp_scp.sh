@@ -10,7 +10,7 @@ trials=("trial1" "trial2" "trial3" "trial4" "trial5")
 for trial in "${trials[@]}"; do
     for read in "${reads[@]}"; do
         for cell in "${cells[@]}"; do
-            scp ./data_model_out/${cell}_${trial}/${cell}_${trial}__${read}* mohyelim7@203.253.2.168:/home/data/HiHiC/${cell}__${read}/
+            scp ./data_model_out/${cell}_${trial}/${cell}_${trial}__${read}* mohyelim7@203.253.2.168:/home/data/HiHiC/train_3.0M/${cell}__${read}/
         done
     done
 done

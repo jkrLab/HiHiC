@@ -9,8 +9,7 @@ from model import iEnhance
 
 
 ################################################## Added by HiHiC ######
-########################################################################
-import os, argparse
+import os, argparse ####################################################
 
 parser = argparse.ArgumentParser(description='iEnhance prediction process')
 parser._action_groups.pop()
@@ -32,18 +31,16 @@ required.add_argument('--output_data_dir', type=str, default='./output_iEnhance'
                       help='directory path for saving enhanced output (default: HiHiC/output_iEnhance/)')
 args = parser.parse_args()
 
-model = Construct() 
-state_dict = t.load(args.ckpt_file, map_location = t.device('cpu'))
+model = Construct()
+state_dict = t.load(args.ckpt_file, map_location = t.device(f'cuda:{args.gpu_id}' if t.cuda.is_available() and args.gpu_id >= 0 else 'cpu'))
 model.load_state_dict(state_dict)
 
-device = t.device(f'cuda:{args.gpu_id}' if t.cuda.is_available() else 'cpu')
+device = t.device(f'cuda:{args.gpu_id}' if t.cuda.is_available() and args.gpu_id >= 0 else 'cpu')
 model.to(device)
 
 prefix = os.path.splitext(os.path.basename(args.input_data))[0]
 input_data = dict(np.load(args.input_data, allow_pickle=True))
-chrs_list = input_data.keys()
-
-########################################################################
+chrs_list = input_data.keys() ##########################################
 ########################################################################
 
 # model = t.load("pretrained/BestHiCModule.pt",map_location = t.device('cpu'))
@@ -104,6 +101,12 @@ def Combine(d_size,jump,lens,hic_m):
             enRes = t.triu(y)
             enRes = enRes.float()
             
+            ################## byHiHiC ###
+            del temp_m, result ###########
+            if t.cuda.is_available() and args.gpu_id >= 0:
+                t.cuda.empty_cache() #####
+            ##############################
+
             current_row_idx = np.arange(current_row_start,current_row_end)
             last_row_idx = np.arange(last_row_start,last_row_end)
             hr_mat_row_site = np.intersect1d(current_row_idx,last_row_idx)
@@ -170,11 +173,16 @@ def predict(c):
     # rdata = Readcooler(fn,'chr' + c)
     rdata = input_data[str(c)] ###### by HiHiC
     lrmat = rdata.astype(np.float32)
-    hic_m = t.from_numpy(lrmat)
-    fakemat = Combine(150,50,lrmat.shape[0],hic_m)
-
+    hic_m = t.from_numpy(lrmat).to(device)
+    # fakemat = Combine(150,50,lrmat.shape[0],hic_m)
     # np.savez('./' + cell_line_name +'HiC-Predict-chr'+c+'.npz',fakeh = fakemat.numpy(),lhr = lrmat)
-    return fakemat
+    try:
+        fakemat = Combine(150, 50, lrmat.shape[0], hic_m)
+        return fakemat
+    finally:
+        del hic_m
+        t.cuda.empty_cache()
+
 
 if __name__ == '__main__':
     # pool_num = len(chrs_list) if multiprocessing.cpu_count() > len(chrs_list) else multiprocessing.cpu_count()
@@ -191,6 +199,9 @@ if __name__ == '__main__':
     for chr in chrs_list:
         chr_mat = predict(chr)
         chr_dict[chr] = chr_mat.cpu().numpy()
+        del chr_mat
+        if t.cuda.is_available() and args.gpu_id >= 0:
+            t.cuda.empty_cache()
  
     np.savez(file, **chr_dict)
     #######################################

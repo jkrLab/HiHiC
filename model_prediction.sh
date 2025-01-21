@@ -44,13 +44,7 @@ fi
 check_file_exists "${ckpt_file}"
 check_file_exists "${input_data}"
 
-if [ "${model}" = "iEnhance" ]; then
-    prefix=$(basename "$input_data")
-    prefix=${prefix%%__*}
-    dir_output="${saved_in}/${prefix}"
-else
-    dir_output="${saved_in}/OUTPUT"
-fi
+dir_output="${saved_in}/OUTPUT"
 
 if [ ! -d "${dir_output}" ]; then
     mkdir -p "${dir_output}"
