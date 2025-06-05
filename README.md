@@ -254,7 +254,7 @@ bash model_train.sh -m "DFHiC" -e "500" -b "16" -g "0" -o "./checkpoints" -l "./
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-m` | Name of the model (One of HiCARN1, HiCARN12, DeepHiC, HiCNN2, DFHiC, HiCPlus, SRHiC, or iEnhance) | `DFHiC` |   
+| `-m` | Name of the model (One of HiCARN1, HiCARN2, DeepHiC, HiCNN, DFHiC, HiCPlus, SRHiC, or iEnhance) | `DFHiC` |   
 | `-e` | Number of train epoch | `500` |
 | `-b` | Number of batch size | `16` | 
 | `-g` | Number of GPU ID  | `0` |
@@ -298,7 +298,7 @@ bash model_prediction.sh -m "DFHiC" -c "./checkpoints/checkpoints_DFHiC/00005_0.
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-m` | Name of the model (One of HiCARN1, HiCARN12, DeepHiC, HiCNN2, DFHiC, HiCPlus, SRHiC, or iEnhance) | `DFHiC` |   
+| `-m` | Name of the model (One of HiCARN1, HiCARN2, DeepHiC, HiCNN, DFHiC, HiCPlus, SRHiC, or iEnhance) | `DFHiC` |   
 | `-c` | File path of checkpoint | `./checkpoints/checkpoints_DFHiC/00005_0.02.38_0.0006605307.npz` |
 | `-b` | Number of batch size | `16` |
 | `-g` | Number of GPU ID  | `0` |

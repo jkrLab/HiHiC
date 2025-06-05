@@ -67,8 +67,8 @@ elif [ ${model} = "HiCARN2" ]; then
 elif [ ${model} = "DeepHiC" ]; then 
     python model_DeepHiC/data_predict.py --root_dir "${root_dir}" --model "${model}" --ckpt_file "${ckpt_file}" --batch_size "${batch_size}" --gpu_id "${gpu_id}" --input_data "${input_data}" --output_data_dir "${dir_output}"
 
-elif [ ${model} = "HiCNN2" ]; then 
-    python model_HiCNN2/HiCNN2_predict.py --root_dir "${root_dir}" --model "${model}" --ckpt_file "${ckpt_file}" --batch_size "${batch_size}" --gpu_id "${gpu_id}" --input_data "${input_data}" --output_data_dir "${dir_output}"
+elif [ ${model} = "HiCNN" ]; then 
+    python model_HiCNN2/HiCNN2_predict.py --root_dir "${root_dir}" --model "HiCNN2" --ckpt_file "${ckpt_file}" --batch_size "${batch_size}" --gpu_id "${gpu_id}" --input_data "${input_data}" --output_data_dir "${dir_output}"
 
 elif [ ${model} = "DFHiC" ]; then 
     python model_DFHiC/run_predict.py --root_dir "${root_dir}" --model "${model}" --ckpt_file "${ckpt_file}" --batch_size "${batch_size}" --gpu_id "${gpu_id}" --input_data "${input_data}" --output_data_dir "${dir_output}"
@@ -83,6 +83,6 @@ elif [ ${model} = "iEnhance" ]; then
     python model_iEnhance/predict-hic.py --root_dir "${root_dir}" --model "${model}" --ckpt_file "${ckpt_file}" --batch_size "${batch_size}" --gpu_id "${gpu_id}" --input_data "${input_data}" --output_data_dir "${saved_in}"
 
 else
-    echo "Model name should be one of the DeepHiC, HiCNN2, DFHiC, HiCPlus, HiCARN1, HiCARN2, SRHiC, iEnhance."
+    echo "Model name should be one of the DeepHiC, HiCNN, DFHiC, HiCPlus, HiCARN1, HiCARN2, SRHiC, iEnhance."
 
 fi
