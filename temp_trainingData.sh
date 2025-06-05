@@ -1,8 +1,8 @@
 #!/bin/bash
 
-reads=("3000000")
+reads=("10000000")
 resolution=10000
-models=("iEnhance")  # tensorflow: "SRHiC" "DFHiC" / torch: "HiCARN1" "HiCARN2" "HiCNN2" "DeepHiC" "iEnhance" "HiCPlus"
+models=("SRHiC")  # tensorflow: "SRHiC" "DFHiC" / torch: "HiCARN1" "HiCARN2" "HiCNN2" "DeepHiC" "iEnhance" "HiCPlus"
 
 # bash data_download_downsample.sh -i "https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz" -p "GM12878" -g "hg19.txt" -r "${read}" -j "./juicer_tools.jar" -n "KR" -b ${resolution} -o "./data"
 # bash data_downsample.sh -i "GSM1551550_HIC001.txt.gz" -p "GM12878" -g "hg19.txt" -r "3000000" -j "juicer_tools.jar" -n "KR" -b "${resolution}" -o "./data"

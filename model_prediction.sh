@@ -80,7 +80,7 @@ elif [ ${model} = "HiCPlus" ]; then
     python model_HiCPlus/hicplus/pred_chromosome.py --root_dir "${root_dir}" --model "${model}" --ckpt_file "${ckpt_file}" --batch_size "${batch_size}" --gpu_id "${gpu_id}" --input_data "${input_data}" --output_data_dir "${dir_output}"
 
 elif [ ${model} = "iEnhance" ]; then
-    python model_iEnhance/predict-hic.py --root_dir "${root_dir}" --model "${model}" --ckpt_file "${ckpt_file}" --batch_size "${batch_size}" --gpu_id "${gpu_id}" --input_data "${input_data}" --output_data_dir "${dir_output}"
+    python model_iEnhance/predict-hic.py --root_dir "${root_dir}" --model "${model}" --ckpt_file "${ckpt_file}" --batch_size "${batch_size}" --gpu_id "${gpu_id}" --input_data "${input_data}" --output_data_dir "${saved_in}"
 
 else
     echo "Model name should be one of the DeepHiC, HiCNN2, DFHiC, HiCPlus, HiCARN1, HiCARN2, SRHiC, iEnhance."

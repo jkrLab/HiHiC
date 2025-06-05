@@ -185,7 +185,8 @@ loss_trend.png
 *.html
 *backup*
 TAD*
-temp/
+temp_*
+temp_scp.sh
 
 predicted_*
 GM12878*
@@ -193,3 +194,4 @@ data_downsampling.sh
 train.ipynb
 output
 wget-log
+/others

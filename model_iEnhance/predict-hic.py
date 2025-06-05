@@ -194,7 +194,7 @@ if __name__ == '__main__':
     
     ######################### by HiHiC ####
     th_model = args.ckpt_file.split('/')[-1].split('_')[0]
-    file = os.path.join(args.output_data_dir, f'{prefix}_{args.model}_{th_model}ep.npz')
+    file = os.path.join(args.output_data_dir, prefix.split("__")[0], f'{prefix}_{args.model}_{th_model}ep.npz')
     chr_dict = {}
     for chr in chrs_list:
         chr_mat = predict(chr)
@@ -202,7 +202,8 @@ if __name__ == '__main__':
         del chr_mat
         if t.cuda.is_available() and args.gpu_id >= 0:
             t.cuda.empty_cache()
- 
+            
+    os.makedirs(os.path.join(args.output_data_dir, prefix.split("__")[0]), exist_ok=True)
     np.savez(file, **chr_dict)
     #######################################
     # pool.close()

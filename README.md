@@ -147,7 +147,7 @@ bash data_generate_for_training.sh -i "./data/MAT/GM12878__160.3M_10Kb_KR/" -d "
 | `-b` | Resolution (Binning size) | `10000` | 
 | `-s` | Max value of Hi-C matrix | `300` |
 | `-m` | Model name that you use (One of HiCARN, DeepHiC, HiCNN, DFHiC, HiCPlus, SRHiC, or iEnhance) | `DFHiC` |
-| `-t` | Chromosome numbers of training set | `"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"` |
+| `-t` | Chromosome numbers of training set | `"1 2 3 4 5 6 7 8 9 10 11 12 13 14"` |
 | `-v` | Chromosome numbers of validation set | `"15 16 17"` |
 | `-p` | Chromosome numbers of prediction set | `"18 19 20 21 22"` |
 
@@ -180,7 +180,7 @@ bash data_generate_for_prediction.sh -i "./data/MAT/GM12878__10.2M_10Kb_KR/" -b 
 
 
 > Output: 
-> * `{OutputDirectory}/data_{Model}/ENHANCEMENT/{InputName}_{MaxValue}.npz`
+> * `{OutputDirectory}/data_{Model}/ENHANCEMENT/{InputName}.npz`
 
 
 
