@@ -5,7 +5,7 @@ root_dir=$(pwd)
 
 # bash data_generate_for_prediction.sh -i "./data/MAT/GM12878__10.2M_10Kb_KR/" -b "10000" -m "DFHiC" -g "./hg19.txt" -o "./data_model" -s "300"
 
-while getopts ":i:b:m:g:o:s:" flag; do
+while getopts ":i:b:m:g:o:s:w:" flag; do
     case $flag in
         i) input_data_dir=$(echo "${OPTARG}" | sed 's#/*$##');;
         b) bin_size=$OPTARG;;
@@ -13,6 +13,7 @@ while getopts ":i:b:m:g:o:s:" flag; do
         g) ref_genome=$OPTARG;;
         o) saved_in=$(echo "${OPTARG}" | sed 's#/*$##');;
         s) max_value=$OPTARG;;
+        w) workers=$OPTARG;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
             exit 1;;
@@ -24,7 +25,7 @@ done
 
 # 필수 인자 체크
 if [ -z "${input_data_dir}" ] || [ -z "${bin_size}" ] || [ -z "${model}" ] || [ -z "${ref_genome}" ] || [ -z "${saved_in}" ] || [ -z "${max_value}" ]; then
-    echo "Usage: $0 -i <input_data_path> -b <resolution> -m <model_name> -g <ref_genome> -o <saved_in> -s <max_value> " >&2
+    echo "Usage: $0 -i <input_data_path> -b <resolution> -m <model_name> -g <ref_genome> -o <saved_in> -s <max_value> [-w <workers>]" >&2
     exit 1
 fi
 
@@ -45,5 +46,5 @@ fi
 if [ "${model}" = "iEnhance" ]; then
     python3 -u model_iEnhance/divide-data.py -a "Enhancement" -i "${input_data_dir}" -m "${model}" -b "${bin_size}" -g "${ref_genome}" -o "${saved_in}/data_${model}/" -s "${max_value}"
 else
-    python3 -u data_generate_for_prediction.py -i "${input_data_dir}" -b "${bin_size}" -m "${model}" -g "${ref_genome}" -o "${saved_in}/data_${model}/" -s "${max_value}"
+    python3 -u data_generate_for_prediction.py -i "${input_data_dir}" -b "${bin_size}" -m "${model}" -g "${ref_genome}" -o "${saved_in}/data_${model}/" -s "${max_value}" -w "${workers:-$(nproc)}"
 fi

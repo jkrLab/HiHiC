@@ -65,51 +65,20 @@ cd /path/to/HiHiC/directory
 2. Process mapped read data and transform into Hi-C contact map
 
 
-* Download data from web and transform into Hi-C contact map
+* Sample reads and transform into Hi-C contact map
 
 
 ```
-bash data_download_downsample.sh -i "https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz" -p "GM12878" -g "./hg19.txt" -r "10187283" -j "./juicer_tools.jar" -n "KR" -b "10000" -o "./data"
-```
-
-
-| Argument | Description | Example |
-|----------|-------------|---------|
-| `-i` | Download URL of Hi-C data contact reads | `https://ftp.ncbi.nlm.nih.gov/geo/samples/GSM1551nnn/GSM1551550/suppl/GSM1551550_HIC001_merged_nodups.txt.gz` |
-| `-g` | Reference genome length file, your Hi-C data is based on | `./hg19.txt` |
-| `-p` | Prefix | `GM12878` |
-| `-r` | Number of down-sample reads<br>If set to -1, all reads will be sampled and made into a contact map. | `10187283` |
-| `-j` | Path of Juicer tools | `./juicer_tools.jar` |
-| `-n` | Normalization | `KR` |
-| `-b` | Resolution (binning sizes) | `10000` | 
-| `-o` | Directory path of output data | `./data` |
-
-
->If the total number of reads in the downloaded file is less than or equal to the down-sampling read number, 
->the down-sampling step and its subsequent processes will be skipped.
->
->
-> Output: 
-> * `{OutputDirectory}/HIC/{Prefix}__{ReadsNumber}.hic`
-> * `{OutputDirectory}/READ/{Prefix}__{ReadsNumber}.txt.gz`
-> * `{OutputDirectory}/MAT/{Prefix}__{ReadsNumber}_{Resolution}_{Normalization}/`
-
-
-
-* Own data to down-sample and transform into Hi-C contact map
-
-
-```
-bash data_downsample.sh -i "./data/GM12878/READ/GSM1551550_HIC001.txt.gz" -p "GM12878" -g "./hg19.txt" -r "10187283" -j "./juicer_tools.jar" -n "KR" -b "10000" -o "./data"
+bash data_downsample.sh -i "./data/GSE63525_merged/GM12878_primary_merged.txt.gz" -p "GM12878_primary" -g "./hg19.txt" -r "180000000" -j "./juicer_tools.jar" -n "KR" -b "10000" -o "./data"
 ```
 
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-i` | Hi-C data contact reads file | `./data/GM12878/READ/GSM1551550_HIC001.txt.gz` |
+| `-i` | Hi-C data contact reads file | `./data/GSE63525_merged/GM12878_primary_merged.txt.gz` |
 | `-g` | Reference genome length file, your Hi-C data is based on | `./hg19.txt` |
-| `-p` | Prefix | `GM12878` |
-| `-r` | Number of down-sample reads<br>If set to -1, all reads will be sampled and made into a contact map. | `10187283` |
+| `-p` | Prefix | `GM12878_primary` |
+| `-r` | Number of down-sample reads<br>If set to -1, all reads will be sampled and made into a contact map. | `180000000` |
 | `-j` | Path of Juicer tools | `./juicer_tools.jar` |
 | `-n` | Normalization | `KR` |
 | `-b` | Resolution (binning size) | `10000` | 
@@ -122,6 +91,7 @@ bash data_downsample.sh -i "./data/GM12878/READ/GSM1551550_HIC001.txt.gz" -p "GM
 >
 > Output: 
 > * `{OutputDirectory}/READ/{Prefix}__{ReadsNumber}.txt.gz`
+> * `{OutputDirectory}/HIC/{Prefix}__{ReadsNumber}.hic`
 > * `{OutputDirectory}/MAT/{Prefix}__{ReadsNumber}_{Resolution}_{Normalization}/`
 
 
@@ -133,14 +103,14 @@ bash data_downsample.sh -i "./data/GM12878/READ/GSM1551550_HIC001.txt.gz" -p "GM
 
 
 ```
-bash data_generate_for_training.sh -i "./data/MAT/GM12878__160.3M_10Kb_KR/" -d "./data/MAT/GM12878__10.2M_10Kb_KR/" -r "10187283" -b "10000" -m "DFHiC" -g "./hg19.txt" -o "./data_model" -s "300" -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22"
+bash data_generate_for_training.sh -i "./data/MAT/GM12878_primary__2946.5M_10Kb_KR/" -d "./data/MAT/GM12878_primary__180.0M_10Kb_KR/" -r "10187283" -b "10000" -m "DFHiC" -g "./hg19.txt" -o "./data_model" -s "300" -t "1 2 3 4 5 6 7 8 9 10 11 12 13 14" -v "15 16 17" -p "18 19 20 21 22" -w "8"
 ```
 
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-i` | Directory containing chr{N}.txt files (Intra chromosome interaction in COO format) | `./data/MAT/GM12878__160.3M_10Kb_KR/` |
-| `-d` | Directory containing down-sampled chr{N}.txt files (Intra chromosome interaction in COO format) | `./data/MAT/GM12878__10.2M_10Kb_KR/` |
+| `-i` | Directory containing chr{N}.txt files (Intra chromosome interaction in COO format) | `./data/MAT/GM12878_primary__2946.5M_10Kb_KR/` |
+| `-d` | Directory containing down-sampled chr{N}.txt files (Intra chromosome interaction in COO format) | `./data/MAT/GM12878_primary__180.0M_10Kb_KR/` |
 | `-r` | Number of down-sample reads | `10187283` |
 | `-g` | Reference genome length file, your input data are based on | `./hg19.txt` |
 | `-o` | Directory path of output data | `./data_model` |
@@ -150,6 +120,7 @@ bash data_generate_for_training.sh -i "./data/MAT/GM12878__160.3M_10Kb_KR/" -d "
 | `-t` | Chromosome numbers of training set | `"1 2 3 4 5 6 7 8 9 10 11 12 13 14"` |
 | `-v` | Chromosome numbers of validation set | `"15 16 17"` |
 | `-p` | Chromosome numbers of prediction set | `"18 19 20 21 22"` |
+| `-w` | Number of worker processes (optional; defaults to all CPUs) | `8` |
 
 
 > *In the case of HiCPlus, if validation chromosome is provided, it will be automatically incorporated into the training set.*
@@ -167,16 +138,17 @@ bash data_generate_for_training.sh -i "./data/MAT/GM12878__160.3M_10Kb_KR/" -d "
 
 
 ```
-bash data_generate_for_prediction.sh -i "./data/MAT/GM12878__10.2M_10Kb_KR/" -b "10000" -m "DFHiC" -g "./hg19.txt" -o "./data_model" -s "300"
+bash data_generate_for_prediction.sh -i "./data/MAT/GM12878_primary__180.0M_10Kb_KR/" -b "10000" -m "DFHiC" -g "./hg19.txt" -o "./data_model" -s "300" -w "8"
 ```
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `-i` | Directory containing chr{N}.txt files (Intra chromosome interaction in COO format) | `./data/MAT/GM12878__10.2M_10Kb_KR/` |
+| `-i` | Directory containing chr{N}.txt files (Intra chromosome interaction in COO format) | `./data/MAT/GM12878_primary__180.0M_10Kb_KR/` |
 | `-g` | Reference genome length file, your input data is based on | `./hg19.txt` |
 | `-o` | Directory path of output data | `./data_model` |
 | `-b` | Resolution (Binning size) | `10000` | 
 | `-s` | Max value of Hi-C matrix | `300` |
 | `-m` | Model name that you use (One of HiCARN, DeepHiC, HiCNN, DFHiC, HiCPlus, SRHiC, or iEnhance) | `DFHiC` |
+| `-w` | Number of worker processes (optional; defaults to all CPUs) | `8` |
 
 
 > Output: 
@@ -292,7 +264,7 @@ cd /path/to/HiHiC/directory
 
 
 ```
-bash model_prediction.sh -m "DFHiC" -c "./checkpoints/checkpoints_DFHiC/00005_0.02.38_0.0006605307.npz" -b "16" -g "0" -i "./data_model/data_DFHiC/test/test_ratio16.npz" -o "./data_model_out"
+bash model_prediction.sh -m "DFHiC" -c "./checkpoints/checkpoints_DFHiC/00005_0.02.38_0.0006605307.npz" -b "16" -g "0" -i "./data_DFHiC/ENHANCEMENT/GM12878__2.0M_10Kb_KR.npz" -o "./data_model_out"
 ```
 
 
@@ -319,7 +291,7 @@ bash model_prediction.sh -m "DFHiC" -c "./checkpoints/checkpoints_DFHiC/00005_0.
 
 
 ```
-python data_make_whole.py -i ./data_model_out/OUTPUT/GM12878__2.0M_10Kb_KR_DFHiC_00005ep.npz  -o ./data_model_out
+python data_make_whole.py -i ./data_model_out/OUTPUT/GM12878__2.0M_10Kb_KR_DFHiC_00005ep.npz -o ./data_model_out -w 8
 ```
 
 
@@ -327,6 +299,7 @@ python data_make_whole.py -i ./data_model_out/OUTPUT/GM12878__2.0M_10Kb_KR_DFHiC
 |----------|-------------|---------|
 | `-i` | File path of sub-matrix data or prediction output directory | `./data_model_out/OUTPUT/GM12878__2.0M_10Kb_KR_DFHiC_00005ep.npz` or `./data_model_out/OUTPUT` |
 | `-o` | Directory path of output data | `./data_model_out` |
+| `-w` | Number of worker processes (optional; defaults to all CPUs) | `8` |
 
 
 > *The output of iEnhance doesn't need to create a chromosome matrix; it's already done within the output file of the model prediction.*

@@ -1,10 +1,21 @@
 import os, sys, math, random, argparse, shutil
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+from multiprocessing import Pool
+import tempfile
 
 path = os.getcwd()
 random.seed(100)
-scaler = MinMaxScaler(feature_range=(0,1))
+
+# Lightweight normalization: clip to max_value and scale to [0,1] per-matrix using float32
+def _normalize_matrix_inplace(matrix: np.ndarray, max_value: int) -> None:
+    # Ensure float32 to reduce memory
+    if matrix.dtype != np.float32:
+        matrix[:] = matrix.astype(np.float32, copy=False)
+    # Clip and scale in place
+    np.clip(matrix, 0, max_value, out=matrix)
+    local_max = float(matrix.max())
+    if local_max > 0.0:
+        matrix /= np.float32(local_max)
 
 # 인자 받기
 parser = argparse.ArgumentParser(description='Read Hi-C contact map and Divide submatrix for training and prediction', add_help=True)
@@ -21,6 +32,7 @@ required.add_argument('-s', '--max_value', dest='max_value', type=str, required=
 optional.add_argument('-t', '--train_set', dest='train_set', type=str, required=False, help='Train set chromosome: "1 2 3 4 5 6 7 8 9 10 11 12 13 14"')
 optional.add_argument('-v', '--valid_set', dest='valid_set', type=str, required=False, help='Validation set chromosome: "15 16 17"')
 optional.add_argument('-p', '--test_set', dest='test_set', type=str, required=False, help='Prediction set chromosome: "18 19 20 21 22"')
+optional.add_argument('-w', '--workers', dest='workers', type=int, required=False, default=os.cpu_count(), help='Number of worker processes for building contact matrices')
 
 args = parser.parse_args()
 file_list = os.listdir(args.input_data_dir)
@@ -31,53 +43,91 @@ chrom_list = args.train_set.split() + args.valid_set.split() + args.test_set.spl
 max_value = int(args.max_value) # minmax scaling
 bin_size = args.bin_size
 
-# 크로모좀 별로 matrix 만들기
+def _build_contact_mats_for_chrom(task):
+    file, res, chrom_len, input_hr_dir, input_lr_dir, max_value, temp_dir = task
+    chrom = file.split('.')[0]
+    mat_dim = int(math.ceil(chrom_len[chrom]*1.0/res))
+    hr_contact_matrix = np.zeros((mat_dim, mat_dim), dtype=np.float32)
+    lr_contact_matrix = np.zeros((mat_dim, mat_dim), dtype=np.float32)
+    
+    # HR
+    hr_hic_file = f'{input_hr_dir}/{file}'
+    with open(hr_hic_file, 'r') as f:
+        for line in f:
+            parts = line.rstrip().split('\t')
+            if len(parts) < 3:
+                continue
+            idx1 = int(parts[0]); idx2 = int(parts[1]); value = float(parts[2])
+            if np.isnan(value):
+                continue
+            i = int(idx1//res); j = int(idx2//res)
+            if i>=mat_dim or j>=mat_dim:
+                continue
+            hr_contact_matrix[i, j] = np.float32(value)
+    hr_contact_matrix += hr_contact_matrix.T - np.diag(hr_contact_matrix.diagonal())
+    if np.isnan(hr_contact_matrix).any():
+        print(f'hr_{chrom} has nan value!', flush=True)
+    _normalize_matrix_inplace(hr_contact_matrix, max_value)
+    
+    # LR
+    lr_hic_file = f'{input_lr_dir}/{file}'
+    with open(lr_hic_file, 'r') as f:
+        for line in f:
+            parts = line.rstrip().split('\t')
+            if len(parts) < 3:
+                continue
+            idx1 = int(parts[0]); idx2 = int(parts[1]); value = float(parts[2])
+            if np.isnan(value):
+                continue
+            i = int(idx1//res); j = int(idx2//res)
+            if i>=mat_dim or j>=mat_dim:
+                continue
+            lr_contact_matrix[i, j] = np.float32(value)
+    lr_contact_matrix += lr_contact_matrix.T - np.diag(lr_contact_matrix.diagonal())
+    if np.isnan(lr_contact_matrix).any():
+        print(f'lr_{chrom} has nan value!', flush=True)
+    _normalize_matrix_inplace(lr_contact_matrix, max_value)
+    
+    # Save matrices to temp files to avoid serialization issues
+    hr_temp_file = os.path.join(temp_dir, f'hr_{chrom}.npy')
+    lr_temp_file = os.path.join(temp_dir, f'lr_{chrom}.npy')
+    np.save(hr_temp_file, hr_contact_matrix)
+    np.save(lr_temp_file, lr_contact_matrix)
+    
+    return chrom, hr_temp_file, lr_temp_file, float(hr_contact_matrix.sum()), float(lr_contact_matrix.sum())
+
+# 크로모좀 별로 matrix 만들기 (병렬 + 임시파일 사용)
 def hic_matrix_extraction(file_list, res):
-    res=int(res)
+    res = int(res)
     chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{args.ref_genome}').readlines()}
-
-    hr_contacts_dict={}
-    for file in file_list:
-        chrom = file.split('.')[0] # 'chr1'
-        hr_hic_file = f'{args.input_data_dir}/{file}'
-        mat_dim = int(math.ceil(chrom_len[chrom]*1.0/res))
-        hr_contact_matrix = np.zeros((mat_dim,mat_dim))
-        for line in open(hr_hic_file).readlines():
-            idx1, idx2, value = int(line.strip().split('\t')[0]),int(line.strip().split('\t')[1]),float(line.strip().split('\t')[2])
-            if np.isnan(value):
-                continue
-            elif idx2/res>=mat_dim or idx1/res>=mat_dim:
-                continue
-            else:
-                hr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
-        hr_contact_matrix+= hr_contact_matrix.T - np.diag(hr_contact_matrix.diagonal())
-        if np.isnan(hr_contact_matrix).any():
-            print(f'hr_{chrom} has nan value!', flush=True)
-        hr_contacts_dict[chrom] = scaler.fit_transform(np.minimum(max_value, hr_contact_matrix)) # (0,300) >> (0,1)
-
-    lr_contacts_dict={}
-    for file in file_list:
-        chrom = file.split('.')[0]
-        lr_hic_file = f'{args.input_downsample_dir}/{file}'
-        mat_dim = int(math.ceil(chrom_len[chrom]*1.0/res))
-        lr_contact_matrix = np.zeros((mat_dim,mat_dim))
-        for line in open(lr_hic_file).readlines():
-            idx1, idx2, value = int(line.strip().split('\t')[0]),int(line.strip().split('\t')[1]),float(line.strip().split('\t')[2])
-            if np.isnan(value):
-                continue
-            elif idx2/res>=mat_dim or idx1/res>=mat_dim:
-                continue
-            else:
-                lr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
-        lr_contact_matrix+= lr_contact_matrix.T - np.diag(lr_contact_matrix.diagonal())
-        if np.isnan(lr_contact_matrix).any():
-            print(f'lr_{chrom} has nan value!', flush=True)
-        lr_contacts_dict[chrom] = scaler.fit_transform(np.minimum(max_value, lr_contact_matrix)) # (0,300) >> (0,1)
-
-    ct_hr_contacts={item:sum(sum(hr_contacts_dict[item])) for item in hr_contacts_dict.keys()} # read 수
-    ct_lr_contacts={item:sum(sum(lr_contacts_dict[item])) for item in lr_contacts_dict.keys()}    
-    print("\n  ...Done making whole contact map by each chromosomes...", flush=True)
-    return hr_contacts_dict,lr_contacts_dict,ct_hr_contacts,ct_lr_contacts
+    workers = max(1, int(args.workers) if args.workers else os.cpu_count())
+    
+    # Create temporary directory for matrix files
+    temp_dir = tempfile.mkdtemp(prefix='hihic_matrices_')
+    
+    try:
+        tasks = [(file, res, chrom_len, args.input_data_dir, args.input_downsample_dir, int(args.max_value), temp_dir) for file in file_list]
+        hr_contacts_dict = {}
+        lr_contacts_dict = {}
+        ct_hr_contacts = {}
+        ct_lr_contacts = {}
+        
+        with Pool(processes=min(workers, len(tasks))) as pool:
+            for chrom, hr_temp_file, lr_temp_file, hr_sum, lr_sum in pool.imap_unordered(_build_contact_mats_for_chrom, tasks):
+                # Load matrices from temp files
+                hr_contacts_dict[chrom] = np.load(hr_temp_file)
+                lr_contacts_dict[chrom] = np.load(lr_temp_file)
+                ct_hr_contacts[chrom] = hr_sum
+                ct_lr_contacts[chrom] = lr_sum
+                print(f"Processed {chrom}", flush=True)
+        
+        print("\n  ...Done making whole contact map by each chromosomes...", flush=True)
+        return hr_contacts_dict, lr_contacts_dict, ct_hr_contacts, ct_lr_contacts
+    
+    finally:
+        # Clean up temporary files
+        import shutil
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 # 매트릭스 자르기
 def crop_hic_matrix_by_chrom(chrom, for_model, bin_size): 

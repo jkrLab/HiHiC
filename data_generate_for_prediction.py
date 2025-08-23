@@ -1,10 +1,19 @@
 import os, sys, math, random, argparse, shutil
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+from multiprocessing import Pool
+import tempfile
 
 path = os.getcwd()
 random.seed(100)
-scaler = MinMaxScaler(feature_range=(0,1))
+
+# Lightweight normalization: clip to max_value and scale to [0,1] per-matrix using float32
+def _normalize_matrix_inplace(matrix: np.ndarray, max_value: int) -> None:
+    if matrix.dtype != np.float32:
+        matrix[:] = matrix.astype(np.float32, copy=False)
+    np.clip(matrix, 0, max_value, out=matrix)
+    local_max = float(matrix.max())
+    if local_max > 0.0:
+        matrix /= np.float32(local_max)
 
 # 인자 받기
 parser = argparse.ArgumentParser(description='Read Hi-C contact map and Divide submatrix for training and prediction', add_help=True)
@@ -17,6 +26,7 @@ required.add_argument('-m', '--model', dest='model', type=str, required=True, ch
 required.add_argument('-g', '--ref_genome', dest='ref_genome', type=str, required=True, help='Reference chromosome length: /HiHiC/hg19.txt')
 required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Parent directory of output: /HiHiC/data_model/data_DFHiC/')
 required.add_argument('-s', '--max_value', dest='max_value', type=str, required=True, default='300', help='Maximum value across all matrices')
+optional.add_argument('-w', '--workers', dest='workers', type=int, required=False, default=os.cpu_count(), help='Number of worker processes for building contact matrices')
 
 args = parser.parse_args()
 file_list = os.listdir(args.input_data_dir)
@@ -24,36 +34,73 @@ chrom_list = [file.split('.')[0] for file in file_list]
 max_value = int(args.max_value) # minmax scaling
 bin_size = args.bin_size
 
-# 크로모좀 별로 matrix 만들기
+def _build_contact_mat_for_chrom(task):
+    file, res, chrom_len, input_dir, max_value, temp_dir = task
+    chrom = file.split('.')[0]
+    mat_dim = int(math.ceil(chrom_len[chrom]*1.0/res))
+    lr_contact_matrix = np.zeros((mat_dim, mat_dim), dtype=np.float32)
+    lr_hic_file = f'{input_dir}/{file}'
+    with open(lr_hic_file, 'r') as f:
+        for line in f:
+            parts = line.rstrip().split('\t')
+            if len(parts) < 3:
+                continue
+            idx1 = int(parts[0]); idx2 = int(parts[1]); value = float(parts[2])
+            if np.isnan(value):
+                continue
+            i = int(idx1//res); j = int(idx2//res)
+            if i>=mat_dim or j>=mat_dim:
+                continue
+            lr_contact_matrix[i, j] = np.float32(value)
+    lr_contact_matrix += lr_contact_matrix.T - np.diag(lr_contact_matrix.diagonal())
+    if np.isnan(lr_contact_matrix).any():
+        print(f'lr_{chrom} has nan value!', flush=True)
+    _normalize_matrix_inplace(lr_contact_matrix, max_value)
+    
+    # Save matrix to temp file to avoid serialization issues
+    lr_temp_file = os.path.join(temp_dir, f'lr_{chrom}.npy')
+    np.save(lr_temp_file, lr_contact_matrix)
+    
+    return chrom, lr_temp_file, float(lr_contact_matrix.sum())
+
+# 크로모좀 별로 matrix 만들기 (병렬 + 임시파일 사용)
 def hic_matrix_extraction(file_list, bin_size):
     res=int(bin_size)
     chrom_len = {item.split()[0]:int(item.strip().split()[1]) for item in open(f'{args.ref_genome}').readlines()} # GM12878 Hg19
 
-    contacts_dict={}
-    for file in file_list:
-        chr = file.split('.')[0] # 'chr1'
-        lr_hic_file = f'{args.input_data_dir}/{file}'
-        mat_dim = int(math.ceil(chrom_len[chr]*1.0/res))
-        lr_contact_matrix = np.zeros((mat_dim,mat_dim))
-        for line in open(lr_hic_file).readlines():
-            idx1, idx2, value = int(line.strip().split('\t')[0]),int(line.strip().split('\t')[1]),float(line.strip().split('\t')[2])
-            if np.isnan(value):
-                continue
-            elif idx2/res>=mat_dim or idx1/res>=mat_dim:
-                continue
-            else:
-                lr_contact_matrix[int(idx1/res)][int(idx2/res)] = value
-        lr_contact_matrix+= lr_contact_matrix.T - np.diag(lr_contact_matrix.diagonal())
-        if np.isnan(lr_contact_matrix).any(): 
-            print(f'lr_{chr} has nan value!', flush=True) 
-        contacts_dict[chr] = scaler.fit_transform(np.minimum(max_value, lr_contact_matrix)) # (0,300) >> (0,1)
-        print(chr,":",contacts_dict[chr].shape)
-    ct_contacts={item:sum(sum(contacts_dict[item])) for item in contacts_dict.keys()} # read 수
-    print("\n  ...Done making whole contact map by each chromosomes...", flush=True)
-    return contacts_dict,ct_contacts
+    workers = max(1, int(args.workers) if args.workers else os.cpu_count())
+    
+    # Create temporary directory for matrix files
+    temp_dir = tempfile.mkdtemp(prefix='hihic_prediction_')
+    
+    try:
+        tasks = [(file, res, chrom_len, args.input_data_dir, int(args.max_value), temp_dir) for file in file_list]
+        contacts_dict = {}
+        ct_contacts = {}
+        with Pool(processes=min(workers, len(tasks))) as pool:
+            for chrom, lr_temp_file, lr_sum in pool.imap_unordered(_build_contact_mat_for_chrom, tasks):
+                # Load matrix from temp file
+                contacts_dict[chrom] = np.load(lr_temp_file)
+                ct_contacts[chrom] = lr_sum
+                print(chrom, ":", contacts_dict[chrom].shape)
+        print("\n  ...Done making whole contact map by each chromosomes...", flush=True)
+        return contacts_dict,ct_contacts
+    
+    finally:
+        # Clean up temporary files
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 def crop_hic_matrix_by_chrom(chrom, for_model, bin_size): 
-    chr = int(chrom.split('chr')[1].split(".")[0])
+    # Dynamic chromosome mapping based on available chromosomes
+    chrom_num = chrom.split('chr')[1].split(".")[0]
+    
+    # Get all available chromosomes and create mapping
+    available_chroms = sorted(contacts_dict.keys())
+    chrom_to_num = {}
+    for i, ch in enumerate(available_chroms):
+        chrom_to_num[ch] = i + 1
+    
+    chr = chrom_to_num[chrom]
     chrom = chrom.split(".")[0]
     thred=2000000/int(bin_size) # thred=2M/resolution 
     distance=[] # DFHiC
@@ -189,16 +236,40 @@ if args.model == "DFHiC":
 elif args.model == "DeepHiC":      
     mats,coordinates = DeepHiC_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
-    compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in contacts_dict.items()}
-    size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_genome}').readlines()}
+    # Dynamic chromosome mapping for compacts
+    available_chroms = sorted(contacts_dict.keys())
+    chrom_to_num = {}
+    for i, ch in enumerate(available_chroms):
+        chrom_to_num[ch] = i + 1
+    
+    compacts = {chrom_to_num[k] : np.nonzero(v)[0] for k, v in contacts_dict.items()}
+    size = {}
+    for item in open(f'{args.ref_genome}').readlines():
+        chrom_name = item.split()[0]
+        size_val = int(item.strip().split()[1])
+        # Keep original chromosome name (X, Y) for size dictionary
+        chrom_key = chrom_name.split('chr')[1]
+        size[chrom_key] = size_val
     np.savez(out_file, data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
     
     
 elif args.model == "HiCARN":          
     mats,coordinates = HiCARN_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
-    compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in contacts_dict.items()}
-    size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_genome}').readlines()}
+    # Dynamic chromosome mapping for compacts
+    available_chroms = sorted(contacts_dict.keys())
+    chrom_to_num = {}
+    for i, ch in enumerate(available_chroms):
+        chrom_to_num[ch] = i + 1
+    
+    compacts = {chrom_to_num[k] : np.nonzero(v)[0] for k, v in contacts_dict.items()}
+    size = {}
+    for item in open(f'{args.ref_genome}').readlines():
+        chrom_name = item.split()[0]
+        size_val = int(item.strip().split()[1])
+        # Keep original chromosome name (X, Y) for size dictionary
+        chrom_key = chrom_name.split('chr')[1]
+        size[chrom_key] = size_val
     np.savez(out_file, data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
    
 
