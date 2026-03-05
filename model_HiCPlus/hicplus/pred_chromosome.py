@@ -49,7 +49,7 @@ startTime = datetime.now()
 #if use_gpu and not torch.cuda.is_available():
 #    raise Exception("No GPU found, please run without --cuda")
 use_gpu = torch.cuda.is_available() ##############################################################
-if args.gpu_id == -1:
+if args.gpu_id == -1 or not torch.cuda.is_available():
     device  = torch.device('cpu')  # CPU 사용
 else:
     device  = torch.device(f'cuda:{args.gpu_id}')  # GPU 사용 ###################### Added by HiHiC

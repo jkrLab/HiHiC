@@ -53,8 +53,8 @@ def hic_matrix_extraction(file_list, bin_size):
     return contacts_dict,ct_contacts
 
 def crop_hic_matrix_by_chrom(chrom, for_model, bin_size): 
-    # chr = int(chrom.split('chr')[1].split(".")[0])
-    chr=chrom
+    chr = int(chrom.split('chr')[1].split(".")[0])
+    chrom = chrom.split(".")[0]
     thred=2000000/int(bin_size) # thred=2M/resolution 
     distance=[] # DFHiC
     lr_crop_mats=[]
@@ -174,25 +174,6 @@ def HiCPlus_data_split(chrom_list):
 contacts_dict,ct_contacts = hic_matrix_extraction(file_list, bin_size)
 print(f"\n  ...Done making whole matrices...", flush=True)
 
-# 알파벳 크로모좀
-KEY_MAP = {'X': 100, 'Y': 101, 'M': 102, 'MT': 102}
-non_integer_chromosome_found = False 
-conversion_map = {}
-contacts_dict_numeric = {}
-for key, value in contacts_dict.items():
-    base = key.split('.')[0].replace('chr', '')
-    new_key = 999
-    if base.isdigit():
-        new_key = int(base)
-    else:
-        non_integer_chromosome_found = True
-        new_key = KEY_MAP.get(base.upper(), 999)
-    contacts_dict_numeric[new_key] = value
-    conversion_map[key] = new_key
-contacts_dict = contacts_dict_numeric
-chrom_list = sorted(contacts_dict.keys())
-
-
 saved_in = os.path.join(args.output_dir,"ENHANCEMENT")
 os.makedirs(saved_in, exist_ok=True)
 prefix = os.path.basename(args.input_data_dir)
@@ -208,7 +189,7 @@ if args.model == "DFHiC":
 elif args.model == "DeepHiC":      
     mats,coordinates = DeepHiC_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
-    compacts = {k : np.nonzero(v)[0] for k, v in contacts_dict.items()}
+    compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in contacts_dict.items()}
     size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_genome}').readlines()}
     np.savez(out_file, data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
     
@@ -216,23 +197,24 @@ elif args.model == "DeepHiC":
 elif args.model == "HiCARN":          
     mats,coordinates = HiCARN_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
-    compacts = {k : np.nonzero(v)[0] for k, v in contacts_dict.items()}
+    compacts = {int(k.split('chr')[1]) : np.nonzero(v)[0] for k, v in contacts_dict.items()}
     size = {item.split()[0].split('chr')[1]:int(item.strip().split()[1])for item in open(f'{args.ref_genome}').readlines()}
     np.savez(out_file, data=mats,inds=np.array(coordinates, dtype=np.int_),compacts=compacts,sizes=size)
    
 
 elif args.model == "HiCNN":     
-   mats,hr_coords,coords = HiCNN_data_split(chrom_list)
-   print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
-   np.savez(out_file, data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
+    mats,hr_coords,coords = HiCNN_data_split(chrom_list)
+    print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
+    np.savez(out_file, data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
 
 
 elif args.model == "SRHiC":  
     mats,hr_coords,coords = SRHiC_data_split(chrom_list)
     print(f"\n  ...Done cropping whole matrix into submatrix for {args.model} prediction...", flush=True)
     mats = mats[:,0,:,:]
+    # np.savez(os.path.join(saved_in, f"index_{prefix}.npz"), inds=np.array(coords, dtype=np.int_), inds_target=np.array(hr_coords, dtype=np.int_))
     np.savez(out_file, data=mats,inds=np.array(coords, dtype=np.int_),inds_target=np.array(hr_coords, dtype=np.int_))
-
+    
 
 else:
     assert args.model == "HiCPlus", "    model name is not correct "
@@ -242,12 +224,3 @@ else:
 
     
 print(f"\n  ...Generated data is saved in {args.output_dir}...\n", flush=True)
-
-if non_integer_chromosome_found:
-    print("\n  [INFO] Non-integer chromosome keys were converted:")
-    print("  ===============================================")
-    for old_key in sorted(conversion_map.keys()):
-        if conversion_map[old_key] >= 100:
-            new_key = conversion_map[old_key]
-            print(f"    '{old_key}' \t -> \t {new_key}")
-    print("  ===============================================\n")

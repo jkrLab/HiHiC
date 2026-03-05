@@ -20,6 +20,7 @@ seed = 13
 random.seed(seed)  # Python 기본 랜덤 시드
 np.random.seed(seed)  # NumPy 랜덤 시드
 t.manual_seed(seed)  # CPU 랜덤 시드
+os.environ["TORCH_HOME"] = os.path.abspath("./.cache/torch")
 
 if t.cuda.is_available():
     t.cuda.manual_seed(seed)

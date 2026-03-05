@@ -81,7 +81,8 @@ def hicarn_predictor(model, hicarn_loader, ckpt_file, device):
     deepmodel = model.Generator(num_channels=64).to(device)
     if not os.path.isfile(ckpt_file):
         ckpt_file = f'save/{ckpt_file}'
-    deepmodel.load_state_dict(torch.load(ckpt_file, map_location=torch.device('cpu')))
+    # deepmodel.load_state_dict(torch.load(ckpt_file, map_location=torch.device('cpu')))
+    deepmodel.load_state_dict(torch.load(ckpt_file, map_location=device))
     print(f'Loading HiCARN checkpoint file from "{ckpt_file}"')
 
     result_data = []

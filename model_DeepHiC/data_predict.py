@@ -45,6 +45,8 @@ prefix = os.path.splitext(os.path.basename(args.input_data))[0]
 def dataloader(data, batch_size=64):
     inputs = torch.tensor(data['data'], dtype=torch.float)
     inds = torch.tensor(data['inds'], dtype=torch.long)
+    # inds_array = data['inds'].replace("chr", "").astype(np.int64)
+    # inds = torch.tensor(inds_array, dtype=torch.long)
     dataset = TensorDataset(inputs, inds)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     return loader
@@ -71,7 +73,7 @@ def deephic_predictor(deephic_loader, ckpt_file, device, scale, res_num):
     if not os.path.isfile(ckpt_file):
         ckpt_file = f'save/{ckpt_file}'
     # deepmodel.load_state_dict(torch.load(ckpt_file))
-    deepmodel.load_state_dict(torch.load(ckpt_file, map_location=torch.device(device)))
+    deepmodel.load_state_dict(torch.load(ckpt_file, map_location=device))
     print(f'Loading DeepHiC checkpoint file from "{ckpt_file}"')
     result_data = []
     result_inds = []

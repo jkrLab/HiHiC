@@ -53,7 +53,7 @@ fi
 echo ""
 echo "  ...Current working directory is ${root_dir}."
 echo "      ${model} will enhance low resolution HiC data, ${input_data}"
-echo "      And the enhanced HiC data will be saved in ${dir_output}." 
+echo "      And the enhanced output data will be saved in ${dir_output}." 
 echo "      The pretrained model, ${ckpt_file} will be utilized."
 echo "      If available, GPU:${gpu_id} will be used for prediction; otherwise, CPU will be used."
 echo ""

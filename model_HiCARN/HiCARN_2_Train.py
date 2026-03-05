@@ -15,6 +15,7 @@ from math import log10
 import datetime, argparse, random ######################################
 
 seed = 13
+os.environ["TORCH_HOME"] = os.path.abspath("./.cache/torch")
 random.seed(seed)  # Python 기본 랜덤 시드
 np.random.seed(seed)  # NumPy 랜덤 시드
 torch.manual_seed(seed)  # CPU 랜덤 시드

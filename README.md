@@ -179,22 +179,22 @@ cd /path/to/HiHiC/parent/directory
 * HiCPlus, HiCNN, DeepHiC, HiCARN, or iEnhance:
    + With GPU (CUDA 11.4)
    ```
-   docker run --rm --gpus all -it --name hihic_torch -v ${PWD}:${PWD} jkrlab/hihic_torch
+   docker run --rm --gpus all -it --name hihic_torch -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_torch
    ```
    + Without GPU
    ```
-   docker run --rm -it --name hihic_torch -v ${PWD}:${PWD} jkrlab/hihic_torch
+   docker run --rm -it --name hihic_torch -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_torch
    ```
 
 
 * SRHiC or DFHiC:
    + With GPU (CUDA 11.4)
    ```
-   docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/hihic_tensorflow
+   docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_tensorflow
    ```
    + Without GPU
    ```
-   docker run --rm -it --name hihic_tensorflow -v ${PWD}:${PWD} jkrlab/hihic_tensorflow
+   docker run --rm -it --name hihic_tensorflow -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_tensorflow
    ```
 
 

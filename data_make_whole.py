@@ -80,7 +80,7 @@ for data_path in args.input_data:
 if len(npz_files) == 0:
     raise SystemExit("No .npz files found in given inputs.")
 
-workers = max(1, int(args.workers) if args.workers else os.cpu_count())
+workers = max(1, int(args.workers) if args.workers else 8)
 tasks = [(f, args.output_dir) for f in npz_files]
 with Pool(processes=min(workers, len(npz_files))) as pool:
     for msg in pool.imap_unordered(_process_one_file, tasks):

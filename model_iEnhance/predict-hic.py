@@ -31,11 +31,11 @@ required.add_argument('--output_data_dir', type=str, default='./output_iEnhance'
                       help='directory path for saving enhanced output (default: HiHiC/output_iEnhance/)')
 args = parser.parse_args()
 
-model = Construct()
-state_dict = t.load(args.ckpt_file, map_location = t.device(f'cuda:{args.gpu_id}' if t.cuda.is_available() and args.gpu_id >= 0 else 'cpu'))
-model.load_state_dict(state_dict)
-
 device = t.device(f'cuda:{args.gpu_id}' if t.cuda.is_available() and args.gpu_id >= 0 else 'cpu')
+
+model = Construct()
+state_dict = t.load(args.ckpt_file, map_location=device)
+model.load_state_dict(state_dict)
 model.to(device)
 
 prefix = os.path.splitext(os.path.basename(args.input_data))[0]

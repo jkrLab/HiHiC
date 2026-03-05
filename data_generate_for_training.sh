@@ -40,6 +40,23 @@ if [[ "${model}" != "HiCPlus" ]] && [ -z "${valid_set}" ]; then
     exit 1
 fi
 
+# 입력 디렉토리 파일명 매칭 검사
+if [ -d "$input_data_dir" ] && [ -d "$input_downsample_dir" ]; then
+    # 두 디렉토리에서 파일명만 추출 (경로 제외)
+    files_i=$(ls "$input_data_dir" | sort)
+    files_d=$(ls "$input_downsample_dir" | sort)
+
+    if [ "$files_i" != "$files_d" ]; then
+        echo "Error: Files in $input_data_dir and $input_downsample_dir do not match." >&2
+        echo "  - $input_data_dir: $(echo $files_i | tr '\n' ' ')" >&2
+        echo "  - $input_downsample_dir: $(echo $files_d | tr '\n' ' ')" >&2
+        exit 1
+    fi
+else
+    echo "Error: Input directories not found: $input_data_dir or $input_downsample_dir" >&2
+    exit 1
+fi
+
 # 데이터셋 split 기본값 설정
 if [ "${model}" = "HiCPlus" ]; then
     echo ""
