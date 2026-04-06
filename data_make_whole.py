@@ -6,17 +6,31 @@ path = os.getcwd()
 random.seed(100)
 
 # 인자 받기
-parser = argparse.ArgumentParser(description='Read Hi-C contact map and Divide submatrix for train and predict', add_help=True)
+parser = argparse.ArgumentParser(description='Make whole contact matrix from divided submatrices', add_help=True)
 parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
 required.add_argument('-i', '--input_data', dest='input_data', type=str, nargs='+', required=True, help='Input of model prediction')  # 여러 파일 및 디렉토리 받기
 required.add_argument('-o', '--output_dir', dest='output_dir', type=str, required=True, help='Parental directory to save')
 optional = parser.add_argument_group('optional arguments')
-optional.add_argument('-w', '--workers', dest='workers', type=int, required=False, default=os.cpu_count(), help='Number of worker processes for reconstruction')
+optional.add_argument('-w', '--workers', dest='workers', type=int, required=False, default=8, help='Number of worker processes for reconstruction')
 args = parser.parse_args()
 
+DROP_KEYS = {"X", "Y", "M", "chrX", "chrY", "chrM"}  # drop_keys는 필요 없는 키를 지정하는 집합입니다. 
+
+def save_filtered_fp16_npz(save_filename, mats, drop_keys=DROP_KEYS): 
+    """
+    mats(dict)에서 지정 key 제거 후 float16 변환하여 저장
+    """
+    out = {}  
+    for k, v in mats.items():  
+        if k in drop_keys:  
+            continue  
+        if isinstance(v, np.ndarray) and np.issubdtype(v.dtype, np.floating):  
+            v = v.astype(np.float16, copy=False)  
+        out[k] = v  
+    np.savez_compressed(save_filename, **out) 
+
 def make_whole_40(predicted, save_filename):
-    predicted = np.load(predicted, allow_pickle=True)
     mats = {}
     unique_chrom = np.unique(predicted['inds'][:, 0])
     for chrom in sorted(unique_chrom):
@@ -28,10 +42,9 @@ def make_whole_40(predicted, save_filename):
         for ind, submat in zip(inds, submats):
             mat[ind[0]:ind[0]+28, ind[1]:ind[1]+28] = submat
         mats[str(chrom)] = np.triu(mat) + np.triu(mat, k=1).T
-    np.savez_compressed(save_filename, **mats)
+    save_filtered_fp16_npz(save_filename, mats)
 
 def make_whole_28(predicted, save_filename):
-    predicted = np.load(predicted, allow_pickle=True)
     mats = {}
     unique_chrom = np.unique(predicted['inds'][:, 0])
     for chrom in sorted(unique_chrom):
@@ -43,8 +56,7 @@ def make_whole_28(predicted, save_filename):
         for ind, submat in zip(inds, submats):
             mat[ind[0]:ind[0]+28, ind[1]:ind[1]+28] = submat
         mats[str(chrom)] = np.triu(mat) + np.triu(mat, k=1).T
-    np.savez_compressed(save_filename, **mats)
-
+    save_filtered_fp16_npz(save_filename, mats)
 
 def _process_one_file(task):
     input_file, base_out = task
@@ -53,15 +65,15 @@ def _process_one_file(task):
         output_dir = os.path.join(base_out, prefix)
         os.makedirs(output_dir, exist_ok=True)
         save_filename = os.path.join(output_dir, os.path.basename(input_file))
-        data = np.load(input_file, allow_pickle=True)
-        data_shape = int(np.squeeze(data['data']).shape[-1])
-        if data_shape == 40:
-            make_whole_40(input_file, save_filename)
-        elif data_shape == 28:
-            make_whole_28(input_file, save_filename)
-        else:
-            return f"{input_file} isn't 40*40 or 28*28 sub matrix."
-        return f"{save_filename} was done."
+        with np.load(input_file, allow_pickle=True) as predicted:
+            data_shape = int(np.squeeze(predicted['data']).shape[-1])
+            if data_shape == 40:
+                make_whole_40(predicted, save_filename)
+            elif data_shape == 28:
+                make_whole_28(predicted, save_filename)
+            else:
+                return f"{input_file} isn't 40*40 or 28*28 sub matrix."
+            return f"{save_filename} was done."
     except Exception as e:
         return f"Error processing {input_file}: {e}"
 
@@ -80,7 +92,7 @@ for data_path in args.input_data:
 if len(npz_files) == 0:
     raise SystemExit("No .npz files found in given inputs.")
 
-workers = max(1, int(args.workers) if args.workers else 8)
+workers = max(1, int(args.workers))
 tasks = [(f, args.output_dir) for f in npz_files]
 with Pool(processes=min(workers, len(npz_files))) as pool:
     for msg in pool.imap_unordered(_process_one_file, tasks):

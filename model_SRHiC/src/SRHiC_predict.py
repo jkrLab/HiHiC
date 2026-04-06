@@ -72,8 +72,13 @@ def predict(test_file,
         # for test_file in test_files:
             # test=os.path.join(test_input_dir,test_file)
             # x = np.load(test).astype(np.float32)[:,:,:40]
-        test = np.load(test_file)
-        x = test['data'].astype(np.float32)[:,:,:40]
+        test = np.load(test_file, mmap_mode='r')
+        # x = test['data'].astype(np.float32)[:,:,:40]
+        x = test['data']
+        if x.dtype != np.float32: 
+            x = x.astype(np.float32)
+        x = x[:, :, :40]
+        
         x = np.reshape(x, [x.shape[0], 40, 40, 1])
         size = int(x.shape[0] / epoch_size) + 1
         Out = np.zeros([1, 28, 28, 1])

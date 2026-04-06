@@ -61,9 +61,9 @@ def crop_hic_matrix_by_chrom(chrom, for_model, bin_size):
     hr_coordinates=[]    
     lr_coordinates=[] # HiCARN
     row,col = contacts_dict[chrom].shape
-    if row<=thred or col<=thred: # bin 수가 200 보다 작으면 False
-        print('HiC matrix size wrong!', flush=True)
-        sys.exit()
+    # if row<=thred or col<=thred: # bin 수가 200 보다 작으면 False
+    #     print('HiC matrix size wrong!', flush=True)
+    #     sys.exit()
     # def quality_control(mat,thred=0.05):
     #     if len(mat.nonzero()[0])<thred*mat.shape[0]*mat.shape[1]: # 숫자 있는 셀의 수가 전체의 5% 미만이면 False (분석 가능한 수준 설정)
     #         return False
@@ -71,18 +71,18 @@ def crop_hic_matrix_by_chrom(chrom, for_model, bin_size):
     #         return True 
     for idx1 in range(0,row-40,28):
         for idx2 in range(0,col-40,28):
-             if abs(idx1-idx2)<thred:
-                distance.append([idx1-idx2,chrom]) # DFHiC
-                lr_coordinates.append([chr, row, idx1, idx2]) # row:HiCARN                    
-                lr_contact = contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]
-                if for_model in ["HiCARN", "DeepHiC", "DFHiC"]:
-                    hr_coordinates.append([chr, row, idx1, idx2])
-                elif for_model in ["HiCNN", "HiCPlus"]: # output mat:28*28
-                    hr_coordinates.append([chr, row, idx1+6, idx2+6])
-                else:
-                    assert for_model in ["SRHiC"]
-                    hr_coordinates.append([chr, row, idx1+6, idx2+6]) 
-                lr_crop_mats.append(lr_contact)
+            # if abs(idx1-idx2)<thred:
+            distance.append([idx1-idx2,chrom]) # DFHiC
+            lr_coordinates.append([chr, row, idx1, idx2]) # row:HiCARN                    
+            lr_contact = contacts_dict[chrom][idx1:idx1+40,idx2:idx2+40]
+            if for_model in ["HiCARN", "DeepHiC", "DFHiC"]:
+                hr_coordinates.append([chr, row, idx1, idx2])
+            elif for_model in ["HiCNN", "HiCPlus"]: # output mat:28*28
+                hr_coordinates.append([chr, row, idx1+6, idx2+6])
+            else:
+                assert for_model in ["SRHiC"]
+                hr_coordinates.append([chr, row, idx1+6, idx2+6]) 
+            lr_crop_mats.append(lr_contact)
     lr_crop_mats = np.concatenate([item[np.newaxis,:] for item in lr_crop_mats],axis=0)
     return lr_crop_mats,hr_coordinates,lr_coordinates,distance     
 
@@ -191,7 +191,6 @@ for key, value in contacts_dict.items():
     conversion_map[key] = new_key
 contacts_dict = contacts_dict_numeric
 chrom_list = sorted(contacts_dict.keys())
-
 
 saved_in = os.path.join(args.output_dir,"ENHANCEMENT")
 os.makedirs(saved_in, exist_ok=True)
