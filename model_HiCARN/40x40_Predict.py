@@ -16,6 +16,8 @@ from Arg_Parser import *
 ########################################################################
 
 import argparse
+import os
+
 
 parser = argparse.ArgumentParser(description='HiCARN prediction process')
 parser._action_groups.pop()
@@ -48,11 +50,12 @@ os.makedirs(args.output_data_dir, exist_ok=True) #######################
 
 
 def dataloader(data, batch_size=64):
-    inputs = torch.tensor(data['data'], dtype=torch.float)
+    inputs = data['data'] 
+    inds = data['inds']
+    dataset = TensorDataset(torch.from_numpy(inputs).float(), torch.from_numpy(inds))
     # target = torch.tensor(data['target'], dtype=torch.float)
-    inds = torch.tensor(data['inds'], dtype=torch.long)
     # dataset = TensorDataset(inputs, target, inds)
-    dataset = TensorDataset(inputs, inds)
+    # dataset = TensorDataset(inputs, inds)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     return loader
 

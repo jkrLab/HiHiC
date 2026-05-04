@@ -138,7 +138,7 @@ bash data_generate_for_training.sh -i "./data/MAT/GM12878_primary__2946.5M_10Kb_
 
 
 ```
-bash data_generate_for_prediction.sh -i "./data/MAT/GM12878_primary__180.0M_10Kb_KR/" -b "10000" -m "DFHiC" -g "./hg19.txt" -o "./data_model" -s "300" -w "8"
+bash data_generate_for_prediction.sh -i "./data/MAT/GM12878_primary__180.0M_10Kb_KR/" -b "10000" -m "DFHiC" -g "./hg19.txt" -o "./data_model" -s "250"
 ```
 | Argument | Description | Example |
 |----------|-------------|---------|
@@ -146,7 +146,7 @@ bash data_generate_for_prediction.sh -i "./data/MAT/GM12878_primary__180.0M_10Kb
 | `-g` | Reference genome length file, your input data is based on | `./hg19.txt` |
 | `-o` | Directory path of output data | `./data_model` |
 | `-b` | Resolution (Binning size) | `10000` | 
-| `-s` | Max value of Hi-C matrix | `300` |
+| `-s` | Max value of Hi-C matrix | `250` |
 | `-m` | Model name that you use (One of HiCARN, DeepHiC, HiCNN, DFHiC, HiCPlus, SRHiC, or iEnhance) | `DFHiC` |
 | `-w` | Number of worker processes (optional; defaults to all CPUs) | `8` |
 
