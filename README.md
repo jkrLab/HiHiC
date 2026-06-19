@@ -25,11 +25,11 @@ HiHiC provides a unified framework for:
 - iEnhance
 
 
-## 1. Prepare the Data Generation Environment
+## 1 Prepare the Data Generation Environment
 ------------------------------------
 
 
-1. Clone the HiHiC repository.
+### Step 1. Clone the HiHiC repository.
 
 
 ```
@@ -39,7 +39,7 @@ git clone https://github.com/Biomedical-Data-Science-Laboratory/HiHiC.git
 
 
 
-2. Run the preprocessing Docker image.
+### Step 2. Run the preprocessing Docker image.
 
 
 + With GPU (CUDA 11.4)
@@ -55,7 +55,7 @@ docker run --rm -it --name hihic_preprocess -v ${PWD}:${PWD} --user $(id -u):$(i
 
 
 
-3. Create a symbolic link from the Juicer Tools JAR in the Docker workspace to the HiHiC directory.
+### Step 3. Create a symbolic link from the Juicer Tools JAR in the Docker workspace to the HiHiC directory.
 
 
 ```
@@ -71,7 +71,7 @@ ln -s /workspace/juicer_tools.jar /path/to/HiHiC/directory/
 -------------------------------------------------
 
 
-1. Change your working directory to HiHiC.
+### Step 1. Change your working directory to HiHiC.
 
 
 ```
@@ -81,7 +81,7 @@ cd /path/to/HiHiC/directory
 
 
 
-2. Process mapped reads into a Hi-C contact map.
+### Step 2. Process mapped reads into a Hi-C contact map.
 
 
 * Down-sample reads and generate a Hi-C contact map.
@@ -115,7 +115,7 @@ bash data_downsample.sh -i "./data/GSE63525_merged/GM12878_primary_merged.txt.gz
 
 
 
-3. Transform Hi-C contact maps into model input matrices.
+### Step 3. Transform Hi-C contact maps into model input matrices.
 
 
 * Generate input matrices for training.
@@ -181,7 +181,7 @@ bash data_generate_for_prediction.sh -i "./data/MAT/GM12878_primary__180.0M_10Kb
 -----------------------------------------------
 
 
-1. Change your working directory to the HiHiC parent directory.
+### Step 1. Change your working directory to the HiHiC parent directory.
 
 
 ```
@@ -191,7 +191,7 @@ cd /path/to/HiHiC/parent/directory
 
 
 
-2. Launch the Docker container.
+### Step 2. Launch the Docker container.
 
 
 * DeepHiC, HiCNN, HiCPlus, HiCARN1, HiCARN2, or iEnhance:
@@ -224,7 +224,7 @@ cd /path/to/HiHiC/parent/directory
 ---------------------
 
 
-1. Change your working directory to HiHiC.
+### Step 1. Change your working directory to HiHiC.
 
 
 ```
@@ -234,7 +234,7 @@ cd /path/to/HiHiC/directory
 
 
 
-2. Train the desired model.
+### Step 2. Train the desired model.
 
 
 ```
@@ -269,7 +269,7 @@ bash model_train.sh -m "DFHiC" -e "500" -b "16" -g "0" -o "./checkpoints" -l "./
 ----------------------------------------------------------
 
 
-1. Change your working directory to HiHiC.
+### Step 1. Change your working directory to HiHiC.
 
 
 ```
@@ -279,7 +279,7 @@ cd /path/to/HiHiC/directory
 
 
 
-2. Generate enhanced Hi-C contact maps.
+### Step 2. Generate enhanced Hi-C contact maps.
 
 
 ```
@@ -306,7 +306,7 @@ bash model_prediction.sh -m "DFHiC" -c "./checkpoints/checkpoints_DFHiC/00005_0.
 
 
 
-3. Reconstruct chromosome-scale contact matrices from the predicted submatrices (except for iEnhance).
+### Step 3. Reconstruct chromosome-scale contact matrices from the predicted submatrices (except for iEnhance).
 
 
 ```
