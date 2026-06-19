@@ -8,7 +8,7 @@
 HiHiC provides a unified framework for:
 
 - preprocessing Hi-C datasets
-- generating training datasets
+- generating training and prediction datasets
 - training eight deep learning models
 - enhancing low-resolution Hi-C contact maps
 - reconstructing chromosome-scale contact matrices
@@ -25,7 +25,7 @@ HiHiC provides a unified framework for:
 - iEnhance
 
 
-## 1 Prepare the Data Generation Environment
+## 1. Prepare the Data Generation Environment
 ------------------------------------
 
 
@@ -42,11 +42,11 @@ git clone https://github.com/Biomedical-Data-Science-Laboratory/HiHiC.git
 ### Step 2. Run the preprocessing Docker image.
 
 
-+ With GPU (CUDA 11.4)
++ GPU (CUDA 11.4)
 ```
 docker run --rm --gpus all -it --name hihic_preprocess -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_preprocess
 ```
-+ Without GPU
++ CPU only
 ```
 docker run --rm -it --name hihic_preprocess -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_preprocess
 ```
@@ -71,7 +71,7 @@ ln -s /workspace/juicer_tools.jar /path/to/HiHiC/directory/
 -------------------------------------------------
 
 
-### Step 1. Change your working directory to HiHiC.
+### Step 1. Change to the HiHiC project directory.
 
 
 ```
@@ -135,7 +135,7 @@ bash data_generate_for_training.sh -i "./data/MAT/GM12878_primary__2946.5M_10Kb_
 | `-o` | Output directory | `./data_model` |
 | `-b` | Resolution (binning size) | `10000` | 
 | `-s` | Max value of Hi-C matrix | `300` |
-| `-m` | Model name (DeepHiC, DFHiC, HiCARN, HiCNN, HiCPlus, iEnhance, or SRHiC; use `HiCARN` for HiCARN1/2) | `DFHiC` |
+| `-m` | Model name (DeepHiC, DFHiC, HiCARN, HiCNN, HiCPlus, iEnhance, or SRHiC; use `HiCARN` for HiCARN1/2.) | `DFHiC` |
 | `-t` | Chromosome numbers of training set | `"1 2 3 4 5 6 7 8 9 10 11 12 13 14"` |
 | `-v` | Chromosome numbers of validation set | `"15 16 17"` |
 | `-p` | Chromosome numbers of prediction set | `"18 19 20 21 22"` |
@@ -195,22 +195,22 @@ cd /path/to/HiHiC/parent/directory
 
 
 * DeepHiC, HiCNN, HiCPlus, HiCARN1, HiCARN2, or iEnhance:
-   + With GPU (CUDA 11.4)
+   + GPU (CUDA 11.4) Support
    ```
    docker run --rm --gpus all -it --name hihic_torch -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_torch
    ```
-   + Without GPU
+   + CPU only
    ```
    docker run --rm -it --name hihic_torch -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_torch
    ```
 
 
 * DFHiC, or SRHiC:
-   + With GPU (CUDA 11.4)
+   + GPU (CUDA 11.4) Support
    ```
    docker run --rm --gpus all -it --name hihic_tensorflow -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_tensorflow
    ```
-   + Without GPU
+   + CPU only
    ```
    docker run --rm -it --name hihic_tensorflow -v ${PWD}:${PWD} --user $(id -u):$(id -g) jkrlab/hihic_tensorflow
    ```
@@ -224,7 +224,7 @@ cd /path/to/HiHiC/parent/directory
 ---------------------
 
 
-### Step 1. Change your working directory to HiHiC.
+### Step 1. Change to the HiHiC project directory.
 
 
 ```
@@ -269,7 +269,7 @@ bash model_train.sh -m "DFHiC" -e "500" -b "16" -g "0" -o "./checkpoints" -l "./
 ----------------------------------------------------------
 
 
-### Step 1. Change your working directory to HiHiC.
+### Step 1. Change to the HiHiC project directory.
 
 
 ```
