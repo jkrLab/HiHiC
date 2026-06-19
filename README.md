@@ -279,7 +279,7 @@ cd /path/to/HiHiC/directory
 
 
 
-### Step 2. Generate enhanced Hi-C contact maps.
+### Step 2. Predict enhanced Hi-C contact maps.
 
 
 ```
